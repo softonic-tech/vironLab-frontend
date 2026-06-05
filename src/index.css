@@ -1,0 +1,1194 @@
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Sora:wght@400;500;600;700;800&family=IBM+Plex+Mono:wght@400;500&family=Syne:wght@500;600;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 222 47% 4%;
+    --foreground: 220 27% 96%;
+    --card: 222 35% 8%;
+    --card-foreground: 220 27% 96%;
+    --popover: 222 35% 8%;
+    --popover-foreground: 220 27% 96%;
+    --primary: 168 65% 50%;
+    --primary-foreground: 222 47% 4%;
+    --secondary: 220 20% 14%;
+    --secondary-foreground: 220 27% 96%;
+    --muted: 220 20% 18%;
+    --muted-foreground: 220 15% 65%;
+    --accent: 168 65% 50%;
+    --accent-foreground: 222 47% 4%;
+    --destructive: 0 84% 60%;
+    --destructive-foreground: 0 0% 98%;
+    --border: 220 15% 18%;
+    --input: 220 15% 18%;
+    --ring: 168 65% 50%;
+    --radius: 1.125rem;
+    /* Used by alert grid + legacy shadcn calc() */
+    --spacing: 0.25rem;
+    /* Sidebar (shadcn) — align with main tokens */
+    --sidebar-background: 222 47% 4%;
+    --sidebar-foreground: 220 27% 96%;
+    --sidebar-primary: 168 65% 50%;
+    --sidebar-primary-foreground: 222 47% 4%;
+    --sidebar-accent: 220 20% 14%;
+    --sidebar-accent-foreground: 220 27% 96%;
+    --sidebar-border: 220 15% 18%;
+    --sidebar-ring: 168 65% 50%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+  
+  html {
+    scroll-behavior: smooth;
+  }
+  
+  body {
+    @apply bg-background text-foreground antialiased;
+    font-family: 'Inter', sans-serif;
+    background-color: #070A12;
+    overflow-x: hidden;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Sora', sans-serif;
+    letter-spacing: -0.02em;
+    line-height: 0.95;
+  }
+  
+  .font-mono {
+    font-family: 'IBM Plex Mono', monospace;
+  }
+}
+
+@layer components {
+  .gradient-text {
+    background: linear-gradient(90deg, #3B82F6 0%, #8B5CF6 50%, #EC4899 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+  
+  .gradient-border {
+    position: relative;
+  }
+  
+  .gradient-border::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    padding: 1px;
+    border-radius: inherit;
+    background: linear-gradient(90deg, #3B82F6, #8B5CF6, #EC4899);
+    -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+    -webkit-mask-composite: xor;
+    mask-composite: exclude;
+  }
+  
+  .glow-teal {
+    box-shadow: 0 0 40px rgba(46, 209, 180, 0.3), 0 0 80px rgba(46, 209, 180, 0.15);
+  }
+  
+  .glow-purple {
+    box-shadow: 0 0 40px rgba(139, 92, 246, 0.3), 0 0 80px rgba(139, 92, 246, 0.15);
+  }
+  
+  .card-hover {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-6px);
+    border-color: rgba(244, 246, 250, 0.18);
+  }
+  
+  .btn-primary {
+    @apply px-7 py-3 rounded-full font-medium transition-all duration-300;
+    background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+    color: #0c0a06;
+  }
+  
+  .btn-primary:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(245, 158, 11, 0.38);
+  }
+  
+  .btn-outline {
+    @apply px-7 py-3 rounded-full font-medium transition-all duration-300;
+    border: 1px solid rgba(244, 246, 250, 0.2);
+    background: transparent;
+    color: #F4F6FA;
+  }
+  
+  .btn-outline:hover {
+    border-color: rgba(245, 158, 11, 0.45);
+    background: rgba(245, 158, 11, 0.08);
+  }
+  
+  .grid-overlay {
+    background-image: 
+      linear-gradient(rgba(244, 246, 250, 0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(244, 246, 250, 0.03) 1px, transparent 1px);
+    background-size: 50px 50px;
+  }
+  
+  .noise-overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+    opacity: 0.04;
+    z-index: 9999;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.9' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+  }
+  
+  .section-pinned {
+    height: 100vh;
+    width: 100vw;
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .text-eyebrow {
+    @apply font-mono text-xs uppercase tracking-[0.18em] text-amber-200/90;
+  }
+
+  /** Uppercase section label used on auth / legal / contact pages */
+  .eyebrow {
+    @apply font-mono text-[11px] uppercase tracking-[0.22em] text-amber-200/90;
+  }
+  
+  .product-card {
+    @apply rounded-[18px] border border-[rgba(244,246,250,0.08)] bg-[rgba(17,24,39,0.6)] backdrop-blur-sm;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  }
+  
+  .product-card:hover {
+    transform: translateY(-6px);
+    border-color: rgba(244, 246, 250, 0.18);
+    box-shadow: 0 18px 50px rgba(0, 0, 0, 0.45);
+  }
+  
+  .dosage-selector {
+    @apply flex flex-wrap gap-2;
+  }
+  
+  .dosage-option {
+    @apply px-3 py-1.5 rounded-full text-sm font-medium transition-all duration-200;
+    border: 1px solid rgba(244, 246, 250, 0.15);
+    background: transparent;
+    color: #A9B3C7;
+  }
+  
+  .dosage-option:hover {
+    border-color: rgba(46, 209, 180, 0.5);
+    color: #F4F6FA;
+  }
+  
+  .dosage-option.active {
+    background: rgba(46, 209, 180, 0.15);
+    border-color: #2ED1B4;
+    color: #2ED1B4;
+  }
+  
+  .badge {
+    @apply px-3 py-1 rounded-full text-xs font-mono uppercase tracking-wider;
+  }
+  
+  .badge-best-seller {
+    background: linear-gradient(90deg, rgba(239, 68, 68, 0.2), rgba(249, 115, 22, 0.2));
+    color: #F97316;
+    border: 1px solid rgba(249, 115, 22, 0.3);
+  }
+  
+  .badge-high-demand {
+    background: linear-gradient(90deg, rgba(139, 92, 246, 0.2), rgba(59, 130, 246, 0.2));
+    color: #8B5CF6;
+    border: 1px solid rgba(139, 92, 246, 0.3);
+  }
+  
+  .scroll-indicator {
+    animation: bounce 2s infinite;
+  }
+  
+  @keyframes shimmer {
+    100% { transform: translateX(100%); }
+  }
+
+  @keyframes bounce {
+    0%, 20%, 50%, 80%, 100% {
+      transform: translateY(0);
+    }
+    40% {
+      transform: translateY(-10px);
+    }
+    60% {
+      transform: translateY(-5px);
+    }
+  }
+  
+  .float-animation {
+    animation: float 4s ease-in-out infinite;
+  }
+  
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0);
+    }
+    50% {
+      transform: translateY(-10px);
+    }
+  }
+  
+  .pulse-glow {
+    animation: pulseGlow 3s ease-in-out infinite;
+  }
+  
+  @keyframes pulseGlow {
+    0%, 100% {
+      opacity: 0.6;
+    }
+    50% {
+      opacity: 1;
+    }
+  }
+  
+  /* Hologram Effect Animation */
+  @keyframes hologramShift {
+    0% {
+      background-position: 0% 0%;
+    }
+    50% {
+      background-position: 100% 100%;
+    }
+    100% {
+      background-position: 0% 0%;
+    }
+  }
+  
+  .hologram-shine {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .hologram-shine::after {
+    content: '';
+    position: absolute;
+    top: -50%;
+    left: -50%;
+    width: 200%;
+    height: 200%;
+    background: linear-gradient(
+      45deg,
+      transparent 30%,
+      rgba(255, 0, 255, 0.1) 35%,
+      rgba(0, 255, 255, 0.1) 40%,
+      rgba(255, 255, 0, 0.1) 45%,
+      rgba(0, 255, 0, 0.1) 50%,
+      rgba(255, 0, 255, 0.1) 55%,
+      transparent 60%
+    );
+    animation: hologramShine 4s linear infinite;
+    pointer-events: none;
+    mix-blend-mode: overlay;
+  }
+  
+  @keyframes hologramShine {
+    0% {
+      transform: translateX(-100%) translateY(-100%) rotate(45deg);
+    }
+    100% {
+      transform: translateX(100%) translateY(100%) rotate(45deg);
+    }
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+  
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+
+
+/* ================================================================
+   LANDING PAGE — premium aesthetic, kept SIMPLE and reliable.
+   ----------------------------------------------------------------
+   Scoped under .landing-page so Login, Dashboard, Checkout, Admin
+   are untouched. Uses properly escaped Tailwind selectors (\[ \#)
+   so overrides target the exact compiled utility classes — no
+   fragile attribute substring matching.
+   ================================================================ */
+
+.landing-page {
+  /* --- VIRON Labs logo palette: gold • blue • red • silver on carbon --- */
+  --viron-cyan:      #fde047;       /* bright gold — micro-labels (legacy name) */
+  --viron-blue:      #60a5fa;       /* DNA blue */
+  --viron-violet:    #f87171;       /* soft red accent */
+  --viron-graphite:  #1e293b;
+  --lp-bg-deep:      #010104;
+  --lp-bg:           #050508;
+  --lp-surface:      rgba(10, 12, 26, 0.82);
+  --lp-hairline:     rgba(255, 255, 255, 0.1);
+  /* Primary chrome: metallic gold */
+  --lp-mint:         #ca8a04;
+  --lp-mint-bright:  #facc15;
+  --lp-mint-deep:    #a16207;
+  /* Secondary: royal blue (logo DNA) */
+  --lp-azure:        #2563eb;
+  --lp-azure-deep:   #1d4ed8;
+  /* Accent: logo gold + signal red */
+  --lp-gold:         #eab308;
+  --lp-red:          #ef4444;
+  --lp-text:         #f8fafc;
+  --lp-text-soft:    #e2e8f0;
+  --lp-text-muted:   #94a3b8;
+  /* legacy token aliases consumed by newer sections */
+  --viron-text:         var(--lp-text);
+  --viron-text-soft:    var(--lp-text-soft);
+  --viron-muted:        var(--lp-text-muted);
+
+  /* layered radial mesh: gold / blue / red on near-black */
+  background:
+    radial-gradient(1200px 720px at 8% -6%, rgba(234, 179, 8, 0.16), transparent 58%),
+    radial-gradient(900px 620px at 94% 4%, rgba(59, 130, 246, 0.14), transparent 55%),
+    radial-gradient(780px 520px at 50% 112%, rgba(239, 68, 68, 0.09), transparent 58%),
+    linear-gradient(180deg, #010104 0%, #050816 52%, #010104 100%);
+  color: var(--lp-text);
+  position: relative;
+  isolation: isolate;
+  min-height: 100vh;
+}
+
+/* atmospheric aurora layer (already toggled via JSX) */
+.landing-page .landing-aurora {
+  position: fixed;
+  inset: -10%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(60% 50% at 18% 18%, rgba(250, 204, 21, 0.14), transparent 65%),
+    radial-gradient(55% 46% at 82% 22%, rgba(59, 130, 246, 0.12), transparent 65%),
+    radial-gradient(48% 44% at 48% 88%, rgba(239, 68, 68, 0.1), transparent 65%);
+  filter: blur(56px) saturate(1.08);
+  animation: lpAurora 28s ease-in-out infinite alternate;
+}
+
+@keyframes lpAurora {
+  0%   { transform: translate3d(0, 0, 0) scale(1);    opacity: 0.85; }
+  50%  { transform: translate3d(2.5%, -1.5%, 0) scale(1.05); opacity: 1; }
+  100% { transform: translate3d(-1.5%, 2%, 0) scale(1.02);   opacity: 0.9; }
+}
+
+/* keep the existing noise overlay subtle */
+.landing-page .noise-overlay {
+  opacity: 0.03;
+  mix-blend-mode: overlay;
+}
+
+/* ================================================================
+   Section background overrides
+   ----------------------------------------------------------------
+   Each section in the landing page has inline style="background:
+   #070A12" or class bg-[#070A12]. Make them all transparent so
+   the .landing-page mesh shows through.
+   ================================================================ */
+
+.landing-page section {
+  background: transparent !important;
+}
+
+/* The bg-[#070A12] / bg-[#0D1117] Tailwind classes — properly escaped */
+.landing-page .bg-\[\#070A12\],
+.landing-page .bg-\[\#0D1117\] {
+  background-color: transparent !important;
+}
+
+/* ================================================================
+   Polished gradient text — uses the brand triple gradient but
+   with the mint at the start so it reads "premium pharma".
+   ================================================================ */
+
+.landing-page .gradient-text {
+  background: linear-gradient(
+    105deg,
+    #fde047 0%,
+    #ffffff 24%,
+    #60a5fa 55%,
+    #f87171 100%
+  );
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 22px rgba(250, 204, 21, 0.22));
+}
+
+.landing-page .gradient-border::before {
+  background: linear-gradient(92deg, var(--lp-gold), var(--lp-azure), var(--lp-red));
+}
+
+/* ================================================================
+   Eyebrow label refresh — leader-dash + mint glow
+   ================================================================ */
+
+.landing-page .text-eyebrow {
+  position: relative;
+  color: var(--lp-mint-bright);
+  text-shadow: 0 0 18px rgba(250, 204, 21, 0.38);
+  padding-left: 18px;
+}
+.landing-page .text-eyebrow::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 10px;
+  height: 1px;
+  background: var(--lp-mint-bright);
+  box-shadow: 0 0 10px rgba(250, 204, 21, 0.55);
+}
+
+/* ================================================================
+   Premium primary button — chrome highlight + mint glow + sweep
+   ================================================================ */
+
+.landing-page .btn-primary {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.2), transparent 50%),
+    linear-gradient(92deg, var(--lp-mint-deep) 0%, var(--lp-mint-bright) 42%, var(--lp-azure) 100%);
+  color: var(--lp-bg-deep);
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  border: 1px solid rgba(255, 255, 255, 0.28);
+  position: relative;
+  overflow: hidden;
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 8px 26px rgba(234, 179, 8, 0.28),
+    0 0 48px rgba(59, 130, 246, 0.18);
+}
+
+.landing-page .btn-primary::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(120deg, transparent 30%, rgba(255, 255, 255, 0.45) 50%, transparent 70%);
+  transform: translateX(-120%);
+  transition: transform 0.7s cubic-bezier(0.4, 0, 0.2, 1);
+  pointer-events: none;
+}
+
+.landing-page .btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.65),
+    inset 0 -1px 0 rgba(0, 0, 0, 0.2),
+    0 16px 40px rgba(234, 179, 8, 0.35),
+    0 0 72px rgba(59, 130, 246, 0.22);
+}
+
+.landing-page .btn-primary:hover::after {
+  transform: translateX(120%);
+}
+
+.landing-page .btn-outline {
+  border: 1px solid var(--lp-hairline);
+  background: rgba(8, 10, 20, 0.55);
+  color: var(--lp-text);
+  backdrop-filter: blur(14px);
+  -webkit-backdrop-filter: blur(14px);
+}
+
+.landing-page .btn-outline:hover {
+  border-color: rgba(96, 165, 250, 0.45);
+  background: rgba(59, 130, 246, 0.08);
+  color: #f8fafc;
+  box-shadow: inset 0 1px 0 rgba(250, 204, 21, 0.15), 0 0 32px rgba(59, 130, 246, 0.15);
+}
+
+/* ================================================================
+   Glass product cards — real depth, hover holographic shine
+   ================================================================ */
+
+.landing-page .product-card {
+  position: relative;
+  background: linear-gradient(180deg, rgba(20, 24, 50, 0.78) 0%, rgba(11, 14, 34, 0.72) 100%);
+  border: 1px solid var(--lp-hairline);
+  backdrop-filter: blur(14px) saturate(1.1);
+  -webkit-backdrop-filter: blur(14px) saturate(1.1);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.05),
+    0 16px 36px rgba(0, 0, 0, 0.42),
+    0 30px 70px rgba(3, 5, 11, 0.5);
+  overflow: hidden;
+  transition: transform 0.4s cubic-bezier(0.2, 0.8, 0.2, 1), border-color 0.4s, box-shadow 0.4s;
+}
+
+/* overhead lab-light — warm gold wash */
+.landing-page .product-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background: linear-gradient(180deg, rgba(234, 179, 8, 0.07) 0%, transparent 14%);
+  z-index: 1;
+}
+
+/* holographic shine: gold / blue / red */
+.landing-page .product-card::after {
+  content: "";
+  position: absolute;
+  inset: -2px;
+  pointer-events: none;
+  background: conic-gradient(from 200deg at 50% 50%,
+    transparent 0deg,
+    rgba(250, 204, 21, 0.18) 80deg,
+    rgba(96, 165, 250, 0.15) 160deg,
+    rgba(248, 113, 113, 0.12) 240deg,
+    transparent 320deg);
+  opacity: 0;
+  transition: opacity 0.5s ease;
+  z-index: 0;
+  mix-blend-mode: screen;
+  filter: blur(18px);
+}
+
+.landing-page .product-card:hover {
+  transform: translateY(-6px);
+  border-color: rgba(234, 179, 8, 0.28);
+  box-shadow:
+    inset 0 1px 0 rgba(250, 204, 21, 0.14),
+    0 0 0 1px rgba(59, 130, 246, 0.2),
+    0 22px 50px rgba(0, 0, 0, 0.55),
+    0 0 60px rgba(234, 179, 8, 0.12);
+}
+
+.landing-page .product-card:hover::after {
+  opacity: 1;
+}
+
+.landing-page .product-card > * {
+  position: relative;
+  z-index: 2;
+}
+
+/* ================================================================
+   Refined glow utilities + grid overlay
+   ================================================================ */
+
+.landing-page .glow-teal {
+  box-shadow:
+    0 0 0 1px rgba(234, 179, 8, 0.22),
+    0 0 28px rgba(250, 204, 21, 0.28),
+    0 0 64px rgba(59, 130, 246, 0.14);
+}
+
+.landing-page .glow-purple {
+  box-shadow:
+    0 0 0 1px rgba(239, 68, 68, 0.18),
+    0 0 28px rgba(248, 113, 113, 0.22),
+    0 0 64px rgba(96, 165, 250, 0.14);
+}
+
+.landing-page .grid-overlay {
+  background-image:
+    radial-gradient(circle at 1px 1px, rgba(250, 204, 21, 0.09) 1px, transparent 1.2px);
+  background-size: 28px 28px;
+  mask-image: radial-gradient(ellipse 75% 65% at 50% 40%, #000 45%, transparent 100%);
+  -webkit-mask-image: radial-gradient(ellipse 75% 65% at 50% 40%, #000 45%, transparent 100%);
+  opacity: 0.7 !important;
+}
+
+/* ================================================================
+   Custom scrollbar + selection
+   ================================================================ */
+
+.landing-page ::-webkit-scrollbar { width: 10px; height: 10px; }
+.landing-page ::-webkit-scrollbar-track { background: rgba(3, 5, 11, 0.6); }
+.landing-page ::-webkit-scrollbar-thumb {
+  background: linear-gradient(180deg, var(--lp-mint-bright) 0%, var(--lp-azure) 100%);
+  border-radius: 8px;
+  border: 2px solid rgba(3, 5, 11, 0.8);
+}
+.landing-page ::-webkit-scrollbar-thumb:hover {
+  background: linear-gradient(180deg, #fde047 0%, var(--lp-azure-deep) 100%);
+}
+
+.landing-page ::selection {
+  background: rgba(59, 130, 246, 0.35);
+  color: #ffffff;
+}
+
+/* ================================================================
+   Nav glass-when-scrolled
+   ----------------------------------------------------------------
+   Navigation.tsx adds bg-[rgba(7,10,18,0.9)] when isScrolled is true.
+   Match that escaped class so we only style the scrolled state.
+   At top of page (bg-transparent) we leave the nav alone so the
+   hero sits cleanly underneath.
+   ================================================================ */
+
+.landing-page nav.bg-\[rgba\(7\,10\,18\,0\.9\)\] {
+  backdrop-filter: blur(16px) saturate(1.3);
+  -webkit-backdrop-filter: blur(16px) saturate(1.3);
+  background: linear-gradient(180deg, rgba(3, 5, 11, 0.82) 0%, rgba(3, 5, 11, 0.62) 100%) !important;
+  border-bottom-color: var(--lp-hairline) !important;
+}
+
+/* Nav logo — warm gold + blue rim light (matches logo metal / DNA tones) */
+.landing-page nav .lp-nav-logo-img {
+  filter:
+    brightness(1.04)
+    saturate(1.08)
+    drop-shadow(0 0 12px rgba(250, 204, 21, 0.28))
+    drop-shadow(0 0 26px rgba(59, 130, 246, 0.18));
+}
+/* ================================================================
+   HERO SECTION
+   ================================================================ */
+
+.landing-page .lp-hero {
+  position: relative;
+  z-index: 1;
+  /* nav heights: 64 / 80 / 96px → leave breathing room above title */
+  padding: 96px 1rem 40px;
+  overflow-x: clip;
+  overflow-y: visible;
+}
+@media (min-width: 640px) {
+  .landing-page .lp-hero { padding: 112px 1.5rem 44px; }
+}
+@media (min-width: 1024px) {
+  .landing-page .lp-hero { padding: 128px 3rem 48px; }
+}
+
+/* logo-color halos behind the headline */
+.landing-page .lp-hero::before {
+  content: "";
+  position: absolute;
+  top: 18%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: min(940px, 92%);
+  height: 440px;
+  background:
+    radial-gradient(ellipse at center, rgba(250, 204, 21, 0.12) 0%, transparent 62%),
+    radial-gradient(ellipse at 65% 40%, rgba(59, 130, 246, 0.11) 0%, transparent 55%),
+    radial-gradient(ellipse at 30% 55%, rgba(239, 68, 68, 0.06) 0%, transparent 50%);
+  filter: blur(42px);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* hairline accent — gold → blue */
+.landing-page .lp-hero::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 0;
+  transform: translateX(-50%);
+  width: min(420px, 72%);
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(250, 204, 21, 0.5) 35%, rgba(96, 165, 250, 0.55) 65%, transparent);
+  z-index: 2;
+}
+
+.landing-page .viron-hero.lp-hero {
+  min-height: min(100svh, 1080px);
+  display: flex;
+  flex-direction: column;
+}
+
+/* Hero: intro → visual → tail (mobile); desktop: copy column + tall visual */
+.landing-page .lp-hero-grid {
+  position: relative;
+  z-index: 1;
+  max-width: min(1180px, 100%);
+  margin: 0 auto;
+  display: grid;
+  gap: clamp(1.75rem, 4vw, 2.5rem);
+  align-items: center;
+  text-align: center;
+}
+
+@media (min-width: 1024px) {
+  .landing-page .lp-hero-grid {
+    grid-template-columns: minmax(0, 1fr) minmax(300px, 520px);
+    grid-template-rows: auto 1fr;
+    column-gap: 2.75rem;
+    row-gap: 1.75rem;
+    text-align: left;
+    align-items: start;
+  }
+
+  .landing-page .lp-hero-intro {
+    grid-column: 1;
+    grid-row: 1;
+  }
+
+  .landing-page .lp-hero-tail {
+    grid-column: 1;
+    grid-row: 2;
+    align-self: start;
+  }
+
+  .landing-page .lp-hero-visual {
+    grid-column: 2;
+    grid-row: 1 / -1;
+    align-self: center;
+  }
+}
+
+.landing-page .lp-hero-intro {
+  position: relative;
+  z-index: 1;
+  max-width: 720px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .landing-page .lp-hero-intro {
+    margin: 0;
+    max-width: none;
+  }
+}
+
+.landing-page .lp-hero-tail {
+  position: relative;
+  z-index: 1;
+  max-width: 640px;
+  margin: 0 auto;
+}
+
+@media (min-width: 1024px) {
+  .landing-page .lp-hero-tail {
+    margin: 0;
+    max-width: none;
+  }
+}
+
+/* ----------------------------------------------------------------
+   Hero 3D image cube — catalog JPEGs from /public (see VIRION_LOCAL_PRODUCTS).
+   ---------------------------------------------------------------- */
+
+.landing-page .lp-hero-visual {
+  position: relative;
+  justify-self: center;
+  width: min(100%, 480px);
+  padding: 0.25rem 0 1.5rem;
+}
+
+@media (min-width: 1024px) {
+  .landing-page .lp-hero-visual {
+    justify-self: end;
+    width: 100%;
+    max-width: 520px;
+    padding: 0 0 1rem;
+  }
+}
+
+.landing-page .lp-hero-visual-stage {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: clamp(288px, 82vw, 380px);
+  margin: 0 auto;
+  isolation: isolate;
+  overflow: visible;
+}
+
+@media (min-width: 1024px) {
+  .landing-page .lp-hero-visual-stage {
+    height: 400px;
+  }
+}
+
+.landing-page .lp-hero-cube-scene {
+  --hero-cube: min(228px, 52vw);
+  position: absolute;
+  inset: 0;
+  z-index: 2;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  perspective: 980px;
+  perspective-origin: 50% 42%;
+  pointer-events: none;
+}
+
+@media (min-width: 640px) {
+  .landing-page .lp-hero-cube-scene {
+    --hero-cube: min(252px, 48vw);
+  }
+}
+
+@media (min-width: 1024px) {
+  .landing-page .lp-hero-cube-scene {
+    --hero-cube: min(268px, 40vw);
+    perspective-origin: 50% 44%;
+  }
+}
+
+.landing-page .lp-hero-cube-tilt {
+  transform: rotateX(-14deg);
+  transform-style: preserve-3d;
+}
+
+.landing-page .lp-hero-cube-tumble {
+  width: var(--hero-cube);
+  height: var(--hero-cube);
+  transform-style: preserve-3d;
+  animation: lp-hero-cube-spin-y 26s linear infinite;
+  will-change: transform;
+}
+
+.landing-page .lp-hero-cube-tumble-inner {
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+  animation: lp-hero-cube-spin-x 18s linear infinite reverse;
+}
+
+.landing-page .lp-hero-cube {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  transform-style: preserve-3d;
+}
+
+.landing-page .lp-hero-cube-face {
+  position: absolute;
+  inset: 0;
+  margin: auto;
+  width: var(--hero-cube);
+  height: var(--hero-cube);
+  border-radius: 10px;
+  overflow: hidden;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  box-shadow:
+    inset 0 0 0 1px rgba(255, 255, 255, 0.12),
+    0 0 32px rgba(2, 6, 23, 0.45);
+}
+
+.landing-page .lp-hero-cube-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  display: block;
+  user-select: none;
+  -webkit-user-drag: none;
+  filter: saturate(1.06) brightness(1.02);
+}
+
+.landing-page .lp-hero-cube-face--front {
+  transform: rotateY(0deg) translateZ(calc(var(--hero-cube) / 2));
+}
+
+.landing-page .lp-hero-cube-face--back {
+  transform: rotateY(180deg) translateZ(calc(var(--hero-cube) / 2));
+}
+
+.landing-page .lp-hero-cube-face--right {
+  transform: rotateY(90deg) translateZ(calc(var(--hero-cube) / 2));
+}
+
+.landing-page .lp-hero-cube-face--left {
+  transform: rotateY(-90deg) translateZ(calc(var(--hero-cube) / 2));
+}
+
+.landing-page .lp-hero-cube-face--top {
+  transform: rotateX(90deg) translateZ(calc(var(--hero-cube) / 2));
+}
+
+.landing-page .lp-hero-cube-face--bottom {
+  transform: rotateX(-90deg) translateZ(calc(var(--hero-cube) / 2));
+}
+
+@keyframes lp-hero-cube-spin-y {
+  to {
+    transform: rotateY(1turn);
+  }
+}
+
+@keyframes lp-hero-cube-spin-x {
+  to {
+    transform: rotateX(1turn);
+  }
+}
+
+.landing-page .lp-hero-cube-scene--static .lp-hero-cube-tumble,
+.landing-page .lp-hero-cube-scene--static .lp-hero-cube-tumble-inner {
+  animation: none;
+  will-change: auto;
+}
+
+.landing-page .lp-hero-cube-scene--static .lp-hero-cube-tumble {
+  transform: rotateY(38deg);
+}
+
+.landing-page .lp-hero-cube-scene--static .lp-hero-cube-tumble-inner {
+  transform: rotateX(-22deg);
+}
+
+.landing-page .lp-hero-eyebrow {
+  display: inline-flex;
+  align-items: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11px;
+  letter-spacing: 0.2em;
+  text-transform: uppercase;
+  color: var(--lp-mint-bright);
+  text-shadow: 0 0 18px rgba(250, 204, 21, 0.35);
+  padding: 8px 18px;
+  border: 1px solid rgba(250, 204, 21, 0.35);
+  border-radius: 999px;
+  background: linear-gradient(120deg, rgba(250, 204, 21, 0.12), rgba(59, 130, 246, 0.1));
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
+  margin-bottom: 28px;
+}
+
+.landing-page .lp-hero-title {
+  font-size: clamp(2.25rem, 6vw, 4.75rem);
+  letter-spacing: -0.035em;
+  line-height: 1.02;
+  color: var(--lp-text);
+  margin-bottom: 22px;
+  text-wrap: balance;
+}
+
+.landing-page .lp-hero-lede {
+  font-size: clamp(1rem, 1.4vw, 1.18rem);
+  line-height: 1.55;
+  color: var(--lp-text-soft);
+  max-width: 60ch;
+  margin: 0 auto 36px;
+  text-wrap: balance;
+}
+
+@media (min-width: 1024px) {
+  .landing-page .lp-hero-lede {
+    margin-left: 0;
+    margin-right: 0;
+  }
+}
+
+.landing-page .lp-hero-ctas {
+  display: flex;
+  gap: 12px;
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: 36px;
+}
+
+@media (min-width: 1024px) {
+  .landing-page .lp-hero-ctas {
+    justify-content: flex-start;
+  }
+}
+
+.landing-page .lp-hero-ctas .btn-primary,
+.landing-page .lp-hero-ctas .btn-outline {
+  font-size: 14px;
+  padding: 14px 26px;
+}
+
+.landing-page .lp-hero-trust {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px 24px;
+  justify-content: center;
+  font-family: 'IBM Plex Mono', monospace;
+  font-size: 11.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--lp-text-muted);
+}
+
+@media (min-width: 1024px) {
+  .landing-page .lp-hero-trust {
+    justify-content: flex-start;
+  }
+}
+
+.landing-page .lp-hero-trust li {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.landing-page .lp-trust-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--lp-mint-bright), var(--lp-azure));
+  box-shadow: 0 0 8px rgba(250, 204, 21, 0.45), 0 0 12px rgba(59, 130, 246, 0.35);
+  display: inline-block;
+}
+
+/* Scoped product cards (.pc) — glass + neon rim on hover (catalog only lives on landing) */
+.landing-page .pc {
+  background: linear-gradient(160deg, rgba(15, 19, 35, 0.92), rgba(6, 8, 14, 0.88)) !important;
+  border: 1px solid rgba(226, 232, 240, 0.1) !important;
+  backdrop-filter: blur(16px);
+  border-radius: 18px !important;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06), 0 20px 50px rgba(0, 0, 0, 0.5) !important;
+}
+.landing-page .pc:hover {
+  border-color: rgba(96, 165, 250, 0.35) !important;
+  transform: translateY(-6px) scale(1.01);
+  box-shadow:
+    0 0 0 1px rgba(250, 204, 21, 0.15),
+    0 24px 60px rgba(2, 6, 23, 0.65),
+    0 0 60px rgba(59, 130, 246, 0.12) !important;
+}
+.landing-page .pc-accent-line {
+  background: linear-gradient(90deg, transparent, #eab308, #3b82f6, #ef4444, transparent) !important;
+}
+
+/* ================================================================
+   Catalog: tighten top padding so it sits close to the hero
+   ================================================================ */
+
+.landing-page section#catalog {
+  padding-top: 1.5rem !important;
+}
+@media (min-width: 1024px) {
+  .landing-page section#catalog { padding-top: 2.5rem !important; }
+}
+
+/* ================================================================
+   Reduced motion
+   ================================================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  .landing-page .landing-aurora,
+  .landing-page .btn-primary::after {
+    animation: none !important;
+    transition: none !important;
+  }
+
+  .landing-page .lp-hero-cube-tumble,
+  .landing-page .lp-hero-cube-tumble-inner {
+    animation: none !important;
+    will-change: auto !important;
+  }
+
+  .landing-page .lp-hero-cube-tumble {
+    transform: rotateY(38deg);
+  }
+
+  .landing-page .lp-hero-cube-tumble-inner {
+    transform: rotateX(-22deg);
+  }
+
+  /* Softer logo glow when user prefers reduced motion */
+  .landing-page nav .lp-nav-logo-img {
+    filter:
+      brightness(1.04)
+      saturate(1.08)
+      drop-shadow(0 0 10px rgba(250, 204, 21, 0.14))
+      drop-shadow(0 0 18px rgba(59, 130, 246, 0.12));
+  }
+}
+
+/* ================================================================
+   Dashboard + Admin: align accents with landing palette
+   ----------------------------------------------------------------
+   Keep existing structure/components, but remap legacy teal/purple
+   accents to the storefront brand tones (gold + blue + red).
+   ================================================================ */
+
+.dashboard-page [class*="text-[#2ED1B4]"],
+.dashboard-page [class*="text-[#26b89e]"],
+.dashboard-page [class*="text-[#22C55E]"],
+.admin-theme [class*="text-[#2ED1B4]"],
+.admin-theme [class*="text-[#26b89e]"],
+.admin-theme [class*="text-[#22C55E]"] {
+  color: #facc15 !important;
+}
+
+.dashboard-page [class*="text-[#8B5CF6]"],
+.admin-theme [class*="text-[#8B5CF6]"] {
+  color: #60a5fa !important;
+}
+
+.dashboard-page [class*="bg-[#2ED1B4]"],
+.dashboard-page [class*="bg-[#22C55E]"],
+.admin-theme [class*="bg-[#2ED1B4]"],
+.admin-theme [class*="bg-[#22C55E]"] {
+  background-color: #facc15 !important;
+}
+
+.dashboard-page [class*="bg-[rgba(46,209,180,"],
+.dashboard-page [class*="bg-[rgba(34,197,94,"],
+.admin-theme [class*="bg-[rgba(46,209,180,"],
+.admin-theme [class*="bg-[rgba(34,197,94,"] {
+  background-color: rgba(250, 204, 21, 0.14) !important;
+}
+
+.dashboard-page [class*="bg-[rgba(139,92,246,"],
+.admin-theme [class*="bg-[rgba(139,92,246,"] {
+  background-color: rgba(96, 165, 250, 0.14) !important;
+}
+
+.dashboard-page [class*="border-[rgba(46,209,180,"],
+.dashboard-page [class*="border-[rgba(34,197,94,"],
+.admin-theme [class*="border-[rgba(46,209,180,"],
+.admin-theme [class*="border-[rgba(34,197,94,"] {
+  border-color: rgba(250, 204, 21, 0.35) !important;
+}
+
+.dashboard-page [class*="border-[rgba(139,92,246,"],
+.admin-theme [class*="border-[rgba(139,92,246,"] {
+  border-color: rgba(96, 165, 250, 0.35) !important;
+}
+
+.dashboard-page [class*="focus:border-[#2ED1B4]"]:focus,
+.dashboard-page [class*="focus:border-[#26b89e]"]:focus,
+.admin-theme [class*="focus:border-[#2ED1B4]"]:focus,
+.admin-theme [class*="focus:border-[#26b89e]"]:focus {
+  border-color: #facc15 !important;
+}
+
+.dashboard-page [class*="ring-[#2ED1B4]"],
+.admin-theme [class*="ring-[#2ED1B4]"] {
+  --tw-ring-color: #facc15 !important;
+}
+
+.dashboard-page [class*="from-[#8B5CF6]"],
+.admin-theme [class*="from-[#8B5CF6]"] {
+  --tw-gradient-from: #60a5fa var(--tw-gradient-from-position) !important;
+  --tw-gradient-to: rgb(96 165 250 / 0) var(--tw-gradient-to-position) !important;
+  --tw-gradient-stops: var(--tw-gradient-from), var(--tw-gradient-to) !important;
+}
+
+.dashboard-page [class*="to-[#2ED1B4]"],
+.admin-theme [class*="to-[#2ED1B4]"] {
+  --tw-gradient-to: #facc15 var(--tw-gradient-to-position) !important;
+}
