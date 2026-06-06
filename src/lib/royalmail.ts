@@ -1,3 +1,5 @@
+const FREE_SHIPPING_THRESHOLD_SEK = 2500;
+
 // Royal Mail shipping helpers (UK)
 // Live Royal Mail / parcel-rate APIs are stubbed out; the frontend uses
 // DEFAULT_SHIPPING_RATES until an integration is wired up.
@@ -74,14 +76,15 @@ export const searchTowns = async (query: string): Promise<string[]> => {
 export const searchSuburbs = searchTowns;
 
 export const qualifiesForFreeShipping = (subtotal: number): boolean => {
-  void subtotal;
-  return false;
+  return subtotal >= FREE_SHIPPING_THRESHOLD_SEK;
 };
 
 export const getShippingCost = (
   subtotal: number,
   selectedRate: ShippingRate
 ): number => {
-  void subtotal;
+  if (qualifiesForFreeShipping(subtotal)) {
+    return 0;
+  }
   return selectedRate.price;
 };

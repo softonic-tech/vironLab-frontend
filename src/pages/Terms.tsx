@@ -183,7 +183,7 @@ export default function Terms() {
             <ul className="space-y-2 text-gray-400 mt-4">
               <li className="flex items-start gap-2">
                 <span className="text-[#2ED1B4]">•</span>
-                <span><strong className="text-white">Standard Shipping:</strong> 5-8 business days, flat rate 149 SEK</span>
+                <span><strong className="text-white">Standard Shipping:</strong> 5-8 business days, 149 SEK or free over 2500 SEK</span>
               </li>
             </ul>
             <p className="text-gray-400 leading-relaxed mt-4">

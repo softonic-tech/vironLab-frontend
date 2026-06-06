@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
-import { Mail, ArrowRight, Shield, Beaker, Truck, CreditCard, Hexagon } from 'lucide-react';
+import { Mail, ArrowRight, Shield, Beaker, CreditCard, Hexagon } from 'lucide-react';
 import { getSiteSetting, DEFAULT_SUPPORT_LINKS } from '@/lib/settings';
 import { fadeUp, staggerContainer } from '@/components/landing/motion';
 
@@ -78,7 +78,6 @@ export default function Footer() {
             {[
               { icon: Beaker, title: 'HPLC-verified', sub: '≥99% purity' },
               { icon: Shield, title: 'Lab tested', sub: 'Traceable QA' },
-              { icon: Truck, title: 'Fast shipping', sub: 'UK & EU tiers' },
               { icon: CreditCard, title: 'Secure checkout', sub: 'Encrypted payments' },
             ].map((f) => (
               <div key={f.title} className="flex items-center gap-3">

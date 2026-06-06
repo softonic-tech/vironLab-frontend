@@ -106,10 +106,11 @@ export default function Shipping() {
                     <div className="w-8 h-8 rounded-lg bg-[#2ED1B4] flex items-center justify-center">
                       <span className="text-[#070A12] font-bold text-sm">SEK</span>
                     </div>
-                    <span className="font-semibold text-[#F4F6FA]">Flat-Rate Standard Shipping</span>
+                    <span className="font-semibold text-[#F4F6FA]">FREE SHIPPING 2500 SEK+</span>
                   </div>
                   <p className="text-sm text-[#A9B3C7] ml-11">
-                    All orders use one standard shipping option at <strong className="text-[#F4F6FA]">149 SEK</strong>.
+                    Standard shipping is <strong className="text-[#F4F6FA]">149 SEK</strong>, and orders over{' '}
+                    <strong className="text-[#F4F6FA]">2500 SEK</strong> ship free.
                   </p>
                 </div>
               </section>

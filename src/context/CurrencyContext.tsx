@@ -13,7 +13,7 @@ interface CurrencyContextType {
 
 const STORAGE_KEY = 'vironlabs_currency';
 const GBP_RATE = 0.075;
-const EUR_RATE = 0.086;
+const EUR_RATE = 0.10;
 const USD_RATE = 0.094;
 
 const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined);

@@ -45,6 +45,8 @@ const shippingMethods: ShippingMethod[] = [
   { id: 'standard', name: 'Standard Shipping', description: 'Reliable tracked delivery', price: 149, estimatedDays: '5-8 business days' }
 ];
 
+const FREE_SHIPPING_THRESHOLD_SEK = 2500;
+
 const countryRegionOptions = [
   'United Kingdom',
   'Ireland',
@@ -358,7 +360,8 @@ export default function Checkout() {
     setAffiliateLoading(false);
   };
 
-  const shippingCost = shippingMethods.find(m => m.id === selectedShipping)?.price || 149;
+  const standardShippingCost = shippingMethods.find(m => m.id === selectedShipping)?.price || 149;
+  const shippingCost = paidItemsTotal >= FREE_SHIPPING_THRESHOLD_SEK ? 0 : standardShippingCost;
   const finalTotal = paidItemsTotal + shippingCost - pointsDiscount - affiliateDiscountAmount;
 
   // Legacy: Stripe or bookmarks pointed at `/checkout?order=…` or `?cancelled=1` (success/cancel use dedicated routes now).
@@ -837,8 +840,8 @@ export default function Checkout() {
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-gray-400">Shipping</span>
-                <span className="text-white">
-                  {`${ccySymbol}${toSelectedCurrency(shippingCost).toFixed(2)}`}
+                <span className={shippingCost === 0 ? 'text-green-400' : 'text-white'}>
+                  {shippingCost === 0 ? 'FREE' : `${ccySymbol}${toSelectedCurrency(shippingCost).toFixed(2)}`}
                 </span>
               </div>
               {affiliateDiscountAmount > 0 && (
@@ -975,7 +978,7 @@ export default function Checkout() {
                     <div className="flex justify-between">
                       <span className="text-xs text-white">{method.name}</span>
                       <span className="text-xs text-[#2ED1B4]">
-                        {`${ccySymbol}${toSelectedCurrency(method.price).toFixed(2)}`}
+                        {shippingCost === 0 ? 'FREE' : `${ccySymbol}${toSelectedCurrency(method.price).toFixed(2)}`}
                       </span>
                     </div>
                     <p className="text-[10px] text-gray-400">{method.estimatedDays}</p>

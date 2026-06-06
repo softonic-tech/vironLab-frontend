@@ -35,17 +35,6 @@ interface CartContextType {
 
 const CartContext = createContext<CartContextType | undefined>(undefined);
 
-const FREE_GIFT_THRESHOLD = 300;
-const FREE_GIFT_ITEM: CartItem = {
-  productId: 'free-bac-water',
-  name: 'BAC Water',
-  dosage: '3 mL',
-  price: 0,
-  quantity: 1,
-  image: '/bac-water.png',
-  isFree: true,
-};
-
 export function CartProvider({ children }: { children: React.ReactNode }) {
   const [items, setItems] = useState<CartItem[]>([]);
   const [isCartOpen, setIsCartOpen] = useState(false);
@@ -206,22 +195,16 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     .filter(item => !item.isFree)
     .reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // Auto-add/remove free gift based on threshold
+  // Free BAC/DAC Water gifts are disabled; clean up older saved carts that still contain them.
   useEffect(() => {
     const hasFreeGift = items.some(item => item.isFree);
-    
-    if (paidItemsTotal >= FREE_GIFT_THRESHOLD && !hasFreeGift) {
-      const newItems = [...items, FREE_GIFT_ITEM];
-      setItems(newItems);
-      saveCartToSupabase(newItems);
-      setFreeGiftAdded(true);
-    } else if (paidItemsTotal < FREE_GIFT_THRESHOLD && hasFreeGift) {
+    if (hasFreeGift) {
       const newItems = items.filter(item => !item.isFree);
       setItems(newItems);
       saveCartToSupabase(newItems);
-      setFreeGiftAdded(false);
     }
-  }, [paidItemsTotal]);
+    setFreeGiftAdded(false);
+  }, [items]);
 
   // Logged-in users: one cart reminder per ~7 days if the cart was last updated 24+ hours ago and still has items.
   useEffect(() => {
@@ -334,7 +317,7 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     setFreeGiftAdded(false);
   }, [userId]);
 
-  const totalItems = items.reduce((sum, item) => sum + item.quantity, 0);
+  const totalItems = items.filter(item => !item.isFree).reduce((sum, item) => sum + item.quantity, 0);
   const totalPrice = items.reduce((sum, item) => sum + item.price * item.quantity, 0);
 
   return (

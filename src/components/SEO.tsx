@@ -11,7 +11,7 @@ interface SEOProps {
 
 export function SEO({
   title = 'Viron Labs - UK Peptides | Premium Research Compounds',
-  description = 'Viron Labs offers premium quality peptides for research purposes. HPLC-verified ≥99% purity. Fast shipping across UK.',
+  description = 'Viron Labs offers premium quality peptides for research purposes. HPLC-verified ≥99% purity. Free shipping over 2500 SEK.',
   keywords = 'peptides, research peptides, UK peptides, Retatrutide, Semaglutide, Tirzepatide, NAD+, BPC-157, TB-500',
   ogImage = '/og-image.png',
   noIndex = false,

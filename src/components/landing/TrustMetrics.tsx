@@ -46,12 +46,12 @@ const metrics = [
   },
   {
     icon: Truck,
-    value: 149,
+    value: 2500,
     prefix: '',
     suffix: ' SEK',
     decimals: 0,
-    label: 'Standard shipping',
-    sub: 'Single flat-rate option',
+    label: 'Free shipping',
+    sub: 'Standard shipping threshold',
   },
   {
     icon: Zap,
