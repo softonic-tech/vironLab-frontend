@@ -112,7 +112,7 @@ export default function LandingHero() {
             </li>
             <li>
               <span className="lp-trust-dot" />
-              Free shipping £250+
+              Standard shipping 149 SEK
             </li>
           </motion.ul>
         </motion.div>

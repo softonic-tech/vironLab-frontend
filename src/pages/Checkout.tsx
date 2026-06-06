@@ -42,8 +42,7 @@ interface ShippingMethod {
 }
 
 const shippingMethods: ShippingMethod[] = [
-  { id: 'express', name: 'Express Shipping', description: 'Priority delivery with tracking', price: 15, estimatedDays: '2-4 business days' },
-  { id: 'standard', name: 'Standard Shipping', description: 'Reliable tracked delivery', price: 10, estimatedDays: '5-8 business days' }
+  { id: 'standard', name: 'Standard Shipping', description: 'Reliable tracked delivery', price: 149, estimatedDays: '5-8 business days' }
 ];
 
 const countryRegionOptions = [
@@ -269,7 +268,7 @@ export default function Checkout() {
     postcode: '',
     phone: ''
   });
-  const [selectedShipping, setSelectedShipping] = useState<string>('express');
+  const [selectedShipping, setSelectedShipping] = useState<string>('standard');
   const [agreedToTerms, setAgreedToTerms] = useState(true);
   const [ageVerified, setAgeVerified] = useState(false);
 
@@ -359,7 +358,7 @@ export default function Checkout() {
     setAffiliateLoading(false);
   };
 
-  const shippingCost = paidItemsTotal >= 250 ? 0 : shippingMethods.find(m => m.id === selectedShipping)?.price || 15;
+  const shippingCost = shippingMethods.find(m => m.id === selectedShipping)?.price || 149;
   const finalTotal = paidItemsTotal + shippingCost - pointsDiscount - affiliateDiscountAmount;
 
   // Legacy: Stripe or bookmarks pointed at `/checkout?order=…` or `?cancelled=1` (success/cancel use dedicated routes now).
@@ -838,8 +837,8 @@ export default function Checkout() {
               </div>
               <div className="flex justify-between text-xs">
                 <span className="text-gray-400">Shipping</span>
-                <span className={paidItemsTotal >= 250 ? 'text-green-400' : 'text-white'}>
-                  {paidItemsTotal >= 250 ? 'FREE' : `${ccySymbol}${toSelectedCurrency(shippingCost).toFixed(2)}`}
+                <span className="text-white">
+                  {`${ccySymbol}${toSelectedCurrency(shippingCost).toFixed(2)}`}
                 </span>
               </div>
               {affiliateDiscountAmount > 0 && (
@@ -976,7 +975,7 @@ export default function Checkout() {
                     <div className="flex justify-between">
                       <span className="text-xs text-white">{method.name}</span>
                       <span className="text-xs text-[#2ED1B4]">
-                        {paidItemsTotal >= 250 ? 'FREE' : `${ccySymbol}${toSelectedCurrency(method.price).toFixed(2)}`}
+                        {`${ccySymbol}${toSelectedCurrency(method.price).toFixed(2)}`}
                       </span>
                     </div>
                     <p className="text-[10px] text-gray-400">{method.estimatedDays}</p>

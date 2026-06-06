@@ -1,4 +1,4 @@
-import { ArrowLeft, Truck, MapPin, Package, Globe, Mail } from 'lucide-react';
+import { ArrowLeft, Truck, MapPin, Globe, Mail } from 'lucide-react';
 
 export default function Shipping() {
   return (
@@ -82,27 +82,15 @@ export default function Shipping() {
               </section>
 
               <section>
-                <h2 className="text-xl font-bold text-[#F4F6FA] mb-4">3. Shipping Methods</h2>
+                <h2 className="text-xl font-bold text-[#F4F6FA] mb-4">3. Shipping Method</h2>
                 <div className="space-y-4">
                   <div className="p-4 rounded-xl bg-[rgba(46,209,180,0.05)] border border-[rgba(46,209,180,0.2)]">
                     <div className="flex items-center justify-between mb-2">
                       <div className="flex items-center gap-3">
                         <Truck className="w-5 h-5 text-[#2ED1B4]" />
-                        <span className="font-semibold text-[#F4F6FA]">Express Shipping</span>
-                      </div>
-                      <span className="text-[#2ED1B4] font-medium">£15.00</span>
-                    </div>
-                    <p className="text-sm text-[#A9B3C7] ml-8">
-                      2-4 business days with tracking. Priority handling and delivery.
-                    </p>
-                  </div>
-                  <div className="p-4 rounded-xl bg-[rgba(139,92,246,0.05)] border border-[rgba(139,92,246,0.2)]">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center gap-3">
-                        <Package className="w-5 h-5 text-[#8B5CF6]" />
                         <span className="font-semibold text-[#F4F6FA]">Standard Shipping</span>
                       </div>
-                      <span className="text-[#8B5CF6] font-medium">£10.00</span>
+                      <span className="text-[#2ED1B4] font-medium">149 SEK</span>
                     </div>
                     <p className="text-sm text-[#A9B3C7] ml-8">
                       5-8 business days with tracking. Reliable and cost-effective.
@@ -112,16 +100,16 @@ export default function Shipping() {
               </section>
 
               <section>
-                <h2 className="text-xl font-bold text-[#F4F6FA] mb-4">4. Free Shipping</h2>
+                <h2 className="text-xl font-bold text-[#F4F6FA] mb-4">4. Shipping Cost</h2>
                 <div className="p-4 rounded-xl bg-[rgba(46,209,180,0.1)] border border-[rgba(46,209,180,0.2)]">
                   <div className="flex items-center gap-3 mb-2">
                     <div className="w-8 h-8 rounded-lg bg-[#2ED1B4] flex items-center justify-center">
-                      <span className="text-[#070A12] font-bold text-sm">FREE</span>
+                      <span className="text-[#070A12] font-bold text-sm">SEK</span>
                     </div>
-                    <span className="font-semibold text-[#F4F6FA]">Free Express Shipping</span>
+                    <span className="font-semibold text-[#F4F6FA]">Flat-Rate Standard Shipping</span>
                   </div>
                   <p className="text-sm text-[#A9B3C7] ml-11">
-                    All orders over <strong className="text-[#F4F6FA]">£150 GBP</strong> qualify for free express shipping within UK.
+                    All orders use one standard shipping option at <strong className="text-[#F4F6FA]">149 SEK</strong>.
                   </p>
                 </div>
               </section>

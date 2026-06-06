@@ -166,7 +166,7 @@ export default function Terms() {
               methods as specified at checkout. Orders will not be shipped until payment is received and cleared.
             </p>
             <p className="text-gray-400 leading-relaxed mt-4">
-              <strong className="text-white">Pricing:</strong> All prices are in British Dollars (GBP) and include GST where applicable.
+              <strong className="text-white">Pricing:</strong> All prices are in Swedish Krona (SEK) and include GST where applicable.
               Prices are subject to change without notice.
             </p>
           </section>
@@ -183,11 +183,7 @@ export default function Terms() {
             <ul className="space-y-2 text-gray-400 mt-4">
               <li className="flex items-start gap-2">
                 <span className="text-[#2ED1B4]">•</span>
-                <span><strong className="text-white">Express Shipping:</strong> 2-4 business days (£15 or FREE over £250)</span>
-              </li>
-              <li className="flex items-start gap-2">
-                <span className="text-[#2ED1B4]">•</span>
-                <span><strong className="text-white">Standard Shipping:</strong> 5-8 business days (£10 or FREE over £250)</span>
+                <span><strong className="text-white">Standard Shipping:</strong> 5-8 business days, flat rate 149 SEK</span>
               </li>
             </ul>
             <p className="text-gray-400 leading-relaxed mt-4">

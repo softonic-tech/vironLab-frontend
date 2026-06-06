@@ -46,12 +46,12 @@ const metrics = [
   },
   {
     icon: Truck,
-    value: 250,
-    prefix: '£',
-    suffix: '+',
+    value: 149,
+    prefix: '',
+    suffix: ' SEK',
     decimals: 0,
-    label: 'Free shipping',
-    sub: 'Tiered UK & EU delivery',
+    label: 'Standard shipping',
+    sub: 'Single flat-rate option',
   },
   {
     icon: Zap,

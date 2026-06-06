@@ -36,7 +36,6 @@ export default function CartDrawer() {
 
   const [suggestedItems, setSuggestedItems] = useState<SuggestedItem[]>([]);
 
-  const freeShippingThreshold = 250;
   const freeGiftThreshold = 300;
   
   const paidItems = items.filter(item => !item.isFree);
@@ -53,7 +52,6 @@ export default function CartDrawer() {
     return sum;
   }, 0);
   
-  const remainingForFreeShipping = Math.max(0, freeShippingThreshold - paidTotal);
   const remainingForFreeGift = Math.max(0, freeGiftThreshold - paidTotal);
 
   const paidProductIdsInCart = new Set(
@@ -170,29 +168,15 @@ export default function CartDrawer() {
 
         {/* Progress Section - Compact */}
         <div className="px-3 py-2 sm:px-4 sm:py-3 bg-[rgba(7,10,18,0.5)] border-b border-[rgba(244,246,250,0.08)] space-y-2 sm:space-y-3">
-          {/* Free Shipping Progress */}
-          <div>
-            <div className="flex items-center justify-between mb-0.5 sm:mb-1">
-              <div className="flex items-center gap-1 sm:gap-1.5">
-                <Truck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#2ED1B4]" />
-                {remainingForFreeShipping > 0 ? (
-                  <span className="text-[10px] sm:text-xs text-[#A9B3C7]">
-                    Add <span className="text-[#2ED1B4] font-medium">{symbol}{convert(remainingForFreeShipping).toFixed(0)}</span> for free shipping
-                  </span>
-                ) : (
-                  <span className="text-[10px] sm:text-xs text-[#2ED1B4] font-medium">
-                    Free shipping unlocked!
-                  </span>
-                )}
-              </div>
-              <span className="text-[9px] sm:text-[10px] text-[#A9B3C7]">{symbol}{convert(paidTotal).toFixed(0)}/{symbol}{convert(freeShippingThreshold).toFixed(0)}</span>
+          {/* Shipping Notice */}
+          <div className="flex items-center justify-between gap-2">
+            <div className="flex items-center gap-1 sm:gap-1.5">
+              <Truck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#2ED1B4]" />
+              <span className="text-[10px] sm:text-xs text-[#A9B3C7]">
+                Standard shipping <span className="text-[#2ED1B4] font-medium">149 SEK</span>
+              </span>
             </div>
-            <div className="h-1 sm:h-1.5 bg-[rgba(244,246,250,0.08)] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-[#2ED1B4] to-[#3B82F6] transition-all duration-500"
-                style={{ width: `${Math.min(100, (paidTotal / freeShippingThreshold) * 100)}%` }}
-              />
-            </div>
+            <span className="text-[9px] sm:text-[10px] text-[#A9B3C7]">Flat rate</span>
           </div>
 
           {/* Free Gift Progress */}

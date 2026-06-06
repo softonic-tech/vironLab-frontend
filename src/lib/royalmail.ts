@@ -13,22 +13,15 @@ export interface ShippingRate {
   estimatedDays: string;
 }
 
-// Default UK shipping rates (fallback if API fails).
-// Prices in GBP.
+// Default shipping rate (fallback if API fails).
+// Prices in SEK.
 export const DEFAULT_SHIPPING_RATES: ShippingRate[] = [
   {
-    id: 'express',
-    name: 'Royal Mail Special Delivery',
-    description: '1 business day (tracked, signed-for)',
-    price: 9.95,
-    estimatedDays: '1 day',
-  },
-  {
     id: 'standard',
-    name: 'Royal Mail Tracked 48',
-    description: '2-3 business days (tracked)',
-    price: 4.95,
-    estimatedDays: '2-3 days',
+    name: 'Standard Shipping',
+    description: 'Reliable tracked delivery',
+    price: 149,
+    estimatedDays: '5-8 business days',
   },
 ];
 
@@ -80,19 +73,15 @@ export const searchTowns = async (query: string): Promise<string[]> => {
 /** @deprecated Alias kept so older imports don't break. */
 export const searchSuburbs = searchTowns;
 
-// Free shipping threshold (GBP)
-export const FREE_SHIPPING_THRESHOLD = 250;
-
 export const qualifiesForFreeShipping = (subtotal: number): boolean => {
-  return subtotal >= FREE_SHIPPING_THRESHOLD;
+  void subtotal;
+  return false;
 };
 
 export const getShippingCost = (
   subtotal: number,
   selectedRate: ShippingRate
 ): number => {
-  if (qualifiesForFreeShipping(subtotal)) {
-    return 0;
-  }
+  void subtotal;
   return selectedRate.price;
 };
