@@ -227,7 +227,7 @@ export default function ContactInfo() {
               </p>
             </div>
 
-            <div className="p-6 rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
+            <div className="p-6 rounded-2xl bg-[rgba(72, 78, 92, 0.6)] border border-[rgba(244,246,250,0.08)]">
               <div className="flex items-center gap-3 mb-4">
                 <MessageCircle className="w-5 h-5 text-amber-400" />
                 <h3 className="text-lg font-bold text-[#F4F6FA]">Support Hours</h3>
