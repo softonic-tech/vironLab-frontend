@@ -1,0 +1,15 @@
+export const cart = {
+  title: 'Your Cart',
+  empty: 'Your cart is empty',
+  emptyHint: 'Add some peptides to get started',
+  youMightNeed: 'You might also need:',
+  savePercent: 'Save {{percent}}% ({{amount}})',
+  saving: 'Saving',
+  subtotal: 'Subtotal',
+  total: 'Total',
+  checkout: 'Checkout',
+  continueShopping: 'Continue shopping',
+  addForFreeShipping: 'Add {{amount}} for free shipping',
+  freeShippingUnlocked: 'FREE SHIPPING unlocked!',
+  earnPoints: '{{points}} pts',
+};

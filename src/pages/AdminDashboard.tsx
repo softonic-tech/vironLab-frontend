@@ -24,8 +24,43 @@ import {
 } from '@/lib/affiliates';
 import { formatOrderNumberDisplay } from '@/utils/order-number';
 import { sendPaymentReceived, sendOrderShipped } from '@/lib/email';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslation, useLanguage } from '@/i18n';
 
 const POINTS_SYSTEM_ENABLED = false;
+
+type TranslateFn = ReturnType<typeof useTranslation>['t'];
+
+function isLikelyNetworkFailure(err: unknown): boolean {
+  const m =
+    err && typeof err === 'object' && 'message' in err
+      ? String((err as { message: unknown }).message)
+      : typeof err === 'string'
+        ? err
+        : '';
+  return /failed to fetch|networkerror|internet disconnected|load failed|network request failed|err_internet_disconnected|fetcherror/i.test(
+    m
+  );
+}
+
+function orderStatusLabel(t: TranslateFn, status: string): string {
+  const key = `admin.statusLabels.${status}` as const;
+  const translated = t(key);
+  return translated === key ? status.replace(/_/g, ' ') : translated;
+}
+
+function adminRequestErrorMessage(t: TranslateFn, err: unknown): string {
+  if (isLikelyNetworkFailure(err)) {
+    return t('admin.orders.networkError');
+  }
+  if (err && typeof err === 'object') {
+    const o = err as Record<string, unknown>;
+    if (typeof o.message === 'string' && o.message.trim()) return o.message;
+    if (typeof o.error_description === 'string' && o.error_description.trim()) return o.error_description;
+    if (o.error != null) return String(o.error);
+  }
+  return t('admin.common.unknownError');
+}
 
 // Types
 interface Order {
@@ -72,6 +107,9 @@ interface Product {
 }
 
 export default function AdminDashboard() {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  const dateLocale = language === 'sv' ? 'sv-SE' : 'en-GB';
   const [activeTab, setActiveTab] = useState<'overview' | 'orders' | 'products' | 'users' | 'reviews' | 'affiliates' | 'settings'>('overview');
   const [isAdmin, setIsAdmin] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
@@ -207,13 +245,13 @@ export default function AdminDashboard() {
   if (!isAdmin) return null;
 
   const navItems = [
-    { id: 'overview', label: 'Overview', icon: LayoutDashboard },
-    { id: 'orders', label: 'Orders', icon: ShoppingCart },
-    { id: 'products', label: 'Products', icon: Package },
-    { id: 'users', label: 'Users', icon: Users },
-    { id: 'reviews', label: 'Reviews', icon: MessageSquare },
-    { id: 'affiliates', label: 'Influencers', icon: Link2 },
-    { id: 'settings', label: 'Settings', icon: Settings },
+    { id: 'overview', label: t('admin.tabs.overview'), icon: LayoutDashboard },
+    { id: 'orders', label: t('admin.tabs.orders'), icon: ShoppingCart },
+    { id: 'products', label: t('admin.tabs.products'), icon: Package },
+    { id: 'users', label: t('admin.tabs.users'), icon: Users },
+    { id: 'reviews', label: t('admin.tabs.reviews'), icon: MessageSquare },
+    { id: 'affiliates', label: t('admin.tabs.affiliates'), icon: Link2 },
+    { id: 'settings', label: t('admin.tabs.settings'), icon: Settings },
   ];
 
   return (
@@ -259,12 +297,12 @@ export default function AdminDashboard() {
             </div>
             <div className="min-w-0">
               <p className="text-sm font-medium text-[#F4F6FA] truncate">{adminEmail.split('@')[0]}</p>
-              <p className="text-xs text-[#2ED1B4]">Administrator</p>
+              <p className="text-xs text-[#2ED1B4]">{t('admin.administrator')}</p>
             </div>
           </div>
           <button onClick={handleLogout} className="w-full flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.15)] text-[#EF4444] hover:bg-[rgba(239,68,68,0.2)] transition-colors text-sm font-medium">
             <LogOut className="w-4 h-4" />
-            Sign Out
+            {t('admin.signOut')}
           </button>
         </div>
       </aside>
@@ -280,16 +318,19 @@ export default function AdminDashboard() {
               <p className="text-sm font-bold text-[#F4F6FA] truncate">
                 {navItems.find(n => n.id === activeTab)?.label}
               </p>
-              <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#2ED1B4]">Viron Labs ADMIN</p>
+              <p className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#2ED1B4]">{t('admin.brand')}</p>
             </div>
           </div>
-          <button
-            onClick={handleLogout}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] text-[#EF4444] text-xs font-medium active:scale-95 transition-all"
-          >
-            <LogOut className="w-3.5 h-3.5" />
-            <span>Sign out</span>
-          </button>
+          <div className="flex items-center gap-2">
+            <LanguageSwitcher />
+            <button
+              onClick={handleLogout}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] text-[#EF4444] text-xs font-medium active:scale-95 transition-all"
+            >
+              <LogOut className="w-3.5 h-3.5" />
+              <span>{t('admin.signOutMobile')}</span>
+            </button>
+          </div>
         </div>
       </header>
 
@@ -329,10 +370,10 @@ export default function AdminDashboard() {
               {navItems.find(n => n.id === activeTab)?.label}
             </h1>
             <div className="hidden sm:block text-sm text-[#A9B3C7]">
-              {new Date().toLocaleDateString('en-GB', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
+              {new Date().toLocaleDateString(dateLocale, { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}
             </div>
             <div className="sm:hidden text-xs text-[#A9B3C7]">
-              {new Date().toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+              {new Date().toLocaleDateString(dateLocale, { day: 'numeric', month: 'short' })}
             </div>
           </div>
 
@@ -406,6 +447,7 @@ function aggregateBestSellers(
 
 // Overview Section
 function OverviewSection() {
+  const { t } = useTranslation();
   const [stats, setStats] = useState({
     totalOrders: 0,
     pendingPayment: 0,
@@ -535,11 +577,11 @@ function OverviewSection() {
     <div className="space-y-6">
       {/* Stats Grid */}
       <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
-        <StatCard label="Total Orders" value={stats.totalOrders.toString()} icon={ShoppingCart} color="#8B5CF6" />
-        <StatCard label="Awaiting Payment" value={stats.pendingPayment.toString()} icon={CreditCard} color="#F59E0B" />
-        <StatCard label="Revenue" value={`kr ${stats.totalRevenue.toFixed(0)}`} icon={DollarSign} color="#22C55E" />
-        <StatCard label="Users" value={stats.totalUsers.toString()} icon={Users} color="#3B82F6" />
-        <StatCard label="Products" value={stats.totalProducts.toString()} icon={Package} color="#2ED1B4" />
+        <StatCard label={t('admin.overview.totalOrders')} value={stats.totalOrders.toString()} icon={ShoppingCart} color="#8B5CF6" />
+        <StatCard label={t('admin.overview.awaitingPayment')} value={stats.pendingPayment.toString()} icon={CreditCard} color="#F59E0B" />
+        <StatCard label={t('admin.overview.revenue')} value={`kr ${stats.totalRevenue.toFixed(0)}`} icon={DollarSign} color="#22C55E" />
+        <StatCard label={t('admin.overview.users')} value={stats.totalUsers.toString()} icon={Users} color="#3B82F6" />
+        <StatCard label={t('admin.overview.products')} value={stats.totalProducts.toString()} icon={Package} color="#2ED1B4" />
       </div>
 
       {/* Best Sellers */}
@@ -548,25 +590,25 @@ function OverviewSection() {
         <div className="flex flex-wrap items-start sm:items-center justify-between gap-3 mb-5">
           <h3 className="text-base sm:text-lg font-semibold text-[#F4F6FA] flex items-center gap-2">
             <TrendingUp className="w-5 h-5 text-[#2ED1B4]" />
-            Best Sellers
+            {t('admin.overview.bestSellers')}
           </h3>
 
           {/* Controls */}
           <div className="flex flex-wrap items-center gap-2">
             {/* Time period */}
             <div className="flex rounded-xl overflow-hidden border border-[rgba(244,246,250,0.08)]">
-              {(['7d', '30d', '90d', 'all'] as const).map((t) => (
+              {(['7d', '30d', '90d', 'all'] as const).map((period) => (
                 <button
-                  key={t}
+                  key={period}
                   type="button"
-                  onClick={() => setBsTime(t)}
+                  onClick={() => setBsTime(period)}
                   className={`px-3 py-1.5 text-xs font-semibold transition-colors ${
-                    bsTime === t
+                    bsTime === period
                       ? 'bg-[rgba(46,209,180,0.2)] text-[#2ED1B4]'
                       : 'text-[#6B7280] hover:text-[#A9B3C7]'
                   }`}
                 >
-                  {t === 'all' ? 'All time' : t === '7d' ? '7 days' : t === '30d' ? '30 days' : '90 days'}
+                  {period === 'all' ? t('admin.overview.allTime') : period === '7d' ? t('admin.overview.days7') : period === '30d' ? t('admin.overview.days30') : t('admin.overview.days90')}
                 </button>
               ))}
             </div>
@@ -583,7 +625,7 @@ function OverviewSection() {
                 }`}
               >
                 <BarChart2 className="w-3.5 h-3.5" />
-                Units
+                {t('admin.overview.units')}
               </button>
               <button
                 type="button"
@@ -595,7 +637,7 @@ function OverviewSection() {
                 }`}
               >
                 <DollarSign className="w-3.5 h-3.5" />
-                Revenue
+                {t('admin.overview.revenue')}
               </button>
             </div>
           </div>
@@ -604,7 +646,7 @@ function OverviewSection() {
         {bestSellers.length === 0 ? (
           <div className="flex flex-col items-center gap-3 py-10 text-[#5A667E]">
             <FlaskConical className="w-8 h-8 opacity-40" />
-            <p className="text-sm">No sales data for this period yet.</p>
+            <p className="text-sm">{t('admin.overview.noSalesData')}</p>
           </div>
         ) : (
           <ol className="space-y-3">
@@ -636,7 +678,7 @@ function OverviewSection() {
                       </div>
                       <div className="flex items-center gap-3 shrink-0 text-right">
                         <span className="text-xs text-[#A9B3C7] whitespace-nowrap">
-                          {item.unitsSold} {item.unitsSold === 1 ? 'unit' : 'units'}
+                          {item.unitsSold} {item.unitsSold === 1 ? t('admin.common.unit') : t('admin.common.units')}
                         </span>
                         <span className="text-sm font-bold whitespace-nowrap" style={{ color: rankColor }}>
                           kr {item.revenue.toFixed(0)}
@@ -658,8 +700,7 @@ function OverviewSection() {
         )}
 
         <p className="mt-5 text-[11px] text-[#5A667E]">
-          Excludes cancelled orders and free-gift items from revenue.
-          Counts all confirmed, processing, shipped, and delivered orders.
+          {t('admin.overview.bestSellersFootnote')}
         </p>
       </div>
 
@@ -667,23 +708,23 @@ function OverviewSection() {
       <div className="p-6 rounded-2xl bg-gradient-to-br from-[rgba(46,209,180,0.1)] to-[rgba(139,92,246,0.1)] border border-[rgba(46,209,180,0.2)]">
         <h3 className="text-lg font-semibold text-[#F4F6FA] mb-4 flex items-center gap-2">
           <CreditCard className="w-5 h-5 text-[#2ED1B4]" />
-          Bank Account Details (For Customer Payments)
+          {t('admin.overview.bankDetailsTitle')}
         </h3>
         <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
           <div className="p-3 rounded-lg bg-[rgba(7,10,18,0.5)]">
-            <p className="text-[10px] text-[#A9B3C7] uppercase">Sort Code</p>
+            <p className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.sortCode')}</p>
             <p className="text-sm font-mono text-[#F4F6FA]">{CONFIG.BANK_DETAILS.SORT_CODE}</p>
           </div>
           <div className="p-3 rounded-lg bg-[rgba(7,10,18,0.5)]">
-            <p className="text-[10px] text-[#A9B3C7] uppercase">Account Number</p>
+            <p className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.accountNumber')}</p>
             <p className="text-sm font-mono text-[#F4F6FA]">{CONFIG.BANK_DETAILS.ACCOUNT_NUMBER}</p>
           </div>
           <div className="p-3 rounded-lg bg-[rgba(7,10,18,0.5)]">
-            <p className="text-[10px] text-[#A9B3C7] uppercase">Account Name</p>
+            <p className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.accountName')}</p>
             <p className="text-sm text-[#F4F6FA]">{CONFIG.BANK_DETAILS.ACCOUNT_NAME}</p>
           </div>
           <div className="p-3 rounded-lg bg-[rgba(7,10,18,0.5)]">
-            <p className="text-[10px] text-[#A9B3C7] uppercase">Bank</p>
+            <p className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.bank')}</p>
             <p className="text-sm text-[#F4F6FA]">{CONFIG.BANK_DETAILS.BANK_NAME}</p>
           </div>
         </div>
@@ -691,9 +732,9 @@ function OverviewSection() {
 
       {/* Recent Orders */}
       <div className="p-4 sm:p-6 rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
-        <h3 className="text-base sm:text-lg font-semibold text-[#F4F6FA] mb-3">Recent Orders</h3>
+        <h3 className="text-base sm:text-lg font-semibold text-[#F4F6FA] mb-3">{t('admin.recentOrders')}</h3>
         {recentOrders.length === 0 ? (
-          <p className="text-[#A9B3C7] text-center py-8">No orders yet</p>
+          <p className="text-[#A9B3C7] text-center py-8">{t('admin.noOrdersYet')}</p>
         ) : (
           <div className="space-y-2">
             {recentOrders.map(order => (
@@ -710,7 +751,7 @@ function OverviewSection() {
                 {/* Right: status badge + total */}
                 <div className="shrink-0 flex flex-col items-end gap-1">
                   <span className={`px-2 py-0.5 rounded-md text-[10px] font-semibold leading-tight whitespace-nowrap ${getStatusColor(order.status)}`}>
-                    {order.status.replace(/_/g, ' ')}
+                    {orderStatusLabel(t, order.status)}
                   </span>
                   <span className="text-sm font-bold text-[#2ED1B4]">kr {order.total?.toFixed(2)}</span>
                 </div>
@@ -723,34 +764,10 @@ function OverviewSection() {
   );
 }
 
-function isLikelyNetworkFailure(err: unknown): boolean {
-  const m =
-    err && typeof err === 'object' && 'message' in err
-      ? String((err as { message: unknown }).message)
-      : typeof err === 'string'
-        ? err
-        : '';
-  return /failed to fetch|networkerror|internet disconnected|load failed|network request failed|err_internet_disconnected|fetcherror/i.test(
-    m
-  );
-}
-
-/** User-facing copy for admin alerts (avoids raw "TypeError: Failed to fetch"). */
-function adminRequestErrorMessage(err: unknown): string {
-  if (isLikelyNetworkFailure(err)) {
-    return 'No internet connection or the browser blocked the request. Check Wi‑Fi/VPN, then try again.';
-  }
-  if (err && typeof err === 'object') {
-    const o = err as Record<string, unknown>;
-    if (typeof o.message === 'string' && o.message.trim()) return o.message;
-    if (typeof o.error_description === 'string' && o.error_description.trim()) return o.error_description;
-    if (o.error != null) return String(o.error);
-  }
-  return 'Unknown error';
-}
-
 // Orders Section - Full Order Management
 function OrdersSection() {
+  const { t, language } = useTranslation();
+  const dateLocale = language === 'sv' ? 'sv-SE' : 'en-GB';
   const [orders, setOrders] = useState<Order[]>([]);
   const [loading, setLoading] = useState(true);
   const [statusFilter, setStatusFilter] = useState<string>('all');
@@ -808,7 +825,7 @@ function OrdersSection() {
       setSelectedOrder((prev) => (prev && prev.id === orderId ? { ...prev, status: newStatus } : prev));
     } catch (error) {
       console.error('Error updating order:', error);
-      alert('Failed to update order status: ' + adminRequestErrorMessage(error));
+      alert(t('admin.orders.failUpdateStatus', { message: adminRequestErrorMessage(t, error) }));
     } finally {
       setIsUpdating(false);
     }
@@ -856,7 +873,7 @@ function OrdersSection() {
       }
     } catch (err: unknown) {
       console.error('Error updating payment:', err);
-      alert('Failed to update payment status: ' + adminRequestErrorMessage(err));
+      alert(t('admin.orders.failUpdatePayment', { message: adminRequestErrorMessage(t, err) }));
     } finally {
       setIsUpdating(false);
     }
@@ -900,10 +917,10 @@ function OrdersSection() {
         return { ...prev, tracking_number: trimmedTracking, status: 'shipped' };
       });
 
-      alert('Tracking added!');
+      alert(t('admin.orders.trackingAdded'));
     } catch (error) {
       console.error('Error adding tracking:', error);
-      alert('Failed to add tracking number: ' + adminRequestErrorMessage(error));
+      alert(t('admin.orders.failAddTracking', { message: adminRequestErrorMessage(t, error) }));
     } finally {
       setIsUpdating(false);
     }
@@ -921,7 +938,7 @@ function OrdersSection() {
       await loadOrders(true);
     } catch (err: any) {
       console.error('Error deleting order:', err);
-      alert('Failed to delete order: ' + (err?.message || 'Unknown error'));
+      alert(t('admin.orders.failDelete', { message: err?.message || t('admin.common.unknownError') }));
     } finally {
       setIsDeleting(false);
     }
@@ -943,16 +960,16 @@ function OrdersSection() {
   });
 
   const statusLabels: Record<string, string> = {
-    all: 'All',
-    pending_payment: 'Awaiting payment',
-    processing: 'Processing',
-    shipped: 'Shipped',
-    delivered: 'Delivered',
-    cancelled: 'Cancelled',
+    all: t('admin.statusLabels.all'),
+    pending_payment: t('admin.statusLabels.pending_payment'),
+    processing: t('admin.statusLabels.processing'),
+    shipped: t('admin.statusLabels.shipped'),
+    delivered: t('admin.statusLabels.delivered'),
+    cancelled: t('admin.statusLabels.cancelled'),
   };
 
   const formatDate = (dateString: string) => {
-    return new Date(dateString).toLocaleDateString('en-GB', {
+    return new Date(dateString).toLocaleDateString(dateLocale, {
       day: '2-digit', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit'
     });
   };
@@ -996,18 +1013,18 @@ function OrdersSection() {
       {/* Stats - status cards clickable to filter */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4">
         <button type="button" onClick={() => setStatusFilter('all')} className="text-left">
-          <StatCard label="All Orders" value={orders.length.toString()} icon={ShoppingCart} color="#8B5CF6" />
+          <StatCard label={t('admin.orders.allOrders')} value={orders.length.toString()} icon={ShoppingCart} color="#8B5CF6" />
         </button>
         <button type="button" onClick={() => setStatusFilter('pending_payment')} className="text-left">
-          <StatCard label="Awaiting Payment" value={orders.filter(o => o.status === 'pending_payment').length.toString()} icon={CreditCard} color="#F59E0B" />
+          <StatCard label={t('admin.overview.awaitingPayment')} value={orders.filter(o => o.status === 'pending_payment').length.toString()} icon={CreditCard} color="#F59E0B" />
         </button>
         <button type="button" onClick={() => setStatusFilter('processing')} className="text-left">
-          <StatCard label="Processing" value={orders.filter(o => o.status === 'processing').length.toString()} icon={Box} color="#8B5CF6" />
+          <StatCard label={t('admin.statusLabels.processing')} value={orders.filter(o => o.status === 'processing').length.toString()} icon={Box} color="#8B5CF6" />
         </button>
         <button type="button" onClick={() => setStatusFilter('shipped')} className="text-left">
-          <StatCard label="Shipped" value={orders.filter(o => o.status === 'shipped').length.toString()} icon={Truck} color="#2ED1B4" />
+          <StatCard label={t('admin.statusLabels.shipped')} value={orders.filter(o => o.status === 'shipped').length.toString()} icon={Truck} color="#2ED1B4" />
         </button>
-        <StatCard label="Revenue" value={`kr ${orders.reduce((sum, o) => sum + (o.total || 0), 0).toFixed(0)}`} icon={DollarSign} color="#22C55E" />
+        <StatCard label={t('admin.overview.revenue')} value={`kr ${orders.reduce((sum, o) => sum + (o.total || 0), 0).toFixed(0)}`} icon={DollarSign} color="#22C55E" />
       </div>
 
       {/* Filters card */}
@@ -1019,12 +1036,12 @@ function OrdersSection() {
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search by order #, email, or customer name..."
+              placeholder={t('admin.orders.searchPlaceholder')}
               className="w-full pl-12 pr-4 py-3 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] placeholder-[#A9B3C7] focus:outline-none focus:border-[#2ED1B4] transition-colors"
             />
           </div>
           <div className="flex flex-wrap items-center gap-2 relative z-10">
-            <span className="text-xs text-[#A9B3C7] mr-1">Status:</span>
+            <span className="text-xs text-[#A9B3C7] mr-1">{t('admin.orders.statusFilter')}</span>
             {(['all', 'pending_payment', 'processing', 'shipped', 'delivered', 'cancelled'] as const).map((status) => (
               <button
                 key={status}
@@ -1053,8 +1070,8 @@ function OrdersSection() {
             ))}
           </div>
           <p className="text-sm text-[#A9B3C7]">
-            Showing <span className="font-medium text-[#F4F6FA]">{filteredOrders.length}</span>
-            {filteredOrders.length !== orders.length && ` of ${orders.length}`} orders
+            {t('admin.orders.showing')} <span className="font-medium text-[#F4F6FA]">{filteredOrders.length}</span>
+            {filteredOrders.length !== orders.length && ` ${t('admin.common.of')} ${orders.length}`} {t('admin.common.ordersWord')}
           </p>
         </div>
       </div>
@@ -1063,9 +1080,9 @@ function OrdersSection() {
       {filteredOrders.length === 0 ? (
         <div className="p-12 sm:p-16 rounded-2xl bg-[rgba(17,24,39,0.5)] border border-[rgba(244,246,250,0.08)] text-center">
           <ShoppingCart className="w-14 h-14 sm:w-16 sm:h-16 mx-auto text-[rgba(244,246,250,0.2)] mb-4" />
-          <p className="text-[#F4F6FA] font-medium mb-1">No orders found</p>
+          <p className="text-[#F4F6FA] font-medium mb-1">{t('admin.noOrdersFound')}</p>
           <p className="text-sm text-[#A9B3C7]">
-            {orders.length === 0 ? 'Orders will appear here once customers place them.' : 'Try changing the filter or search.'}
+            {orders.length === 0 ? t('admin.orders.emptyHint') : t('admin.orders.emptyFilterHint')}
           </p>
         </div>
       ) : (
@@ -1075,11 +1092,11 @@ function OrdersSection() {
             <table className="w-full">
               <thead>
                 <tr className="border-b border-[rgba(244,246,250,0.08)] bg-[rgba(7,10,18,0.4)]">
-                  <th className="text-left text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider px-4 py-3">Order</th>
-                  <th className="text-left text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider px-4 py-3">Customer</th>
-                  <th className="text-left text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider px-4 py-3">Date</th>
-                  <th className="text-left text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider px-4 py-3">Status</th>
-                  <th className="text-right text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider px-4 py-3">Total</th>
+                  <th className="text-left text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider px-4 py-3">{t('admin.order')}</th>
+                  <th className="text-left text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider px-4 py-3">{t('admin.customer')}</th>
+                  <th className="text-left text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider px-4 py-3">{t('admin.date')}</th>
+                  <th className="text-left text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider px-4 py-3">{t('admin.status')}</th>
+                  <th className="text-right text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider px-4 py-3">{t('admin.total')}</th>
                   <th className="w-10 px-4 py-3" />
                 </tr>
               </thead>
@@ -1100,15 +1117,15 @@ function OrdersSection() {
                     <td className="px-4 py-3 text-sm text-[#A9B3C7]">{formatDate(order.created_at)}</td>
                     <td className="px-4 py-3">
                       <span className={`inline-flex px-2 py-1 rounded-lg text-xs font-medium ${getStatusColor(order.status)}`}>
-                        {order.status.replace('_', ' ')}
+                        {orderStatusLabel(t, order.status)}
                       </span>
                       {order.payment_status === 'pending' && order.status === 'pending_payment' && (
-                        <span className="ml-1 inline-flex px-2 py-1 rounded-lg text-[10px] font-medium bg-[#F59E0B] text-white">Unpaid</span>
+                        <span className="ml-1 inline-flex px-2 py-1 rounded-lg text-[10px] font-medium bg-[#F59E0B] text-white">{t('admin.unpaid')}</span>
                       )}
                     </td>
                     <td className="px-4 py-3 text-right">
                       <span className="font-semibold text-[#2ED1B4]">kr {order.total?.toFixed(2)}</span>
-                      <span className="block text-xs text-[#A9B3C7]">{order.items?.length || 0} items</span>
+                      <span className="block text-xs text-[#A9B3C7]">{order.items?.length || 0} {t('admin.common.items')}</span>
                     </td>
                     <td className="px-4 py-3">
                       <Eye className="w-4 h-4 text-[#A9B3C7]" />
@@ -1134,16 +1151,16 @@ function OrdersSection() {
                     <p className="text-xs text-[#A9B3C7] mt-1">{formatDate(order.created_at)}</p>
                     <div className="flex flex-wrap gap-1.5 mt-2">
                       <span className={`inline-flex px-2 py-0.5 rounded text-[10px] font-medium ${getStatusColor(order.status)}`}>
-                        {order.status.replace('_', ' ')}
+                        {orderStatusLabel(t, order.status)}
                       </span>
                       {order.payment_status === 'pending' && order.status === 'pending_payment' && (
-                        <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-[#F59E0B] text-white">Unpaid</span>
+                        <span className="inline-flex px-2 py-0.5 rounded text-[10px] font-medium bg-[#F59E0B] text-white">{t('admin.unpaid')}</span>
                       )}
                     </div>
                   </div>
                   <div className="text-right flex-shrink-0">
                     <p className="font-semibold text-[#2ED1B4]">kr {order.total?.toFixed(2)}</p>
-                    <p className="text-xs text-[#A9B3C7]">{order.items?.length || 0} items</p>
+                    <p className="text-xs text-[#A9B3C7]">{order.items?.length || 0} {t('admin.common.items')}</p>
                     <Eye className="w-4 h-4 text-[#A9B3C7] mt-1 ml-auto" />
                   </div>
                 </div>
@@ -1163,7 +1180,7 @@ function OrdersSection() {
             {/* Header */}
             <div className="flex items-center justify-between mb-6">
               <div>
-                <h3 className="text-xl font-bold text-[#F4F6FA]">Order #{formatOrderNumberDisplay(selectedOrder.order_number)}</h3>
+                <h3 className="text-xl font-bold text-[#F4F6FA]">{t('admin.orders.orderDetail', { number: formatOrderNumberDisplay(selectedOrder.order_number) })}</h3>
                 <p className="text-sm text-[#A9B3C7]">{formatDate(selectedOrder.created_at)}</p>
               </div>
               <button onClick={() => setShowOrderModal(false)} className="p-2 rounded-lg bg-[rgba(244,246,250,0.08)] text-[#A9B3C7] hover:text-[#F4F6FA]">
@@ -1174,12 +1191,12 @@ function OrdersSection() {
             {/* Status Badges */}
             <div className="flex flex-wrap gap-2 mb-6">
               <span className={`px-3 py-1 rounded-full text-sm ${getStatusColor(selectedOrder.status)}`}>
-                {selectedOrder.status.replace('_', ' ')}
+                {orderStatusLabel(t, selectedOrder.status)}
               </span>
               <span className={`px-3 py-1 rounded-full text-sm ${
                 selectedOrder.payment_status === 'confirmed' ? 'bg-[#22C55E] text-white' : 'bg-[#F59E0B] text-white'
               }`}>
-                Payment: {selectedOrder.payment_status}
+                {t('admin.common.payment')}: {selectedOrder.payment_status}
               </span>
             </div>
 
@@ -1188,12 +1205,12 @@ function OrdersSection() {
               <div className="p-4 rounded-xl bg-[rgba(7,10,18,0.5)]">
                 <h4 className="text-sm font-semibold text-[#F4F6FA] mb-3 flex items-center gap-2">
                   <Users className="w-4 h-4 text-[#8B5CF6]" />
-                  Customer
+                  {t('admin.customer')}
                 </h4>
                 <div className="space-y-2 text-sm">
                   <p className="text-[#F4F6FA]">{selectedOrder.customer_first_name} {selectedOrder.customer_last_name}</p>
                   <p className="text-[#A9B3C7] flex items-center gap-2"><Mail className="w-3 h-3" /> {selectedOrder.customer_email}</p>
-                  <p className="text-[#A9B3C7] flex items-center gap-2"><Phone className="w-3 h-3" /> {selectedOrder.customer_phone || 'N/A'}</p>
+                  <p className="text-[#A9B3C7] flex items-center gap-2"><Phone className="w-3 h-3" /> {selectedOrder.customer_phone || t('admin.common.na')}</p>
                 </div>
               </div>
 
@@ -1201,12 +1218,12 @@ function OrdersSection() {
               <div className="p-4 rounded-xl bg-[rgba(7,10,18,0.5)]">
                 <h4 className="text-sm font-semibold text-[#F4F6FA] mb-3 flex items-center gap-2">
                   <MapPin className="w-4 h-4 text-[#2ED1B4]" />
-                  Shipping Address
+                  {t('admin.orders.shippingAddress')}
                 </h4>
                 <div className="space-y-1 text-sm">
                   <p className="text-[#F4F6FA]">{selectedOrder.shipping_address}</p>
                   <p className="text-[#F4F6FA]">{selectedOrder.shipping_suburb}, {selectedOrder.shipping_state} {selectedOrder.shipping_postcode}</p>
-                  <p className="text-[#A9B3C7] mt-2">Method: {selectedOrder.shipping_method}</p>
+                  <p className="text-[#A9B3C7] mt-2">{t('admin.common.method')}: {selectedOrder.shipping_method}</p>
                 </div>
               </div>
             </div>
@@ -1215,14 +1232,14 @@ function OrdersSection() {
             <div className="mb-6">
               <h4 className="text-sm font-semibold text-[#F4F6FA] mb-3 flex items-center gap-2">
                 <Box className="w-4 h-4 text-[#8B5CF6]" />
-                Items
+                {t('admin.orders.items')}
               </h4>
               <div className="space-y-2">
                 {selectedOrder.items?.map((item: any, idx: number) => (
                   <div key={idx} className="flex items-center justify-between p-3 rounded-lg bg-[rgba(7,10,18,0.5)]">
                     <div>
                       <p className="text-sm text-[#F4F6FA]">{item.name} ({item.dosage})</p>
-                      <p className="text-xs text-[#A9B3C7]">Qty: {item.quantity} × kr {item.price}</p>
+                      <p className="text-xs text-[#A9B3C7]">{t('admin.common.qty')}: {item.quantity} × kr {item.price}</p>
                     </div>
                     <p className="text-sm text-[#2ED1B4]">kr {(item.price * item.quantity).toFixed(2)}</p>
                   </div>
@@ -1233,21 +1250,21 @@ function OrdersSection() {
             {/* Order Total */}
             <div className="p-4 rounded-xl bg-[rgba(46,209,180,0.1)] border border-[rgba(46,209,180,0.2)] mb-6">
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-[#A9B3C7]">Subtotal</span>
+                <span className="text-[#A9B3C7]">{t('admin.subtotal')}</span>
                 <span className="text-[#F4F6FA]">kr {selectedOrder.subtotal?.toFixed(2)}</span>
               </div>
               <div className="flex justify-between text-sm mb-1">
-                <span className="text-[#A9B3C7]">Shipping</span>
+                <span className="text-[#A9B3C7]">{t('admin.shipping')}</span>
                 <span className="text-[#F4F6FA]">kr {selectedOrder.shipping_cost?.toFixed(2)}</span>
               </div>
               {selectedOrder.discount_amount > 0 && (
                 <div className="flex justify-between text-sm mb-1">
-                  <span className="text-[#A9B3C7]">Discount</span>
+                  <span className="text-[#A9B3C7]">{t('admin.discount')}</span>
                   <span className="text-[#22C55E]">-kr {selectedOrder.discount_amount?.toFixed(2)}</span>
                 </div>
               )}
               <div className="flex justify-between text-lg font-bold pt-2 border-t border-[rgba(244,246,250,0.1)]">
-                <span className="text-[#F4F6FA]">Total</span>
+                <span className="text-[#F4F6FA]">{t('admin.total')}</span>
                 <span className="text-[#2ED1B4]">kr {selectedOrder.total?.toFixed(2)}</span>
               </div>
             </div>
@@ -1256,7 +1273,10 @@ function OrdersSection() {
             {selectedOrder.status === 'pending_payment' && (
               <div className="p-4 rounded-xl bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.2)] mb-4">
                 <p className="text-sm text-[#F59E0B] mb-3">
-                  Customer should transfer <span className="font-bold">kr {selectedOrder.total?.toFixed(2)}</span> with reference: <span className="font-mono font-bold">{formatOrderNumberDisplay(selectedOrder.order_number)}</span>
+                  {t('admin.orders.paymentTransfer', {
+                    amount: selectedOrder.total?.toFixed(2) ?? '0',
+                    reference: formatOrderNumberDisplay(selectedOrder.order_number),
+                  })}
                 </p>
                 <button
                   onClick={() => updatePaymentStatus(selectedOrder.id, 'confirmed', selectedOrder)}
@@ -1264,7 +1284,7 @@ function OrdersSection() {
                   className="w-full px-4 py-3 rounded-xl bg-[#22C55E] text-white hover:bg-[#16A34A] disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <CheckCircle className="w-5 h-5" />
-                  {isUpdating ? 'Processing...' : 'I Received Payment - Mark as Paid'}
+                  {isUpdating ? t('admin.common.processing') : t('admin.orders.markPaid')}
                 </button>
               </div>
             )}
@@ -1274,12 +1294,12 @@ function OrdersSection() {
               <div className="p-4 rounded-xl bg-[rgba(139,92,246,0.1)] border border-[rgba(139,92,246,0.2)] mb-4">
                 <h4 className="text-sm font-semibold text-[#F4F6FA] mb-3 flex items-center gap-2">
                   <Truck className="w-4 h-4 text-[#8B5CF6]" />
-                  Tracking Information
+                  {t('admin.orders.trackingInfo')}
                 </h4>
                 {selectedOrder.tracking_number ? (
                   <div className="flex items-center justify-between p-3 rounded-lg bg-[rgba(7,10,18,0.5)]">
                     <p className="text-sm font-mono text-[#F4F6FA]">{selectedOrder.tracking_number}</p>
-                    <span className="text-xs text-[#22C55E] flex items-center gap-1"><CheckCircle className="w-3 h-3" /> Shipped</span>
+                    <span className="text-xs text-[#22C55E] flex items-center gap-1"><CheckCircle className="w-3 h-3" /> {t('admin.statusLabels.shipped')}</span>
                   </div>
                 ) : (
                   <div className="flex gap-2">
@@ -1287,7 +1307,7 @@ function OrdersSection() {
                       type="text"
                       value={trackingNumber}
                       onChange={(e) => setTrackingNumber(e.target.value)}
-                      placeholder="Enter Royal Mail tracking number"
+                      placeholder={t('admin.orders.trackingPlaceholder')}
                       className="flex-1 px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-sm"
                     />
                     <button
@@ -1305,7 +1325,7 @@ function OrdersSection() {
                       className="px-4 py-2 rounded-lg bg-[#8B5CF6] text-white hover:bg-[#7C3AED] disabled:opacity-50 flex items-center gap-2"
                     >
                       <Send className="w-4 h-4" />
-                      Add Tracking
+                      {t('admin.orders.addTracking')}
                     </button>
                   </div>
                 )}
@@ -1317,13 +1337,13 @@ function OrdersSection() {
               <div className="p-4 rounded-xl bg-[rgba(46,209,180,0.1)] border border-[rgba(46,209,180,0.2)] mb-4">
                 <h4 className="text-sm font-semibold text-[#F4F6FA] mb-3 flex items-center gap-2">
                   <Printer className="w-4 h-4 text-[#2ED1B4]" />
-                  Shipping Label
+                  {t('admin.orders.shippingLabel')}
                 </h4>
                 <button
                   type="button"
                   onClick={() => {
                     const labelWindow = window.open('', '_blank', 'width=400,height=600');
-                    if (!labelWindow) { alert('Please allow popups to print labels'); return; }
+                    if (!labelWindow) { alert(t('admin.orders.allowPopups')); return; }
                     const o = selectedOrder;
                     const ordDisplay = formatOrderNumberDisplay(o.order_number);
                     labelWindow.document.write(`
@@ -1368,9 +1388,9 @@ function OrdersSection() {
                   className="w-full px-4 py-2.5 rounded-lg bg-[rgba(46,209,180,0.15)] border border-[rgba(46,209,180,0.3)] text-[#2ED1B4] hover:bg-[rgba(46,209,180,0.25)] flex items-center justify-center gap-2 text-sm"
                 >
                   <Printer className="w-4 h-4" />
-                  Print / Edit Shipping Label
+                  {t('admin.orders.printLabel')}
                 </button>
-                <p className="text-xs text-[#A9B3C7] mt-2">Opens printable label in a new window. Click "Edit Label" to modify before printing.</p>
+                <p className="text-xs text-[#A9B3C7] mt-2">{t('admin.orders.printLabelHint')}</p>
               </div>
             )}
 
@@ -1383,7 +1403,7 @@ function OrdersSection() {
                   className="flex-1 px-4 py-3 rounded-xl bg-[#2ED1B4] text-white hover:bg-[#25b89d] disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <Truck className="w-5 h-5" />
-                  Mark as Shipped (No Tracking)
+                  {t('admin.orders.markShippedNoTracking')}
                 </button>
               )}
               {selectedOrder.status === 'shipped' && (
@@ -1393,7 +1413,7 @@ function OrdersSection() {
                   className="flex-1 px-4 py-3 rounded-xl bg-[#22C55E] text-white hover:bg-[#16A34A] disabled:opacity-50 flex items-center justify-center gap-2"
                 >
                   <CheckCircle className="w-5 h-5" />
-                  Mark as Delivered
+                  {t('admin.orders.markDelivered')}
                 </button>
               )}
               {(selectedOrder.status === 'pending_payment' || selectedOrder.status === 'processing') && (
@@ -1421,7 +1441,7 @@ function OrdersSection() {
                       setSelectedOrder((prev) => (prev && prev.id === orderIdToCancel ? { ...prev, status: 'cancelled' } : prev));
                     } catch (e: any) {
                       console.error('Error cancelling order:', e);
-                      alert('Failed to cancel order: ' + (e?.message || 'Unknown error'));
+                      alert(t('admin.orders.failCancel', { message: e?.message || t('admin.common.unknownError') }));
                       return;
                     } finally {
                       setIsUpdating(false);
@@ -1431,7 +1451,7 @@ function OrdersSection() {
                   className="px-4 py-3 rounded-xl bg-[#EF4444] text-white hover:bg-[#DC2626] disabled:opacity-50 flex items-center gap-2"
                 >
                   <Ban className="w-5 h-5" />
-                  Cancel Order
+                  {t('admin.orders.cancelOrder')}
                 </button>
               )}
               {/* Delete Order (for fake/test orders) */}
@@ -1441,18 +1461,18 @@ function OrdersSection() {
                 className="px-4 py-3 rounded-xl border border-[#EF4444] text-[#EF4444] hover:bg-[rgba(239,68,68,0.1)] disabled:opacity-50 flex items-center gap-2"
               >
                 <Trash2 className="w-5 h-5" />
-                Delete Order
+                {t('admin.orders.deleteOrder')}
               </button>
             </div>
 
             {/* Delete Order Confirmation */}
             {deleteOrderId === selectedOrder.id && (
               <div className="mt-4 p-4 rounded-xl bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)]">
-                <p className="text-sm text-[#EF4444] mb-3">Are you sure? This will permanently delete order #{formatOrderNumberDisplay(selectedOrder.order_number)}. This cannot be undone.</p>
+                <p className="text-sm text-[#EF4444] mb-3">{t('admin.orders.deleteConfirm', { number: formatOrderNumberDisplay(selectedOrder.order_number) })}</p>
                 <div className="flex gap-2">
-                  <button onClick={() => setDeleteOrderId(null)} className="flex-1 px-3 py-2 rounded-lg border border-[rgba(244,246,250,0.2)] text-[#A9B3C7] text-sm">Cancel</button>
+                  <button onClick={() => setDeleteOrderId(null)} className="flex-1 px-3 py-2 rounded-lg border border-[rgba(244,246,250,0.2)] text-[#A9B3C7] text-sm">{t('admin.common.cancel')}</button>
                   <button onClick={() => deleteOrder(selectedOrder.id)} disabled={isDeleting} className="flex-1 px-3 py-2 rounded-lg bg-[#EF4444] text-white text-sm disabled:opacity-50">
-                    {isDeleting ? 'Deleting...' : 'Confirm Delete'}
+                    {isDeleting ? t('admin.common.deleting') : t('admin.common.confirmDelete')}
                   </button>
                 </div>
               </div>
@@ -1497,6 +1517,7 @@ function AddProductModal({
   setError: (s: string | null) => void;
   error?: string | null;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState('');
   const [slug, setSlug] = useState('');
   const [category, setCategory] = useState('');
@@ -1532,7 +1553,7 @@ function AddProductModal({
     setIsSaving(true);
     const productSlug = slug.trim() || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/gi, '');
     if (!productSlug || !name.trim()) {
-      setError('Name and slug are required.');
+      setError(t('admin.products.nameSlugRequired'));
       setIsSaving(false);
       return;
     }
@@ -1571,7 +1592,7 @@ function AddProductModal({
 
       onSaved();
     } catch (err: any) {
-      setError(err?.message || 'Failed to add product.');
+      setError(err?.message || t('admin.products.failAdd'));
     } finally {
       setIsSaving(false);
     }
@@ -1601,8 +1622,8 @@ function AddProductModal({
         {/* Header */}
         <div className="px-5 py-4 flex items-center justify-between border-b border-[rgba(244,246,250,0.08)] sticky top-0 bg-[#0F172A] z-10">
           <div>
-            <h3 className="text-base font-bold text-[#F4F6FA]">Add Product</h3>
-            <p className="text-xs text-[#A9B3C7] mt-0.5">Fill in the details below</p>
+            <h3 className="text-base font-bold text-[#F4F6FA]">{t('admin.addProduct')}</h3>
+            <p className="text-xs text-[#A9B3C7] mt-0.5">{t('admin.fillDetails')}</p>
           </div>
           <button type="button" onClick={onClose} className="p-2 rounded-xl bg-[rgba(244,246,250,0.06)] text-[#A9B3C7] hover:bg-[rgba(244,246,250,0.12)] hover:text-[#F4F6FA] transition-colors">
             <X className="w-5 h-5" />
@@ -1613,21 +1634,21 @@ function AddProductModal({
           {/* Name + Slug side by side on sm+ */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={lc}>Product Name *</label>
+              <label className={lc}>{t('admin.products.productName')}</label>
               <input type="text" value={name} onChange={e => handleNameChange(e.target.value)} className={ic} placeholder="e.g. BPC-157" required />
             </div>
             <div>
-              <label className={lc}>Slug (URL ID)</label>
+              <label className={lc}>{t('admin.products.slug')}</label>
               <input type="text" value={slug} onChange={e => setSlug(e.target.value)} className={ic} placeholder="e.g. bpc-157" />
             </div>
           </div>
 
           {/* Category */}
           <div>
-            <label className={lc}>Category</label>
+            <label className={lc}>{t('admin.category')}</label>
             <SelectWrap>
               <select value={category} onChange={e => setCategory(e.target.value)} className={sc}>
-                <option value="">Select category...</option>
+                <option value="">{t('admin.products.selectCategory')}</option>
                 <option value="Best Seller">Best Seller</option>
                 <option value="High Popularity">High Popularity</option>
                 <option value="Popular">Popular</option>
@@ -1638,20 +1659,20 @@ function AddProductModal({
 
           {/* Description */}
           <div>
-            <label className={lc}>Description</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)} className={ic} rows={2} placeholder="Short product description" />
+            <label className={lc}>{t('admin.description')}</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} className={ic} rows={2} placeholder={t('admin.products.shortDescription')} />
           </div>
 
           {/* More Info */}
           <div>
-            <label className={lc}>More Info <span className="text-[#4B5563] normal-case font-normal">(storefront popup)</span></label>
-            <textarea value={moreInfo} onChange={e => setMoreInfo(e.target.value)} className={ic} rows={4} placeholder="Research & regulatory information..." />
+            <label className={lc}>{t('admin.moreInfo')} <span className="text-[#4B5563] normal-case font-normal">{t('admin.storefrontPopup')}</span></label>
+            <textarea value={moreInfo} onChange={e => setMoreInfo(e.target.value)} className={ic} rows={4} placeholder={t('admin.products.researchInfo')} />
           </div>
 
           {/* Review count + Active toggle on one row */}
           <div className="flex items-center gap-4">
             <div className="flex-1">
-              <label className={lc}>Review Count</label>
+              <label className={lc}>{t('admin.reviewCount')}</label>
               <input type="number" min={0} value={reviewCount} onChange={e => setReviewCount(e.target.value)} className={ic} placeholder="0" />
             </div>
             <div className="shrink-0 pt-5">
@@ -1667,20 +1688,20 @@ function AddProductModal({
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isActive ? 'border-[#2ED1B4] bg-[#2ED1B4]' : 'border-[#6B7280]'}`}>
                   {isActive && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                 </div>
-                {isActive ? 'Active' : 'Inactive'}
+                {isActive ? t('admin.common.active') : t('admin.common.inactive')}
               </button>
             </div>
           </div>
 
           {/* COA PDF */}
           <div>
-            <label className={lc}>COA PDF <span className="text-[#4B5563] normal-case font-normal">(optional)</span></label>
+            <label className={lc}>{t('admin.coaPdf')} <span className="text-[#4B5563] normal-case font-normal">{t('admin.optional')}</span></label>
             <div className="space-y-2">
               <label className={`flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border border-dashed cursor-pointer transition-colors ${
                 isCoaUploading ? 'border-[rgba(244,246,250,0.1)] text-[#4B5563]' : 'border-[rgba(46,209,180,0.35)] text-[#2ED1B4] hover:bg-[rgba(46,209,180,0.06)]'
               }`}>
                 <Upload className="w-4 h-4 shrink-0" />
-                <span className="text-sm font-medium">{isCoaUploading ? 'Uploading COA...' : 'Upload COA PDF'}</span>
+                <span className="text-sm font-medium">{isCoaUploading ? t('admin.products.uploadingCoa') : t('admin.products.uploadCoa')}</span>
                 <input
                   type="file"
                   accept="application/pdf"
@@ -1698,7 +1719,7 @@ function AddProductModal({
                       if (uploadErr) throw uploadErr;
                       setCoaUrl(uploadData.publicUrl);
                     } catch (err: any) {
-                      alert('COA upload failed: ' + (err?.message || 'Unknown error'));
+                      alert(t('admin.products.coaUploadFailed', { message: err?.message || t('admin.common.unknownError') }));
                     } finally {
                       setIsCoaUploading(false);
                     }
@@ -1708,8 +1729,8 @@ function AddProductModal({
               {coaUrl && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[rgba(46,209,180,0.08)] border border-[rgba(46,209,180,0.2)]">
                   <CheckCircle className="w-4 h-4 text-[#2ED1B4] shrink-0" />
-                  <span className="text-xs text-[#2ED1B4] truncate flex-1">COA uploaded</span>
-                  <button type="button" onClick={() => window.open(coaUrl, '_blank', 'noopener,noreferrer')} className="text-xs text-[#2ED1B4] underline shrink-0">View</button>
+                  <span className="text-xs text-[#2ED1B4] truncate flex-1">{t('admin.coaUploaded')}</span>
+                  <button type="button" onClick={() => window.open(coaUrl, '_blank', 'noopener,noreferrer')} className="text-xs text-[#2ED1B4] underline shrink-0">{t('admin.view')}</button>
                 </div>
               )}
             </div>
@@ -1717,7 +1738,7 @@ function AddProductModal({
 
           {/* Product Image */}
           <div>
-            <label className={lc}>Product Image</label>
+            <label className={lc}>{t('admin.productImage')}</label>
             <div className="space-y-2">
               <div className="flex gap-2 items-center">
                 {imageUrl && (
@@ -1728,7 +1749,7 @@ function AddProductModal({
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                 )}
-                <input type="text" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className={ic} placeholder="Paste URL or upload below" />
+                <input type="text" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className={ic} placeholder={t('admin.products.pasteOrUpload')} />
               </div>
               <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={async (e) => {
                 const file = e.target.files?.[0];
@@ -1741,14 +1762,14 @@ function AddProductModal({
                   if (error) throw error;
                   setImageUrl(data.publicUrl);
                 } catch (err: any) {
-                  alert('Upload failed: ' + (err?.message || 'Unknown error'));
+                  alert(t('admin.products.uploadFailed', { message: err?.message || t('admin.common.unknownError') }));
                 } finally {
                   setIsUploading(false);
                 }
               }} />
               <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="w-full px-3 py-3 rounded-xl border border-dashed border-[rgba(46,209,180,0.35)] text-sm font-medium text-[#2ED1B4] hover:bg-[rgba(46,209,180,0.06)] flex items-center justify-center gap-2 transition-colors disabled:opacity-50">
                 <ImageIcon className="w-4 h-4" />
-                {isUploading ? 'Uploading...' : 'Upload from Device'}
+                {isUploading ? t('admin.products.uploading') : t('admin.products.uploadFromDevice')}
               </button>
             </div>
           </div>
@@ -1757,17 +1778,17 @@ function AddProductModal({
           <div className="pt-3 border-t border-[rgba(244,246,250,0.08)]">
             <p className="text-sm font-bold text-[#F4F6FA] mb-3 flex items-center gap-2">
               <Tag className="w-4 h-4 text-[#2ED1B4]" />
-              First Dosage Variant
+              {t('admin.products.firstDosage')}
             </p>
             <div className="space-y-3">
               {/* Dosage value + Unit */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={lc}>Dosage Value</label>
+                  <label className={lc}>{t('admin.dosageValue')}</label>
                   <input type="text" value={dosageMg} onChange={e => setDosageMg(e.target.value)} className={ic} placeholder="e.g. 5" />
                 </div>
                 <div>
-                  <label className={lc}>Unit</label>
+                  <label className={lc}>{t('admin.unit')}</label>
                   <SelectWrap>
                     <select value={dosageUnit} onChange={e => setDosageUnit(e.target.value)} className={sc}>
                       <option value="MG">MG</option>
@@ -1782,11 +1803,11 @@ function AddProductModal({
               {/* Price + Stock */}
               <div className="grid grid-cols-2 gap-3">
                 <div>
-                  <label className={lc}>Original Price (SEK) *</label>
+                  <label className={lc}>{t('admin.products.originalPrice')}</label>
                   <input type="number" step="0.01" min={0} value={originalPrice} onChange={e => setOriginalPrice(e.target.value)} className={ic} placeholder="e.g. 149.00" required />
                 </div>
                 <div>
-                  <label className={lc}>Stock Quantity</label>
+                  <label className={lc}>{t('admin.stockQuantity')}</label>
                   <input type="number" min={0} value={stockQuantity} onChange={e => setStockQuantity(e.target.value)} className={ic} />
                 </div>
               </div>
@@ -1800,7 +1821,7 @@ function AddProductModal({
                     : 'bg-[rgba(239,68,68,0.08)] border-[rgba(239,68,68,0.2)] text-[#EF4444]'
                 }`}
               >
-                <span className="text-sm font-medium">{inStock ? 'In Stock' : 'Out of Stock'}</span>
+                <span className="text-sm font-medium">{inStock ? t('admin.common.inStock') : t('admin.common.outOfStock')}</span>
                 <div className={`w-11 h-7 rounded-full inline-flex items-center shrink-0 transition-colors ${inStock ? 'bg-[#22C55E]' : 'bg-[rgba(244,246,250,0.12)]'}`}>
                   <span className={`inline-block w-5 h-5 rounded-full bg-white shadow transition-transform ${inStock ? 'translate-x-[22px]' : 'translate-x-[3px]'}`} />
                 </div>
@@ -1811,14 +1832,14 @@ function AddProductModal({
           {/* Bundle preview */}
           {bundlePreview && (
             <div className="p-3 rounded-xl bg-[rgba(46,209,180,0.06)] border border-[rgba(46,209,180,0.2)]">
-              <p className="text-xs font-bold text-[#2ED1B4] mb-2 uppercase tracking-wider">Bundle Pricing Preview</p>
+              <p className="text-xs font-bold text-[#2ED1B4] mb-2 uppercase tracking-wider">{t('admin.bundlePreview')}</p>
               <div className="grid grid-cols-5 gap-1 text-center">
                 {[
-                  { label: 'Buy 1', price: bundlePreview.buy1, disc: '20%' },
-                  { label: 'Buy 2', price: bundlePreview.buy2, disc: '25%' },
-                  { label: 'Buy 3', price: bundlePreview.buy3, disc: '30%' },
-                  { label: 'Buy 5', price: bundlePreview.buy5, disc: '36%' },
-                  { label: 'Buy 10', price: bundlePreview.buy10, disc: '44%' },
+                  { label: t('admin.buy1'), price: bundlePreview.buy1, disc: '20%' },
+                  { label: t('admin.buy2'), price: bundlePreview.buy2, disc: '25%' },
+                  { label: t('admin.buy3'), price: bundlePreview.buy3, disc: '30%' },
+                  { label: t('admin.buy5'), price: bundlePreview.buy5, disc: '36%' },
+                  { label: t('admin.buy10'), price: bundlePreview.buy10, disc: '44%' },
                 ].map(t => (
                   <div key={t.label} className="p-2 rounded-lg bg-[rgba(7,10,18,0.5)]">
                     <p className="text-[10px] text-[#A9B3C7]">{t.label}</p>
@@ -1843,7 +1864,7 @@ function AddProductModal({
         {/* Sticky action footer — always visible above the bottom nav */}
         <div className="sticky bottom-0 left-0 right-0 bg-[#0F172A] border-t border-[rgba(244,246,250,0.08)] px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] flex gap-3">
           <button type="button" onClick={onClose} className="flex-1 sm:flex-none px-5 py-3 rounded-xl border border-[rgba(244,246,250,0.15)] text-[#A9B3C7] hover:bg-[rgba(244,246,250,0.05)] font-medium transition-colors">
-            Cancel
+            {t('admin.common.cancel')}
           </button>
           <button
             form="add-product-form"
@@ -1852,9 +1873,9 @@ function AddProductModal({
             className="flex-1 px-5 py-3 rounded-xl bg-[#2ED1B4] text-white hover:bg-[#25b89d] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 font-semibold transition-all"
           >
             {isSaving ? (
-              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> {t('admin.common.saving')}</>
             ) : (
-              <><Save className="w-4 h-4" /> Save Product</>
+              <><Save className="w-4 h-4" /> {t('admin.common.saveProduct')}</>
             )}
           </button>
         </div>
@@ -1887,6 +1908,7 @@ function EditProductModal({
   setError: (s: string | null) => void;
   error?: string | null;
 }) {
+  const { t } = useTranslation();
   const [name, setName] = useState(product.name);
   const [slug, setSlug] = useState(product.slug);
   const [category, setCategory] = useState(product.category || '');
@@ -1939,12 +1961,12 @@ function EditProductModal({
     setIsSaving(true);
     const productSlug = slug.trim() || name.toLowerCase().replace(/\s+/g, '-').replace(/[^a-z0-9-]/gi, '');
     if (!productSlug || !name.trim()) {
-      setError('Name and slug are required.');
+      setError(t('admin.products.nameSlugRequired'));
       setIsSaving(false);
       return;
     }
     if (dosages.length === 0) {
-      setError('At least one dosage is required.');
+      setError(t('admin.products.dosageRequired'));
       setIsSaving(false);
       return;
     }
@@ -2007,7 +2029,7 @@ function EditProductModal({
 
       onSaved();
     } catch (err: any) {
-      setError(err?.message || 'Failed to update product.');
+      setError(err?.message || t('admin.products.failUpdate'));
     } finally {
       setIsSaving(false);
     }
@@ -2039,8 +2061,8 @@ function EditProductModal({
         {/* Sticky header */}
         <div className="px-5 py-4 flex items-center justify-between border-b border-[rgba(244,246,250,0.08)] sticky top-0 bg-[#0F172A] z-10">
           <div className="min-w-0">
-            <h3 className="text-base font-bold text-[#F4F6FA] truncate">Edit: {product.name}</h3>
-            <p className="text-xs text-[#A9B3C7] mt-0.5">Update product details below</p>
+            <h3 className="text-base font-bold text-[#F4F6FA] truncate">{t('admin.products.editTitle', { name: product.name })}</h3>
+            <p className="text-xs text-[#A9B3C7] mt-0.5">{t('admin.updateDetails')}</p>
           </div>
           <button type="button" onClick={onClose} className="ml-3 shrink-0 p-2 rounded-xl bg-[rgba(244,246,250,0.06)] text-[#A9B3C7] hover:bg-[rgba(244,246,250,0.12)] hover:text-[#F4F6FA] transition-colors">
             <X className="w-5 h-5" />
@@ -2051,21 +2073,21 @@ function EditProductModal({
           {/* Name + Slug */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
             <div>
-              <label className={lc}>Product Name *</label>
+              <label className={lc}>{t('admin.products.productName')}</label>
               <input type="text" value={name} onChange={e => setName(e.target.value)} className={ic} placeholder="e.g. BPC-157" required />
             </div>
             <div>
-              <label className={lc}>Slug (URL ID)</label>
+              <label className={lc}>{t('admin.products.slug')}</label>
               <input type="text" value={slug} onChange={e => setSlug(e.target.value)} className={ic} placeholder="e.g. bpc-157" />
             </div>
           </div>
 
           {/* Category */}
           <div>
-            <label className={lc}>Category</label>
+            <label className={lc}>{t('admin.category')}</label>
             <SelectWrap>
               <select value={category} onChange={e => setCategory(e.target.value)} className={sc}>
-                <option value="">Select category...</option>
+                <option value="">{t('admin.products.selectCategory')}</option>
                 <option value="Best Seller">Best Seller</option>
                 <option value="High Popularity">High Popularity</option>
                 <option value="Popular">Popular</option>
@@ -2076,14 +2098,14 @@ function EditProductModal({
 
           {/* Description */}
           <div>
-            <label className={lc}>Description</label>
-            <textarea value={description} onChange={e => setDescription(e.target.value)} className={ic} rows={2} placeholder="Short product description" />
+            <label className={lc}>{t('admin.description')}</label>
+            <textarea value={description} onChange={e => setDescription(e.target.value)} className={ic} rows={2} placeholder={t('admin.products.shortDescription')} />
           </div>
 
           {/* Review count + Active toggle */}
           <div className="flex items-center gap-4">
             <div className="flex-1">
-              <label className={lc}>Review Count</label>
+              <label className={lc}>{t('admin.reviewCount')}</label>
               <input type="number" min={0} value={reviewCount} onChange={e => setReviewCount(e.target.value)} className={ic} placeholder="0" />
             </div>
             <div className="shrink-0 pt-5">
@@ -2099,26 +2121,26 @@ function EditProductModal({
                 <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center ${isActive ? 'border-[#2ED1B4] bg-[#2ED1B4]' : 'border-[#6B7280]'}`}>
                   {isActive && <div className="w-1.5 h-1.5 rounded-full bg-white" />}
                 </div>
-                {isActive ? 'Active' : 'Inactive'}
+                {isActive ? t('admin.common.active') : t('admin.common.inactive')}
               </button>
             </div>
           </div>
 
           {/* More Info */}
           <div>
-            <label className={lc}>More Info <span className="text-[#4B5563] normal-case font-normal">(storefront popup)</span></label>
-            <textarea value={moreInfo} onChange={e => setMoreInfo(e.target.value)} className={ic} rows={4} placeholder="Research & regulatory information..." />
+            <label className={lc}>{t('admin.moreInfo')} <span className="text-[#4B5563] normal-case font-normal">{t('admin.storefrontPopup')}</span></label>
+            <textarea value={moreInfo} onChange={e => setMoreInfo(e.target.value)} className={ic} rows={4} placeholder={t('admin.products.researchInfo')} />
           </div>
 
           {/* COA PDF */}
           <div>
-            <label className={lc}>COA PDF <span className="text-[#4B5563] normal-case font-normal">(optional)</span></label>
+            <label className={lc}>{t('admin.coaPdf')} <span className="text-[#4B5563] normal-case font-normal">{t('admin.optional')}</span></label>
             <div className="space-y-2">
               <label className={`flex items-center justify-center gap-2 w-full px-4 py-3 rounded-xl border border-dashed cursor-pointer transition-colors ${
                 isCoaUploading ? 'border-[rgba(244,246,250,0.1)] text-[#4B5563]' : 'border-[rgba(46,209,180,0.35)] text-[#2ED1B4] hover:bg-[rgba(46,209,180,0.06)]'
               }`}>
                 <Upload className="w-4 h-4 shrink-0" />
-                <span className="text-sm font-medium">{isCoaUploading ? 'Uploading COA...' : 'Replace COA PDF'}</span>
+                <span className="text-sm font-medium">{isCoaUploading ? t('admin.products.uploadingCoa') : t('admin.products.replaceCoa')}</span>
                 <input
                   type="file"
                   accept="application/pdf"
@@ -2136,7 +2158,7 @@ function EditProductModal({
                       if (uploadErr) throw uploadErr;
                       setCoaUrl(uploadData.publicUrl);
                     } catch (err: any) {
-                      alert('COA upload failed: ' + (err?.message || 'Unknown error'));
+                      alert(t('admin.products.coaUploadFailed', { message: err?.message || t('admin.common.unknownError') }));
                     } finally {
                       setIsCoaUploading(false);
                     }
@@ -2146,8 +2168,8 @@ function EditProductModal({
               {coaUrl && (
                 <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-[rgba(46,209,180,0.08)] border border-[rgba(46,209,180,0.2)]">
                   <CheckCircle className="w-4 h-4 text-[#2ED1B4] shrink-0" />
-                  <span className="text-xs text-[#2ED1B4] truncate flex-1">COA uploaded</span>
-                  <button type="button" onClick={() => window.open(coaUrl, '_blank', 'noopener,noreferrer')} className="text-xs text-[#2ED1B4] underline shrink-0">View</button>
+                  <span className="text-xs text-[#2ED1B4] truncate flex-1">{t('admin.coaUploaded')}</span>
+                  <button type="button" onClick={() => window.open(coaUrl, '_blank', 'noopener,noreferrer')} className="text-xs text-[#2ED1B4] underline shrink-0">{t('admin.view')}</button>
                 </div>
               )}
             </div>
@@ -2155,7 +2177,7 @@ function EditProductModal({
 
           {/* Product Image */}
           <div>
-            <label className={lc}>Product Image</label>
+            <label className={lc}>{t('admin.productImage')}</label>
             <div className="space-y-2">
               <div className="flex gap-2 items-center">
                 {imageUrl && (
@@ -2166,7 +2188,7 @@ function EditProductModal({
                     onError={(e) => { (e.target as HTMLImageElement).style.display = 'none'; }}
                   />
                 )}
-                <input type="text" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className={ic} placeholder="Paste URL or upload below" />
+                <input type="text" value={imageUrl} onChange={e => setImageUrl(e.target.value)} className={ic} placeholder={t('admin.products.pasteOrUpload')} />
               </div>
               <input type="file" ref={fileInputRef} accept="image/*" className="hidden" onChange={async (e) => {
                 const file = e.target.files?.[0];
@@ -2179,14 +2201,14 @@ function EditProductModal({
                   if (error) throw error;
                   setImageUrl(data.publicUrl);
                 } catch (err: any) {
-                  alert('Upload failed: ' + (err?.message || 'Unknown error'));
+                  alert(t('admin.products.uploadFailed', { message: err?.message || t('admin.common.unknownError') }));
                 } finally {
                   setIsUploading(false);
                 }
               }} />
               <button type="button" onClick={() => fileInputRef.current?.click()} disabled={isUploading} className="w-full px-3 py-3 rounded-xl border border-dashed border-[rgba(46,209,180,0.35)] text-sm font-medium text-[#2ED1B4] hover:bg-[rgba(46,209,180,0.06)] flex items-center justify-center gap-2 transition-colors disabled:opacity-50">
                 <ImageIcon className="w-4 h-4" />
-                {isUploading ? 'Uploading...' : 'Upload from Device'}
+                {isUploading ? t('admin.products.uploading') : t('admin.products.uploadFromDevice')}
               </button>
             </div>
           </div>
@@ -2196,7 +2218,7 @@ function EditProductModal({
             <div className="flex items-center justify-between mb-3">
               <p className="text-sm font-bold text-[#F4F6FA] flex items-center gap-2">
                 <Tag className="w-4 h-4 text-[#2ED1B4]" />
-                Dosage Variants ({dosages.length})
+                {t('admin.products.dosageVariants', { count: dosages.length })}
               </p>
               <button
                 type="button"
@@ -2204,7 +2226,7 @@ function EditProductModal({
                 className="flex items-center gap-1.5 px-3 py-2 rounded-xl bg-[rgba(46,209,180,0.12)] border border-[rgba(46,209,180,0.25)] text-[#2ED1B4] text-xs font-semibold hover:bg-[rgba(46,209,180,0.2)] transition-colors"
               >
                 <Plus className="w-3.5 h-3.5" />
-                Add Variant
+                {t('admin.products.addVariant')}
               </button>
             </div>
 
@@ -2216,21 +2238,21 @@ function EditProductModal({
                   <div key={idx} className="rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.08)] p-3 space-y-3">
                     {/* Row header: dosage # + remove */}
                     <div className="flex items-center justify-between">
-                      <span className="text-xs font-semibold text-[#2ED1B4]">Variant {idx + 1}</span>
+                      <span className="text-xs font-semibold text-[#2ED1B4]">{t('admin.variant', { n: idx + 1 })}</span>
                       <button
                         type="button"
                         onClick={() => removeDosageRow(idx)}
                         disabled={dosages.length === 1}
                         className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[#EF4444] bg-[rgba(239,68,68,0.08)] hover:bg-[rgba(239,68,68,0.15)] disabled:opacity-30 disabled:cursor-not-allowed transition-colors text-xs font-medium"
                       >
-                        <Trash2 className="w-3.5 h-3.5" /> Remove
+                        <Trash2 className="w-3.5 h-3.5" /> {t('admin.products.remove')}
                       </button>
                     </div>
 
                     {/* Dosage value + Unit */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-semibold text-[#6B7280] uppercase mb-1">Dosage</label>
+                        <label className="block text-[10px] font-semibold text-[#6B7280] uppercase mb-1">{t('admin.dosage')}</label>
                         <input
                           type="text"
                           value={row.mg}
@@ -2240,7 +2262,7 @@ function EditProductModal({
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-semibold text-[#6B7280] uppercase mb-1">Unit</label>
+                        <label className="block text-[10px] font-semibold text-[#6B7280] uppercase mb-1">{t('admin.unit')}</label>
                         <SelectWrap>
                           <select value={row.unit} onChange={(e) => updateDosage(idx, 'unit', e.target.value)} className={dsc}>
                             <option value="MG">MG</option>
@@ -2256,7 +2278,7 @@ function EditProductModal({
                     {/* Price + Stock qty */}
                     <div className="grid grid-cols-2 gap-3">
                       <div>
-                        <label className="block text-[10px] font-semibold text-[#6B7280] uppercase mb-1">Price (SEK)</label>
+                        <label className="block text-[10px] font-semibold text-[#6B7280] uppercase mb-1">{t('admin.products.priceSek')}</label>
                         <input
                           type="number"
                           step="0.01"
@@ -2268,7 +2290,7 @@ function EditProductModal({
                         />
                       </div>
                       <div>
-                        <label className="block text-[10px] font-semibold text-[#6B7280] uppercase mb-1">Stock Qty</label>
+                        <label className="block text-[10px] font-semibold text-[#6B7280] uppercase mb-1">{t('admin.stockQty')}</label>
                         <input
                           type="number"
                           min={0}
@@ -2289,7 +2311,7 @@ function EditProductModal({
                           : 'bg-[rgba(239,68,68,0.08)] border-[rgba(239,68,68,0.2)] text-[#EF4444]'
                       }`}
                     >
-                      <span className="text-sm font-medium">{row.inStock ? 'In Stock' : 'Out of Stock'}</span>
+                      <span className="text-sm font-medium">{row.inStock ? t('admin.common.inStock') : t('admin.common.outOfStock')}</span>
                       <div className={`w-11 h-7 rounded-full inline-flex items-center shrink-0 transition-colors ${row.inStock ? 'bg-[#22C55E]' : 'bg-[rgba(244,246,250,0.12)]'}`}>
                         <span className={`inline-block w-5 h-5 rounded-full bg-white shadow transition-transform ${row.inStock ? 'translate-x-[22px]' : 'translate-x-[3px]'}`} />
                       </div>
@@ -2298,14 +2320,14 @@ function EditProductModal({
                     {/* Bundle pricing preview */}
                     {preview && (
                       <div className="pt-2 border-t border-[rgba(244,246,250,0.06)]">
-                        <p className="text-[10px] font-semibold text-[#2ED1B4] uppercase mb-1.5">Bundle preview</p>
+                        <p className="text-[10px] font-semibold text-[#2ED1B4] uppercase mb-1.5">{t('admin.bundlePreviewShort')}</p>
                         <div className="flex gap-1.5 flex-wrap">
                           {[
-                            { label: 'Buy 1', price: preview.buy1, disc: '20%' },
-                            { label: 'Buy 2', price: preview.buy2, disc: '25%' },
-                            { label: 'Buy 3', price: preview.buy3, disc: '30%' },
-                            { label: 'Buy 5', price: preview.buy5, disc: '36%' },
-                            { label: 'Buy 10', price: preview.buy10, disc: '44%' },
+                            { label: t('admin.buy1'), price: preview.buy1, disc: '20%' },
+                            { label: t('admin.buy2'), price: preview.buy2, disc: '25%' },
+                            { label: t('admin.buy3'), price: preview.buy3, disc: '30%' },
+                            { label: t('admin.buy5'), price: preview.buy5, disc: '36%' },
+                            { label: t('admin.buy10'), price: preview.buy10, disc: '44%' },
                           ].map(t => (
                             <div key={t.label} className="px-2 py-1.5 rounded-lg bg-[rgba(46,209,180,0.08)] text-center min-w-[50px]">
                               <p className="text-[9px] text-[#A9B3C7]">{t.label}</p>
@@ -2320,7 +2342,7 @@ function EditProductModal({
                 );
               })}
               {dosages.length === 0 && (
-                <p className="text-sm text-[#A9B3C7] text-center py-6">No variants yet. Tap "Add Variant".</p>
+                <p className="text-sm text-[#A9B3C7] text-center py-6">No variants yet. Tap "{t('admin.products.addVariant')}".</p>
               )}
             </div>
           </div>
@@ -2338,7 +2360,7 @@ function EditProductModal({
         {/* Sticky action footer — always visible above the bottom nav */}
         <div className="sticky bottom-0 left-0 right-0 bg-[#0F172A] border-t border-[rgba(244,246,250,0.08)] px-5 pt-3 pb-[calc(0.75rem+env(safe-area-inset-bottom,0px))] flex gap-3">
           <button type="button" onClick={onClose} className="flex-1 sm:flex-none px-5 py-3 rounded-xl border border-[rgba(244,246,250,0.15)] text-[#A9B3C7] hover:bg-[rgba(244,246,250,0.05)] font-medium transition-colors">
-            Cancel
+            {t('admin.common.cancel')}
           </button>
           <button
             form="edit-product-form"
@@ -2347,7 +2369,7 @@ function EditProductModal({
             className="flex-1 px-5 py-3 rounded-xl bg-[#2ED1B4] text-white hover:bg-[#25b89d] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 font-semibold transition-all"
           >
             {isSaving ? (
-              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> Saving...</>
+              <><div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" /> {t('admin.common.saving')}</>
             ) : (
               <><Save className="w-4 h-4" /> Update</>
             )}
@@ -2410,6 +2432,7 @@ function indexWaitlistForAdminProducts(
 
 // Products Section
 function ProductsSection() {
+  const { t } = useTranslation();
   const [products, setProducts] = useState<Product[]>([]);
   const [waitlistByProduct, setWaitlistByProduct] = useState<Record<string, AdminWaitlistRow[]>>({});
   const [loading, setLoading] = useState(true);
@@ -2479,7 +2502,7 @@ function ProductsSection() {
 
   const toggleStock = async (dosageId: string, currentStatus: boolean) => {
     if (!dosageId) {
-      setProductsError('Missing dosage id. Try refreshing the product list.');
+      setProductsError(t('admin.products.missingDosageId'));
       return;
     }
     try {
@@ -2488,13 +2511,13 @@ function ProductsSection() {
         .update({ in_stock: currentStatus !== true })
         .eq('id', dosageId);
       if (error) {
-        setProductsError(error.message || 'Failed to update stock.');
+        setProductsError(error.message || t('admin.products.failUpdateStock'));
         return;
       }
       await loadProducts(true);
     } catch (error) {
       console.error('Error updating stock:', error);
-      setProductsError(error instanceof Error ? error.message : 'Failed to update stock.');
+      setProductsError(error instanceof Error ? error.message : t('admin.products.failUpdateStock'));
     }
   };
 
@@ -2508,7 +2531,7 @@ function ProductsSection() {
       await loadProducts(true);
     } catch (err: any) {
       console.error('Delete product error:', err);
-      setEditError(err?.message || 'Failed to delete product.');
+      setEditError(err?.message || t('admin.products.failDelete'));
     } finally {
       setDeleting(false);
     }
@@ -2573,7 +2596,7 @@ function ProductsSection() {
       for (const { id, display_order } of pending) {
         const { error } = await supabase.from('products').update({ display_order }).eq('id', id);
         if (error) {
-          setProductsError(error.message || 'Failed to reorder products.');
+          setProductsError(error.message || t('admin.products.failReorder'));
           await loadProducts(true);
           return;
         }
@@ -2582,8 +2605,8 @@ function ProductsSection() {
       await loadProducts(true);
     } catch (err) {
       console.error('Error reordering:', err);
-      setProductsError(err instanceof Error ? err.message : 'Failed to reorder.');
-      alert('Failed to reorder products.');
+      setProductsError(err instanceof Error ? err.message : t('admin.products.failReorder'));
+      alert(t('admin.products.failReorder'));
     } finally {
       reorderInFlightRef.current = false;
       setIsReordering(false);
@@ -2627,14 +2650,14 @@ function ProductsSection() {
   return (
     <div className="space-y-6">
       <div className="flex flex-wrap justify-between items-center gap-3">
-        <h2 className="text-xl font-bold text-[#F4F6FA]">Products ({products.length})</h2>
+        <h2 className="text-xl font-bold text-[#F4F6FA]">{t('admin.products.title', { count: products.length })}</h2>
         <button
           type="button"
           onClick={() => setShowAddModal(true)}
           className="px-4 py-2 rounded-xl bg-[#2ED1B4] text-white hover:bg-[#25b89d] flex items-center gap-2 transition-colors cursor-pointer relative z-10"
         >
           <Plus className="w-4 h-4" />
-          Add Product
+          {t('admin.addProduct')}
         </button>
       </div>
 
@@ -2650,7 +2673,7 @@ function ProductsSection() {
                 : 'bg-[rgba(244,246,250,0.06)] text-[#A9B3C7] hover:bg-[rgba(244,246,250,0.1)]'
             }`}
           >
-            {cat === 'all' ? 'All' : cat.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
+            {cat === 'all' ? t('admin.common.all') : cat.replace(/-/g, ' ').replace(/\b\w/g, c => c.toUpperCase())}
           </button>
         ))}
       </div>
@@ -2681,13 +2704,13 @@ function ProductsSection() {
       {deleteProduct && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60" onClick={() => { setDeleteProduct(null); setEditError(null); }}>
           <div className="bg-[#111827] border border-[rgba(244,246,250,0.08)] rounded-2xl max-w-sm w-full p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-            <p className="text-[#F4F6FA] font-medium mb-2">Delete product?</p>
-            <p className="text-sm text-[#A9B3C7] mb-4">“{deleteProduct.name}” will be removed. Dosages will be deleted. This cannot be undone.</p>
+            <p className="text-[#F4F6FA] font-medium mb-2">{t('admin.products.deleteTitle')}</p>
+            <p className="text-sm text-[#A9B3C7] mb-4">{t('admin.products.deleteDesc', { name: deleteProduct.name })}</p>
             {editError && <p className="text-sm text-[#EF4444] mb-3">{editError}</p>}
             <div className="flex gap-3">
-              <button type="button" onClick={() => { setDeleteProduct(null); setEditError(null); }} className="flex-1 px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7] hover:bg-[rgba(244,246,250,0.05)]">Cancel</button>
+              <button type="button" onClick={() => { setDeleteProduct(null); setEditError(null); }} className="flex-1 px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7] hover:bg-[rgba(244,246,250,0.05)]">{t('admin.common.cancel')}</button>
               <button type="button" onClick={handleDeleteProduct} disabled={deleting} className="flex-1 px-4 py-2 rounded-xl bg-[#EF4444] text-white hover:bg-[#DC2626] disabled:opacity-50">
-                {deleting ? 'Deleting...' : 'Delete'}
+                {deleting ? t('admin.common.deleting') : t('admin.common.delete')}
               </button>
             </div>
           </div>
@@ -2705,7 +2728,7 @@ function ProductsSection() {
                   disabled={idx === 0 || isReordering}
                   onClick={() => moveProduct(product.id, 'up')}
                   className="p-1 rounded text-[#A9B3C7] hover:text-[#2ED1B4] hover:bg-[rgba(46,209,180,0.1)] disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Move up"
+                  title={t('admin.common.moveUp')}
                 >
                   <ArrowUp className="w-4 h-4" />
                 </button>
@@ -2715,7 +2738,7 @@ function ProductsSection() {
                   disabled={idx === filteredProducts.length - 1 || isReordering}
                   onClick={() => moveProduct(product.id, 'down')}
                   className="p-1 rounded text-[#A9B3C7] hover:text-[#2ED1B4] hover:bg-[rgba(46,209,180,0.1)] disabled:opacity-30 disabled:cursor-not-allowed"
-                  title="Move down"
+                  title={t('admin.common.moveDown')}
                 >
                   <ArrowDown className="w-4 h-4" />
                 </button>
@@ -2724,13 +2747,13 @@ function ProductsSection() {
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
                   <h4 className="font-medium text-[#F4F6FA]">{product.name}</h4>
-                  {!product.is_active && <span className="px-2 py-0.5 rounded bg-[#EF4444] text-white text-[10px]">INACTIVE</span>}
+                  {!product.is_active && <span className="px-2 py-0.5 rounded bg-[#EF4444] text-white text-[10px]">{t('admin.inactive')}</span>}
                   <div className="ml-auto flex items-center gap-1 shrink-0">
                     <button
                       type="button"
                       onClick={() => setEditProduct(product as Product & { product_dosages?: any[] })}
                       className="p-2 rounded-lg text-[#A9B3C7] hover:bg-[rgba(46,209,180,0.15)] hover:text-[#2ED1B4]"
-                      title="Edit product"
+                      title={t('admin.products.editProduct')}
                     >
                       <Pencil className="w-4 h-4" />
                     </button>
@@ -2738,18 +2761,18 @@ function ProductsSection() {
                       type="button"
                       onClick={() => { setEditError(null); setDeleteProduct(product); }}
                       className="p-2 rounded-lg text-[#A9B3C7] hover:bg-[rgba(239,68,68,0.15)] hover:text-[#EF4444]"
-                      title="Delete product"
+                      title={t('admin.products.deleteProduct')}
                     >
                       <Trash2 className="w-4 h-4" />
                     </button>
                   </div>
                 </div>
                 <p className="text-xs text-[#A9B3C7] mt-1">{product.category}</p>
-                <p className="text-xs text-[#A9B3C7] mt-1">Displayed reviews: {product.review_count ?? 0}</p>
+                <p className="text-xs text-[#A9B3C7] mt-1">{t('admin.products.displayedReviews', { count: product.review_count ?? 0 })}</p>
                 <div className="flex items-center gap-2 mt-2">
                   <span className={`w-2 h-2 rounded-full ${product.product_dosages?.some((d: any) => d.in_stock) ? 'bg-[#22C55E]' : 'bg-[#EF4444]'}`} />
                   <span className="text-xs text-[#A9B3C7]">
-                    {product.product_dosages?.filter((d: any) => d.in_stock).length || 0}/{product.product_dosages?.length || 0} in stock
+                    {t('admin.products.inStockCount', { inStock: product.product_dosages?.filter((d: any) => d.in_stock).length || 0, total: product.product_dosages?.length || 0 })}
                   </span>
                 </div>
                 {(() => {
@@ -2758,7 +2781,7 @@ function ProductsSection() {
                     return (
                       <p className="text-xs text-[#A9B3C7]/70 mt-2 flex items-center gap-1.5">
                         <UserPlus className="w-3.5 h-3.5 shrink-0 opacity-70" />
-                        Priority waitlist: 0
+                        {t('admin.products.waitlist', { count: 0 })}
                       </p>
                     );
                   }
@@ -2766,8 +2789,8 @@ function ProductsSection() {
                     <details className="mt-2 rounded-lg bg-[rgba(139,92,246,0.08)] border border-[rgba(139,92,246,0.2)] px-2.5 py-2">
                       <summary className="text-xs font-medium text-[#C4B5FD] cursor-pointer list-none flex items-center gap-2 [&::-webkit-details-marker]:hidden">
                         <UserPlus className="w-3.5 h-3.5 shrink-0" />
-                        Priority waitlist: {wl.length} {wl.length === 1 ? 'person' : 'people'}
-                        <span className="text-[#A9B3C7] font-normal">— click to show emails</span>
+                        {t('admin.products.waitlist', { count: wl.length })} {wl.length === 1 ? t('admin.common.person') : t('admin.common.people')}
+                        <span className="text-[#A9B3C7] font-normal">{t('admin.products.waitlistShowEmails')}</span>
                       </summary>
                       <ul className="mt-2 space-y-1.5 max-h-36 overflow-y-auto border-t border-[rgba(139,92,246,0.15)] pt-2">
                         {wl.map((w) => (
@@ -2796,7 +2819,7 @@ function ProductsSection() {
                     <span className="text-sm text-[#F4F6FA]">{dosage.mg} {dosage.unit ?? 'MG'}</span>
                   </div>
                   <div className="flex items-center gap-4">
-                    <span className="text-xs text-[#A9B3C7]">Stock: {dosage.stock_quantity}</span>
+                    <span className="text-xs text-[#A9B3C7]">{t('admin.products.stock')}: {dosage.stock_quantity}</span>
                     <span className="text-sm text-[#2ED1B4]">kr {dosage.originalPrice ?? dosage.price ?? '—'}</span>
                   </div>
                 </div>
@@ -2811,6 +2834,8 @@ function ProductsSection() {
 
 // Users Section
 function UsersSection() {
+  const { t, language } = useTranslation();
+  const dateLocale = language === 'sv' ? 'sv-SE' : 'en-GB';
   const [users, setUsers] = useState<any[]>([]);
   const [userBalances, setUserBalances] = useState<Record<string, number>>({});
   const [loading, setLoading] = useState(true);
@@ -2904,7 +2929,7 @@ function UsersSection() {
       const { error: errProfiles } = await supabase.from('profiles').delete().eq('id', userId);
       if (errProfiles) throw errProfiles;
       setDeleteUser(null); await loadUsers(true);
-    } catch (err: any) { setDeleteError(err?.message || 'Failed to delete user.'); }
+    } catch (err: any) { setDeleteError(err?.message || t('admin.users.failDelete')); }
     finally { setDeleting(false); }
   };
 
@@ -2919,7 +2944,7 @@ function UsersSection() {
       const adminId = session?.user?.id ?? 'unknown';
 
       const amount = parseInt(pointsAmount);
-      if (isNaN(amount) || amount <= 0) { alert('Enter a valid positive number'); setPointsLoading(false); return; }
+      if (isNaN(amount) || amount <= 0) { alert(t('admin.users.invalidPoints')); setPointsLoading(false); return; }
       const pts = pointsModal.mode === 'deduct' ? -amount : amount;
       const desc = pointsReason || (pointsModal.mode === 'add' ? 'Admin adjustment' : 'Admin deduction');
       try {
@@ -2939,7 +2964,7 @@ function UsersSection() {
       }
 
       setPointsModal(null); setPointsAmount(''); setPointsReason(''); await loadUsers(true);
-    } catch (err: any) { alert('Failed: ' + (err?.message || 'Unknown error')); }
+    } catch (err: any) { alert(t('admin.users.failPoints', { message: err?.message || t('admin.common.unknownError') })); }
     finally { setPointsLoading(false); }
   };
 
@@ -2950,13 +2975,13 @@ function UsersSection() {
       const { error } = await supabase.from('profiles').update({ is_banned: true }).eq('id', banUser.id);
       if (error) throw error;
       setBanUser(null); await loadUsers(true);
-    } catch (err: any) { alert('Failed to ban: ' + (err?.message || 'Unknown error')); }
+    } catch (err: any) { alert(t('admin.users.failBan', { message: err?.message || t('admin.common.unknownError') })); }
     finally { setBanning(false); }
   };
 
   const handleUnbanUser = async (userId: string) => {
     try { await supabase.from('profiles').update({ is_banned: false }).eq('id', userId); await loadUsers(true); }
-    catch (err: any) { alert('Failed to unban: ' + (err?.message || 'Unknown error')); }
+    catch (err: any) { alert(t('admin.users.failUnban', { message: err?.message || t('admin.common.unknownError') })); }
   };
 
   const filteredUsers = users.filter(u => {
@@ -2994,25 +3019,25 @@ function UsersSection() {
 
   return (
     <div className="space-y-6">
-      <h2 className="text-xl font-bold text-[#F4F6FA]">Users ({users.length})</h2>
+      <h2 className="text-xl font-bold text-[#F4F6FA]">{t('admin.users.title', { count: users.length })}</h2>
       <div className="relative">
         <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A9B3C7]" />
-        <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder="Search users..." className="w-full pl-12 pr-4 py-3 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] placeholder-[#A9B3C7] focus:outline-none focus:border-[#2ED1B4]" />
+        <input type="text" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} placeholder={t('admin.users.searchPlaceholder')} className="w-full pl-12 pr-4 py-3 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] placeholder-[#A9B3C7] focus:outline-none focus:border-[#2ED1B4]" />
       </div>
 
       {POINTS_SYSTEM_ENABLED && pointsModal && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60" onClick={() => setPointsModal(null)}>
           <div className="bg-[#111827] border border-[rgba(244,246,250,0.08)] rounded-2xl max-w-sm w-full p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-            <h3 className="text-[#F4F6FA] font-medium mb-1">{pointsModal.mode === 'add' ? 'Add Points' : 'Deduct Points'}</h3>
-            <p className="text-sm text-[#A9B3C7] mb-4">For: {pointsModal.user.email}</p>
+            <h3 className="text-[#F4F6FA] font-medium mb-1">{pointsModal.mode === 'add' ? t('admin.users.addPoints') : t('admin.users.deductPoints')}</h3>
+            <p className="text-sm text-[#A9B3C7] mb-4">{t('admin.users.forUser', { email: pointsModal.user.email })}</p>
             <div className="space-y-3">
-              <input type="number" min="1" value={pointsAmount} onChange={e => setPointsAmount(e.target.value)} placeholder="Points amount" className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-sm" />
-              <input type="text" value={pointsReason} onChange={e => setPointsReason(e.target.value)} placeholder="Reason (optional)" className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-sm" />
+              <input type="number" min="1" value={pointsAmount} onChange={e => setPointsAmount(e.target.value)} placeholder={t('admin.users.pointsAmount')} className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-sm" />
+              <input type="text" value={pointsReason} onChange={e => setPointsReason(e.target.value)} placeholder={t('admin.users.reasonOptional')} className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-sm" />
             </div>
             <div className="flex gap-3 mt-4">
-              <button onClick={() => setPointsModal(null)} className="flex-1 px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7]">Cancel</button>
+              <button onClick={() => setPointsModal(null)} className="flex-1 px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7]">{t('admin.common.cancel')}</button>
               <button onClick={handlePointsSubmit} disabled={pointsLoading || !pointsAmount} className={`flex-1 px-4 py-2 rounded-xl text-white disabled:opacity-50 ${pointsModal.mode === 'add' ? 'bg-[#22C55E] hover:bg-[#16A34A]' : 'bg-[#EF4444] hover:bg-[#DC2626]'}`}>
-                {pointsLoading ? 'Processing...' : pointsModal.mode === 'add' ? 'Add Points' : 'Deduct Points'}
+                {pointsLoading ? t('admin.common.processing') : pointsModal.mode === 'add' ? t('admin.users.addPoints') : t('admin.users.deductPoints')}
               </button>
             </div>
           </div>
@@ -3022,11 +3047,11 @@ function UsersSection() {
       {banUser && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60" onClick={() => setBanUser(null)}>
           <div className="bg-[#111827] border border-[rgba(244,246,250,0.08)] rounded-2xl max-w-sm w-full p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-            <p className="text-[#F4F6FA] font-medium mb-2">Ban user?</p>
-            <p className="text-sm text-[#A9B3C7] mb-4">&quot;{banUser.email}&quot; will be banned.</p>
+            <p className="text-[#F4F6FA] font-medium mb-2">{t('admin.users.banTitle')}</p>
+            <p className="text-sm text-[#A9B3C7] mb-4">{t('admin.users.banDesc', { email: banUser.email })}</p>
             <div className="flex gap-3">
-              <button onClick={() => setBanUser(null)} className="flex-1 px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7]">Cancel</button>
-              <button onClick={handleBanUser} disabled={banning} className="flex-1 px-4 py-2 rounded-xl bg-[#EF4444] text-white disabled:opacity-50">{banning ? 'Banning...' : 'Ban User'}</button>
+              <button onClick={() => setBanUser(null)} className="flex-1 px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7]">{t('admin.common.cancel')}</button>
+              <button onClick={handleBanUser} disabled={banning} className="flex-1 px-4 py-2 rounded-xl bg-[#EF4444] text-white disabled:opacity-50">{banning ? t('admin.users.banning') : t('admin.users.banUser')}</button>
             </div>
           </div>
         </div>
@@ -3035,12 +3060,12 @@ function UsersSection() {
       {deleteUser && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60" onClick={() => { setDeleteUser(null); setDeleteError(null); }}>
           <div className="bg-[#111827] border border-[rgba(244,246,250,0.08)] rounded-2xl max-w-sm w-full p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-            <p className="text-[#F4F6FA] font-medium mb-2">Delete user?</p>
-            <p className="text-sm text-[#A9B3C7] mb-4">&quot;{deleteUser.email}&quot; will be removed permanently.</p>
+            <p className="text-[#F4F6FA] font-medium mb-2">{t('admin.users.deleteTitle')}</p>
+            <p className="text-sm text-[#A9B3C7] mb-4">{t('admin.users.deleteDesc', { email: deleteUser.email })}</p>
             {deleteError && <p className="text-sm text-[#EF4444] mb-3">{deleteError}</p>}
             <div className="flex gap-3">
-              <button onClick={() => { setDeleteUser(null); setDeleteError(null); }} className="flex-1 px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7]">Cancel</button>
-              <button onClick={handleDeleteUser} disabled={deleting} className="flex-1 px-4 py-2 rounded-xl bg-[#EF4444] text-white disabled:opacity-50">{deleting ? 'Deleting...' : 'Delete'}</button>
+              <button onClick={() => { setDeleteUser(null); setDeleteError(null); }} className="flex-1 px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7]">{t('admin.common.cancel')}</button>
+              <button onClick={handleDeleteUser} disabled={deleting} className="flex-1 px-4 py-2 rounded-xl bg-[#EF4444] text-white disabled:opacity-50">{deleting ? t('admin.common.deleting') : t('admin.common.delete')}</button>
             </div>
           </div>
         </div>
@@ -3057,8 +3082,8 @@ function UsersSection() {
                   <div className="min-w-0 flex-1">
                     <div className="flex items-center gap-1.5 flex-wrap">
                       <p className="font-medium text-[#F4F6FA] text-sm truncate">{user.full_name || user.email}</p>
-                      {user.is_banned && <span className="px-1.5 py-0.5 rounded bg-[#EF4444] text-white text-[9px] font-bold">BANNED</span>}
-                      {user.is_admin && <span className="px-1.5 py-0.5 rounded bg-[#8B5CF6] text-white text-[9px] font-bold">ADMIN</span>}
+                      {user.is_banned && <span className="px-1.5 py-0.5 rounded bg-[#EF4444] text-white text-[9px] font-bold">{t('admin.banned')}</span>}
+                      {user.is_admin && <span className="px-1.5 py-0.5 rounded bg-[#8B5CF6] text-white text-[9px] font-bold">{t('admin.adminBadge')}</span>}
                     </div>
                     <p className="text-xs text-[#A9B3C7] truncate mt-0.5">{user.email}</p>
                   </div>
@@ -3068,7 +3093,7 @@ function UsersSection() {
                         onClick={() => handleExpandUser(user.id)}
                         className="text-[10px] text-[#2ED1B4] hover:underline"
                       >
-                        {isExpanded ? 'Hide history' : 'History'}
+                        {isExpanded ? t('admin.users.hideHistory') : t('admin.users.history')}
                       </button>
                     </div>
                   )}
@@ -3077,41 +3102,41 @@ function UsersSection() {
                 <div className="flex items-center gap-1.5 mt-2 flex-wrap">
                   {POINTS_SYSTEM_ENABLED && (
                     <>
-                      <button type="button" onClick={() => setPointsModal({ user, mode: 'add' })} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[#22C55E] bg-[rgba(34,197,94,0.08)] hover:bg-[rgba(34,197,94,0.15)] text-xs font-medium transition-colors" title="Add points">
-                        <PlusCircle className="w-3.5 h-3.5" /> Add pts
+                      <button type="button" onClick={() => setPointsModal({ user, mode: 'add' })} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[#22C55E] bg-[rgba(34,197,94,0.08)] hover:bg-[rgba(34,197,94,0.15)] text-xs font-medium transition-colors" title={t('admin.users.addPointsTitle')}>
+                        <PlusCircle className="w-3.5 h-3.5" /> {t('admin.users.addPts')}
                       </button>
-                      <button type="button" onClick={() => setPointsModal({ user, mode: 'deduct' })} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[#F59E0B] bg-[rgba(245,158,11,0.08)] hover:bg-[rgba(245,158,11,0.15)] text-xs font-medium transition-colors" title="Deduct points">
-                        <MinusCircle className="w-3.5 h-3.5" /> Deduct
+                      <button type="button" onClick={() => setPointsModal({ user, mode: 'deduct' })} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[#F59E0B] bg-[rgba(245,158,11,0.08)] hover:bg-[rgba(245,158,11,0.15)] text-xs font-medium transition-colors" title={t('admin.users.deductPointsTitle')}>
+                        <MinusCircle className="w-3.5 h-3.5" /> {t('admin.users.deduct')}
                       </button>
                     </>
                   )}
                   {user.email !== adminEmail ? (
                     <>
                       {user.is_banned ? (
-                        <button type="button" onClick={() => handleUnbanUser(user.id)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[#22C55E] bg-[rgba(34,197,94,0.08)] hover:bg-[rgba(34,197,94,0.15)] text-xs font-medium transition-colors" title="Unban">
-                          <CheckCircle className="w-3.5 h-3.5" /> Unban
+                        <button type="button" onClick={() => handleUnbanUser(user.id)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[#22C55E] bg-[rgba(34,197,94,0.08)] hover:bg-[rgba(34,197,94,0.15)] text-xs font-medium transition-colors" title={t('admin.users.unban')}>
+                          <CheckCircle className="w-3.5 h-3.5" /> {t('admin.users.unban')}
                         </button>
                       ) : (
-                        <button type="button" onClick={() => setBanUser(user)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[#F59E0B] bg-[rgba(245,158,11,0.08)] hover:bg-[rgba(245,158,11,0.15)] text-xs font-medium transition-colors" title="Ban">
-                          <Ban className="w-3.5 h-3.5" /> Ban
+                        <button type="button" onClick={() => setBanUser(user)} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[#F59E0B] bg-[rgba(245,158,11,0.08)] hover:bg-[rgba(245,158,11,0.15)] text-xs font-medium transition-colors" title={t('admin.users.ban')}>
+                          <Ban className="w-3.5 h-3.5" /> {t('admin.users.ban')}
                         </button>
                       )}
-                      <button type="button" onClick={() => { setDeleteError(null); setDeleteUser(user); }} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[#EF4444] bg-[rgba(239,68,68,0.08)] hover:bg-[rgba(239,68,68,0.15)] text-xs font-medium transition-colors ml-auto" title="Delete">
-                        <Trash2 className="w-3.5 h-3.5" /> Delete
+                      <button type="button" onClick={() => { setDeleteError(null); setDeleteUser(user); }} className="flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-[#EF4444] bg-[rgba(239,68,68,0.08)] hover:bg-[rgba(239,68,68,0.15)] text-xs font-medium transition-colors ml-auto" title={t('admin.common.delete')}>
+                        <Trash2 className="w-3.5 h-3.5" /> {t('admin.common.delete')}
                       </button>
                     </>
-                  ) : <span className="text-xs text-[#A9B3C7] px-2 ml-auto">(you)</span>}
+                  ) : <span className="text-xs text-[#A9B3C7] px-2 ml-auto">{t('admin.common.you')}</span>}
                 </div>
               </div>
               {POINTS_SYSTEM_ENABLED && isExpanded && (
                 <div className="border-t border-[rgba(244,246,250,0.06)] bg-[rgba(7,10,18,0.4)] p-4">
                   <p className="text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider mb-3">
-                    Points History
+                    {t('admin.users.pointsHistory')}
                   </p>
                   {historyLoading ? (
-                    <div className="py-4 text-center text-sm text-[#A9B3C7]">Loading...</div>
+                    <div className="py-4 text-center text-sm text-[#A9B3C7]">{t('admin.common.loading')}</div>
                   ) : userPointsHistory.length === 0 ? (
-                    <p className="text-sm text-[#A9B3C7]">No points history found.</p>
+                    <p className="text-sm text-[#A9B3C7]">{t('admin.users.noPointsHistory')}</p>
                   ) : (
                     <div className="space-y-2 max-h-60 overflow-y-auto">
                       {userPointsHistory.map((ev) => (
@@ -3119,7 +3144,7 @@ function UsersSection() {
                           <div>
                             <span className="text-[#F4F6FA] font-medium">{POINT_TYPE_LABELS[ev.type as keyof typeof POINT_TYPE_LABELS] || ev.type}</span>
                             {ev.description && <span className="ml-2 text-[#A9B3C7] text-xs">· {ev.description}</span>}
-                            <p className="text-[10px] text-[rgba(169,179,199,0.6)]">{new Date(ev.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
+                            <p className="text-[10px] text-[rgba(169,179,199,0.6)]">{new Date(ev.created_at).toLocaleDateString(dateLocale, { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                           </div>
                           <span className={`font-bold text-sm ml-4 ${ev.points >= 0 ? 'text-[#22C55E]' : 'text-[#EF4444]'}`}>
                             {ev.points >= 0 ? '+' : ''}{ev.points}
@@ -3140,6 +3165,8 @@ function UsersSection() {
 
 // Reviews Admin Section
 function ReviewsAdminSection() {
+  const { t, language } = useTranslation();
+  const dateLocale = language === 'sv' ? 'sv-SE' : 'en-GB';
   const [reviews, setReviews] = useState<any[]>([]);
   const [products, setProducts] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -3195,7 +3222,7 @@ function ReviewsAdminSection() {
   };
 
   const handleAddReview = async () => {
-    if (!reviewProductId || !reviewComment.trim()) { setError('Product and comment are required'); return; }
+    if (!reviewProductId || !reviewComment.trim()) { setError(t('admin.reviews.productCommentRequired')); return; }
     setIsSaving(true); setError(null);
     try {
       const {
@@ -3223,7 +3250,7 @@ function ReviewsAdminSection() {
       setReviewComment('');
       await loadData(true);
     } catch (err: any) {
-      setError(err?.message || 'Failed to add review');
+      setError(err?.message || t('admin.reviews.failAdd'));
     } finally {
       setIsSaving(false);
     }
@@ -3238,7 +3265,7 @@ function ReviewsAdminSection() {
       setDeleteReview(null);
       await loadData(true);
     } catch (err: any) {
-      alert('Failed to delete: ' + (err?.message || 'Unknown error'));
+      alert(t('admin.reviews.failDelete', { message: err?.message || t('admin.common.unknownError') }));
     } finally {
       setDeleting(false);
     }
@@ -3260,7 +3287,7 @@ function ReviewsAdminSection() {
   const handleUpdateReview = async () => {
     if (!editingReview?.id) return;
     if (!editProductId || !editComment.trim()) {
-      setEditError('Product and comment are required');
+      setEditError(t('admin.reviews.productCommentRequired'));
       return;
     }
 
@@ -3287,7 +3314,7 @@ function ReviewsAdminSection() {
       setEditingReview(null);
       await loadData(true);
     } catch (err: any) {
-      setEditError(err?.message || 'Failed to update review');
+      setEditError(err?.message || t('admin.reviews.failUpdate'));
     } finally {
       setIsUpdating(false);
     }
@@ -3328,9 +3355,9 @@ function ReviewsAdminSection() {
   return (
     <div className="space-y-6">
       <div className="flex justify-between items-center">
-        <h2 className="text-xl font-bold text-[#F4F6FA]">Reviews ({reviews.length})</h2>
+        <h2 className="text-xl font-bold text-[#F4F6FA]">{t('admin.reviews.title', { count: reviews.length })}</h2>
         <button onClick={() => setShowAddModal(true)} className="px-4 py-2 rounded-xl bg-[#2ED1B4] text-white hover:bg-[#25b89d] flex items-center gap-2">
-          <Plus className="w-4 h-4" /> Write Review
+          <Plus className="w-4 h-4" /> {t('admin.writeReview')}
         </button>
       </div>
 
@@ -3339,22 +3366,22 @@ function ReviewsAdminSection() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60" onClick={() => setShowAddModal(false)}>
           <div className="bg-[#111827] border border-[rgba(244,246,250,0.08)] rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
             <div className="p-6 flex justify-between items-center border-b border-[rgba(244,246,250,0.08)]">
-              <h3 className="text-lg font-semibold text-[#F4F6FA]">Write a Review</h3>
+              <h3 className="text-lg font-semibold text-[#F4F6FA]">{t('admin.writeReview')}</h3>
               <button onClick={() => setShowAddModal(false)} className="p-2 rounded-lg text-[#A9B3C7] hover:text-[#F4F6FA]"><X className="w-5 h-5" /></button>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-[#A9B3C7] mb-1.5">Product *</label>
+                <label className="block text-sm font-semibold text-[#A9B3C7] mb-1.5">{t('admin.reviews.productRequired')}</label>
                 <div className="relative">
                   <select value={reviewProductId} onChange={e => setReviewProductId(e.target.value)} className="w-full px-3 py-3 pr-9 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-base focus:outline-none focus:border-[#2ED1B4] transition-colors appearance-none">
-                    <option value="">Select product...</option>
+                    <option value="">{t('admin.reviews.selectProduct')}</option>
                     {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                   <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9B3C7]" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-[#A9B3C7] mb-1">Rating</label>
+                <label className="block text-sm text-[#A9B3C7] mb-1">{t('admin.rating')}</label>
                 <div className="flex gap-1">
                   {[1,2,3,4,5].map(s => (
                     <button key={s} type="button" onClick={() => setReviewRating(s)} className="p-1">
@@ -3364,18 +3391,18 @@ function ReviewsAdminSection() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-[#A9B3C7] mb-1">Title (optional)</label>
-                <input type="text" value={reviewTitle} onChange={e => setReviewTitle(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA]" placeholder="Great product!" />
+                <label className="block text-sm text-[#A9B3C7] mb-1">{t('admin.reviews.titleOptional')}</label>
+                <input type="text" value={reviewTitle} onChange={e => setReviewTitle(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA]" placeholder={t('admin.reviews.titlePlaceholder')} />
               </div>
               <div>
-                <label className="block text-sm text-[#A9B3C7] mb-1">Comment *</label>
-                <textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA]" rows={3} placeholder="Write your review..." />
+                <label className="block text-sm text-[#A9B3C7] mb-1">{t('admin.reviews.commentRequired')}</label>
+                <textarea value={reviewComment} onChange={e => setReviewComment(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA]" rows={3} placeholder={t('admin.reviews.commentPlaceholder')} />
               </div>
               {error && <p className="text-sm text-[#EF4444]">{error}</p>}
               <div className="flex gap-3">
-                <button onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7]">Cancel</button>
+                <button onClick={() => setShowAddModal(false)} className="px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7]">{t('admin.common.cancel')}</button>
                 <button onClick={handleAddReview} disabled={isSaving} className="px-4 py-2 rounded-xl bg-[#2ED1B4] text-white disabled:opacity-50">
-                  {isSaving ? 'Saving...' : 'Post Review'}
+                  {isSaving ? t('admin.common.saving') : t('admin.reviews.postReview')}
                 </button>
               </div>
             </div>
@@ -3387,11 +3414,11 @@ function ReviewsAdminSection() {
       {deleteReview && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60" onClick={() => setDeleteReview(null)}>
           <div className="bg-[#111827] border border-[rgba(244,246,250,0.08)] rounded-2xl max-w-sm w-full p-6 shadow-xl" onClick={e => e.stopPropagation()}>
-            <p className="text-[#F4F6FA] font-medium mb-2">Delete review?</p>
-            <p className="text-sm text-[#A9B3C7] mb-4">This review will be permanently removed.</p>
+            <p className="text-[#F4F6FA] font-medium mb-2">{t('admin.reviews.deleteTitle')}</p>
+            <p className="text-sm text-[#A9B3C7] mb-4">{t('admin.reviews.deleteDesc')}</p>
             <div className="flex gap-3">
-              <button onClick={() => setDeleteReview(null)} className="flex-1 px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7]">Cancel</button>
-              <button onClick={handleDeleteReview} disabled={deleting} className="flex-1 px-4 py-2 rounded-xl bg-[#EF4444] text-white disabled:opacity-50">{deleting ? 'Deleting...' : 'Delete'}</button>
+              <button onClick={() => setDeleteReview(null)} className="flex-1 px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7]">{t('admin.common.cancel')}</button>
+              <button onClick={handleDeleteReview} disabled={deleting} className="flex-1 px-4 py-2 rounded-xl bg-[#EF4444] text-white disabled:opacity-50">{deleting ? t('admin.common.deleting') : t('admin.common.delete')}</button>
             </div>
           </div>
         </div>
@@ -3402,22 +3429,22 @@ function ReviewsAdminSection() {
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-black/60" onClick={() => setShowEditModal(false)}>
           <div className="bg-[#111827] border border-[rgba(244,246,250,0.08)] rounded-2xl max-w-lg w-full max-h-[90vh] overflow-y-auto shadow-xl" onClick={e => e.stopPropagation()}>
             <div className="p-6 flex justify-between items-center border-b border-[rgba(244,246,250,0.08)]">
-              <h3 className="text-lg font-semibold text-[#F4F6FA]">Edit Review</h3>
+              <h3 className="text-lg font-semibold text-[#F4F6FA]">{t('admin.editReview')}</h3>
               <button onClick={() => setShowEditModal(false)} className="p-2 rounded-lg text-[#A9B3C7] hover:text-[#F4F6FA]"><X className="w-5 h-5" /></button>
             </div>
             <div className="p-6 space-y-4">
               <div>
-                <label className="block text-sm font-semibold text-[#A9B3C7] mb-1.5">Product *</label>
+                <label className="block text-sm font-semibold text-[#A9B3C7] mb-1.5">{t('admin.reviews.productRequired')}</label>
                 <div className="relative">
                   <select value={editProductId} onChange={e => setEditProductId(e.target.value)} className="w-full px-3 py-3 pr-9 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-base focus:outline-none focus:border-[#2ED1B4] transition-colors appearance-none">
-                    <option value="">Select product...</option>
+                    <option value="">{t('admin.reviews.selectProduct')}</option>
                     {products.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                   </select>
                   <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9B3C7]" />
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-[#A9B3C7] mb-1">Rating</label>
+                <label className="block text-sm text-[#A9B3C7] mb-1">{t('admin.rating')}</label>
                 <div className="flex gap-1">
                   {[1,2,3,4,5].map(s => (
                     <button key={s} type="button" onClick={() => setEditRating(s)} className="p-1">
@@ -3427,33 +3454,33 @@ function ReviewsAdminSection() {
                 </div>
               </div>
               <div>
-                <label className="block text-sm text-[#A9B3C7] mb-1">Title (optional)</label>
-                <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA]" placeholder="Great product!" />
+                <label className="block text-sm text-[#A9B3C7] mb-1">{t('admin.reviews.titleOptional')}</label>
+                <input type="text" value={editTitle} onChange={e => setEditTitle(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA]" placeholder={t('admin.reviews.titlePlaceholder')} />
               </div>
               <div>
-                <label className="block text-sm text-[#A9B3C7] mb-1">Comment *</label>
-                <textarea value={editComment} onChange={e => setEditComment(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA]" rows={3} placeholder="Write your review..." />
+                <label className="block text-sm text-[#A9B3C7] mb-1">{t('admin.reviews.commentRequired')}</label>
+                <textarea value={editComment} onChange={e => setEditComment(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA]" rows={3} placeholder={t('admin.reviews.commentPlaceholder')} />
               </div>
               <div>
-                <label className="block text-sm text-[#A9B3C7] mb-1">Helpful votes</label>
+                <label className="block text-sm text-[#A9B3C7] mb-1">{t('admin.helpfulVotes')}</label>
                 <input type="number" min={0} value={editHelpfulCount} onChange={e => setEditHelpfulCount(e.target.value)} className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA]" />
-                <p className="text-[11px] text-[#A9B3C7] mt-1">This is the number of users who marked this review as helpful.</p>
+                <p className="text-[11px] text-[#A9B3C7] mt-1">{t('admin.reviews.helpfulHint')}</p>
               </div>
               <div className="flex items-center gap-4">
                 <label className="flex items-center gap-2 text-sm text-[#A9B3C7]">
                   <input type="checkbox" checked={editVerifiedPurchase} onChange={e => setEditVerifiedPurchase(e.target.checked)} className="rounded accent-[#2ED1B4]" />
-                  Verified purchase
+                  {t('admin.reviews.verifiedPurchase')}
                 </label>
                 <label className="flex items-center gap-2 text-sm text-[#A9B3C7]">
                   <input type="checkbox" checked={editApproved} onChange={e => setEditApproved(e.target.checked)} className="rounded accent-[#2ED1B4]" />
-                  Approved for display
+                  {t('admin.reviews.approvedDisplay')}
                 </label>
               </div>
               {editError && <p className="text-sm text-[#EF4444]">{editError}</p>}
               <div className="flex gap-3">
-                <button onClick={() => setShowEditModal(false)} className="px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7]">Cancel</button>
+                <button onClick={() => setShowEditModal(false)} className="px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7]">{t('admin.common.cancel')}</button>
                 <button onClick={handleUpdateReview} disabled={isUpdating} className="px-4 py-2 rounded-xl bg-[#8B5CF6] text-white disabled:opacity-50">
-                  {isUpdating ? 'Saving...' : 'Save Changes'}
+                  {isUpdating ? t('admin.common.saving') : t('admin.common.saveChanges')}
                 </button>
               </div>
             </div>
@@ -3464,7 +3491,7 @@ function ReviewsAdminSection() {
       {/* Reviews List */}
       <div className="space-y-3">
         {reviews.length === 0 ? (
-          <div className="p-12 text-center text-[#A9B3C7]">No reviews yet. Click "Write Review" to add one.</div>
+          <div className="p-12 text-center text-[#A9B3C7]">{t('admin.reviews.empty')}</div>
         ) : reviews.map(review => (
           <div key={review.id} className="p-4 rounded-xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
             <div className="flex items-start justify-between gap-3">
@@ -3475,22 +3502,22 @@ function ReviewsAdminSection() {
                       <Star key={s} className={`w-3.5 h-3.5 ${s <= review.rating ? 'fill-[#F59E0B] text-[#F59E0B]' : 'text-[rgba(244,246,250,0.2)]'}`} />
                     ))}
                   </div>
-                  <span className="text-xs text-[#8B5CF6]">{review.products?.name || 'Unknown Product'}</span>
-                  {review.is_verified_purchase && <span className="text-[10px] text-[#22C55E] flex items-center gap-0.5"><CheckCircle className="w-3 h-3" /> Verified</span>}
+                  <span className="text-xs text-[#8B5CF6]">{review.products?.name || t('admin.reviews.unknownProduct')}</span>
+                  {review.is_verified_purchase && <span className="text-[10px] text-[#22C55E] flex items-center gap-0.5"><CheckCircle className="w-3 h-3" /> {t('admin.reviews.verified')}</span>}
                 </div>
                 {review.title && <p className="text-sm font-medium text-[#F4F6FA]">{review.title}</p>}
                 <p className="text-sm text-[#A9B3C7] mt-1">{review.comment}</p>
                 <div className="flex items-center gap-3 mt-2 text-xs text-[#A9B3C7]">
-                  <span>{userMap[review.user_id] || 'Anonymous'}</span>
-                  <span>{new Date(review.created_at).toLocaleDateString('en-GB')}</span>
-                  <span>{review.helpful_count || 0} people found this helpful</span>
+                  <span>{userMap[review.user_id] || t('admin.reviews.anonymous')}</span>
+                  <span>{new Date(review.created_at).toLocaleDateString(dateLocale)}</span>
+                  <span>{t('admin.reviews.helpfulCount', { count: review.helpful_count || 0 })}</span>
                 </div>
               </div>
               <div className="flex items-center gap-2 shrink-0">
-                <button onClick={() => openEditReview(review)} className="p-2 rounded-lg text-[#A9B3C7] hover:bg-[rgba(46,209,180,0.15)] hover:text-[#2ED1B4]" title="Edit review">
+                <button onClick={() => openEditReview(review)} className="p-2 rounded-lg text-[#A9B3C7] hover:bg-[rgba(46,209,180,0.15)] hover:text-[#2ED1B4]" title={t('admin.reviews.editReviewTitle')}>
                   <Pencil className="w-4 h-4" />
                 </button>
-                <button onClick={() => setDeleteReview(review)} className="p-2 rounded-lg text-[#A9B3C7] hover:bg-[rgba(239,68,68,0.15)] hover:text-[#EF4444]" title="Delete review">
+                <button onClick={() => setDeleteReview(review)} className="p-2 rounded-lg text-[#A9B3C7] hover:bg-[rgba(239,68,68,0.15)] hover:text-[#EF4444]" title={t('admin.reviews.deleteReviewTitle')}>
                   <Trash2 className="w-4 h-4" />
                 </button>
               </div>
@@ -3504,6 +3531,7 @@ function ReviewsAdminSection() {
 
 // Settings Section
 function SettingsSection() {
+  const { t } = useTranslation();
   const [bankDetails, setBankDetails] = useState(DEFAULT_BANK_DETAILS);
   const [discountSettings, setDiscountSettings] = useState(DEFAULT_DISCOUNT_SETTINGS);
   const [freeGiftSettings, setFreeGiftSettings] = useState(DEFAULT_FREE_GIFT_SETTINGS);
@@ -3556,11 +3584,11 @@ function SettingsSection() {
         updateSiteSetting('whatsapp_link', { url: supportLinks.whatsapp_link }),
         updateSiteSetting('landing_page_settings', landingPageSettings),
       ]);
-      setSaveMessage('Settings saved successfully!');
+      setSaveMessage(t('admin.settings.saved'));
       setTimeout(() => setSaveMessage(''), 3000);
     } catch (error) {
       console.error('Error saving settings:', error);
-      setSaveMessage('Error saving settings. Please try again.');
+      setSaveMessage(t('admin.settings.saveError'));
     } finally {
       setIsSaving(false);
     }
@@ -3599,18 +3627,17 @@ function SettingsSection() {
           disabled={isRefreshing}
           className="px-4 py-2 rounded-xl border border-[rgba(244,246,250,0.2)] text-[#A9B3C7] hover:bg-[rgba(244,246,250,0.05)] hover:text-[#F4F6FA] text-sm flex items-center gap-2 disabled:opacity-50"
         >
-          {isRefreshing ? 'Refreshing...' : 'Refresh from database'}
+          {isRefreshing ? t('admin.common.refreshing') : t('admin.common.refreshFromDb')}
         </button>
       </div>
-      {/* Bank Transfer Details */}
       <div className="p-6 rounded-2xl bg-gradient-to-br from-[rgba(46,209,180,0.1)] to-[rgba(139,92,246,0.1)] border border-[rgba(46,209,180,0.2)]">
         <h3 className="text-lg font-semibold text-[#F4F6FA] mb-4 flex items-center gap-2">
           <CreditCard className="w-5 h-5 text-[#2ED1B4]" />
-          Bank Transfer Details
+          {t('admin.settings.bankTransfer')}
         </h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div>
-            <label className="text-[10px] text-[#A9B3C7] uppercase">Account Name</label>
+            <label className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.accountName')}</label>
             <input
               type="text"
               value={bankDetails.account_name}
@@ -3619,7 +3646,7 @@ function SettingsSection() {
             />
           </div>
           <div>
-            <label className="text-[10px] text-[#A9B3C7] uppercase">Bank Name</label>
+            <label className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.bankName')}</label>
             <input
               type="text"
               value={bankDetails.bank_name}
@@ -3628,7 +3655,7 @@ function SettingsSection() {
             />
           </div>
           <div>
-            <label className="text-[10px] text-[#A9B3C7] uppercase">Sort Code</label>
+            <label className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.sortCode')}</label>
             <input
               type="text"
               placeholder="00-00-00"
@@ -3638,7 +3665,7 @@ function SettingsSection() {
             />
           </div>
           <div>
-            <label className="text-[10px] text-[#A9B3C7] uppercase">Account Number</label>
+            <label className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.accountNumber')}</label>
             <input
               type="text"
               placeholder="12345678"
@@ -3648,10 +3675,10 @@ function SettingsSection() {
             />
           </div>
           <div className="lg:col-span-2">
-            <label className="text-[10px] text-[#A9B3C7] uppercase">Payment reference hint (optional)</label>
+            <label className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.settings.referenceHint')}</label>
             <input
               type="text"
-              placeholder="Use your order number as payment reference"
+              placeholder={t('admin.settings.referencePlaceholder')}
               value={bankDetails.reference_hint ?? ''}
               onChange={(e) => setBankDetails({ ...bankDetails, reference_hint: e.target.value })}
               className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-sm"
@@ -3660,22 +3687,21 @@ function SettingsSection() {
         </div>
       </div>
 
-      {/* Landing Page Control */}
       <div className="p-6 rounded-2xl bg-gradient-to-br from-[rgba(59,130,246,0.1)] to-[rgba(139,92,246,0.1)] border border-[rgba(59,130,246,0.2)]">
         <h3 className="text-lg font-semibold text-[#F4F6FA] mb-1 flex items-center gap-2">
           <Eye className="w-5 h-5 text-[#3B82F6]" />
-          Landing Page Control
+          {t('admin.settings.landingControl')}
         </h3>
         <p className="text-xs text-[#A9B3C7] mb-5">
-          Turn the homepage on or off. When off, visitors see a temporary unavailable screen.
+          {t('admin.settings.landingDesc')}
         </p>
         <div className="flex items-center justify-between p-4 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.08)]">
           <div>
-            <p className="text-sm font-medium text-[#F4F6FA]">Landing Page Enabled</p>
+            <p className="text-sm font-medium text-[#F4F6FA]">{t('admin.landingEnabled')}</p>
             <p className="text-xs text-[#A9B3C7] mt-0.5">
               {landingPageSettings.enabled
-                ? 'Active — homepage is visible to customers'
-                : 'Disabled — homepage is temporarily hidden'}
+                ? t('admin.settings.landingActive')
+                : t('admin.settings.landingDisabled')}
             </p>
           </div>
           <button
@@ -3692,24 +3718,27 @@ function SettingsSection() {
         </div>
       </div>
 
-      {/* Discount Settings */}
       <div className="p-6 rounded-2xl bg-gradient-to-br from-[rgba(245,158,11,0.1)] to-[rgba(239,68,68,0.1)] border border-[rgba(245,158,11,0.2)]">
         <h3 className="text-lg font-semibold text-[#F4F6FA] mb-1 flex items-center gap-2">
           <Tag className="w-5 h-5 text-[#F59E0B]" />
-          Discount Settings
+          {t('admin.settings.discountSettings')}
         </h3>
         <p className="text-xs text-[#A9B3C7] mb-5">
-          Control whether storefront prices show a discount and what percentage is applied globally.
+          {t('admin.settings.discountDesc')}
         </p>
 
         {/* Master toggle */}
         <div className="flex items-center justify-between p-4 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.08)] mb-4">
           <div>
-            <p className="text-sm font-medium text-[#F4F6FA]">Discounts Enabled</p>
+            <p className="text-sm font-medium text-[#F4F6FA]">{t('admin.discountsEnabled')}</p>
             <p className="text-xs text-[#A9B3C7] mt-0.5">
               {discountSettings.discount_enabled
-                ? `Active — Buy 1: ${discountSettings.discount_percentage ?? 20}% · Buy 2: ${discountSettings.buy2_percentage ?? 25}% · Buy 3: ${discountSettings.buy3_percentage ?? 30}%`
-                : 'Disabled — kr 200 original prices shown, no discounts applied'}
+                ? t('admin.settings.discountActive', {
+                    buy1: discountSettings.discount_percentage ?? 20,
+                    buy2: discountSettings.buy2_percentage ?? 25,
+                    buy3: discountSettings.buy3_percentage ?? 30,
+                  })
+                : t('admin.settings.discountInactive')}
             </p>
           </div>
           <button
@@ -3731,9 +3760,9 @@ function SettingsSection() {
           {/* Helper: reusable tier row */}
           {(
             [
-              { key: 'discount_percentage' as const, label: 'Buy 1', default: 20, color: '#F59E0B', presets: [5,10,15,20,25,30] },
-              { key: 'buy2_percentage'      as const, label: 'Buy 2', default: 25, color: '#8B5CF6', presets: [15,20,25,30,35,40] },
-              { key: 'buy3_percentage'      as const, label: 'Buy 3', default: 30, color: '#2ED1B4', presets: [20,25,30,35,40,45] },
+              { key: 'discount_percentage' as const, label: t('admin.buy1'), default: 20, color: '#F59E0B', presets: [5,10,15,20,25,30] },
+              { key: 'buy2_percentage'      as const, label: t('admin.buy2'), default: 25, color: '#8B5CF6', presets: [15,20,25,30,35,40] },
+              { key: 'buy3_percentage'      as const, label: t('admin.buy3'), default: 30, color: '#2ED1B4', presets: [20,25,30,35,40,45] },
             ] as const
           ).map(({ key, label, default: def, color, presets }) => {
             const current = (discountSettings[key] as number) ?? def;
@@ -3742,9 +3771,9 @@ function SettingsSection() {
                 <div className="flex items-center justify-between mb-3">
                   <div className="flex items-center gap-2">
                     <span className="px-2 py-0.5 rounded-md text-xs font-bold" style={{ background: `${color}22`, color }}>{label}</span>
-                    <span className="text-xs text-[#A9B3C7]">per unit discount</span>
+                    <span className="text-xs text-[#A9B3C7]">{t('admin.settings.perUnitDiscount')}</span>
                   </div>
-                  <span className="text-sm font-bold" style={{ color }}>{current}% OFF</span>
+                  <span className="text-sm font-bold" style={{ color }}>{current}{t('admin.settings.off', { pct: ' + current + ' })}</span>
                 </div>
 
                 {/* Slider + number input */}
@@ -3794,13 +3823,13 @@ function SettingsSection() {
 
           {/* Live preview table */}
           <div className="p-4 rounded-xl bg-[rgba(7,10,18,0.4)] border border-[rgba(245,158,11,0.1)]">
-            <p className="text-xs text-[#A9B3C7] mb-3 uppercase tracking-wide">Live preview — kr 200 original price</p>
+            <p className="text-xs text-[#A9B3C7] mb-3 uppercase tracking-wide">{t('admin.settings.livePreview')}</p>
             <div className="space-y-2">
               {(
                 [
-                  { label: 'Buy 1', qty: 1,  pct: discountSettings.discount_percentage ?? 20, color: '#F59E0B' },
-                  { label: 'Buy 2', qty: 2,  pct: discountSettings.buy2_percentage ?? 25,     color: '#8B5CF6' },
-                  { label: 'Buy 3', qty: 3,  pct: discountSettings.buy3_percentage ?? 30,     color: '#2ED1B4' },
+                  { label: t('admin.buy1'), qty: 1,  pct: discountSettings.discount_percentage ?? 20, color: '#F59E0B' },
+                  { label: t('admin.buy2'), qty: 2,  pct: discountSettings.buy2_percentage ?? 25,     color: '#8B5CF6' },
+                  { label: t('admin.buy3'), qty: 3,  pct: discountSettings.buy3_percentage ?? 30,     color: '#2ED1B4' },
                 ] as const
               ).map(({ label, qty, pct, color }) => {
                 const unit  = +(200 * (1 - pct / 100)).toFixed(2);
@@ -3811,8 +3840,8 @@ function SettingsSection() {
                     <span className="w-12 text-xs font-bold" style={{ color }}>{label}</span>
                     <span className="text-[#A9B3C7] line-through text-xs">kr {(200 * qty).toFixed(2)}</span>
                     <span className="font-bold text-[#F4F6FA]">kr {total.toFixed(2)}</span>
-                    <span className="text-[10px] px-1.5 py-0.5 rounded font-bold" style={{ background: `${color}22`, color }}>{pct}% OFF</span>
-                    <span className="text-[10px] text-[#22C55E] ml-auto">Save kr {save.toFixed(2)}</span>
+                    <span className="text-[10px] px-1.5 py-0.5 rounded font-bold" style={{ background: `${color}22`, color }}>{pct}{t('admin.settings.off', { pct: ' + current + ' })}</span>
+                    <span className="text-[10px] text-[#22C55E] ml-auto">{t('admin.saveAmount', { amount: save.toFixed(2) })}</span>
                   </div>
                 );
               })}
@@ -3822,10 +3851,10 @@ function SettingsSection() {
 
         {/* Badge display options */}
         <div className="mt-4 pt-4 border-t border-[rgba(244,246,250,0.06)]">
-          <p className="text-xs font-medium text-[#A9B3C7] uppercase mb-3">Badge Display Options</p>
+          <p className="text-xs font-medium text-[#A9B3C7] uppercase mb-3">{t('admin.badgeOptions')}</p>
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
             <div>
-              <label className="text-[10px] text-[#A9B3C7] uppercase">Badge Text</label>
+              <label className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.badgeText')}</label>
               <input
                 type="text"
                 value={discountSettings.badge_text}
@@ -3834,45 +3863,45 @@ function SettingsSection() {
               />
             </div>
             <div>
-              <label className="block text-[10px] font-semibold text-[#A9B3C7] uppercase tracking-wider mb-1.5">Show Percentage</label>
+              <label className="block text-[10px] font-semibold text-[#A9B3C7] uppercase tracking-wider mb-1.5">{t('admin.showPercentage')}</label>
               <div className="relative">
                 <select
                   value={discountSettings.show_percentage ? 'true' : 'false'}
                   onChange={(e) => setDiscountSettings({ ...discountSettings, show_percentage: e.target.value === 'true' })}
                   className="w-full px-3 py-3 pr-9 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-base focus:outline-none focus:border-[#2ED1B4] transition-colors appearance-none"
                 >
-                  <option value="true">Yes</option>
-                  <option value="false">No</option>
+                  <option value="true">{t('admin.common.yes')}</option>
+                  <option value="false">{t('admin.common.no')}</option>
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9B3C7]" />
               </div>
             </div>
             <div>
-              <label className="block text-[10px] font-semibold text-[#A9B3C7] uppercase tracking-wider mb-1.5">Badge Enabled</label>
+              <label className="block text-[10px] font-semibold text-[#A9B3C7] uppercase tracking-wider mb-1.5">{t('admin.badgeEnabled')}</label>
               <div className="relative">
                 <select
                   value={discountSettings.enabled ? 'true' : 'false'}
                   onChange={(e) => setDiscountSettings({ ...discountSettings, enabled: e.target.value === 'true' })}
                   className="w-full px-3 py-3 pr-9 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-base focus:outline-none focus:border-[#2ED1B4] transition-colors appearance-none"
                 >
-                  <option value="true">Yes</option>
-                  <option value="false">No</option>
+                  <option value="true">{t('admin.common.yes')}</option>
+                  <option value="false">{t('admin.common.no')}</option>
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9B3C7]" />
               </div>
             </div>
             <div className="lg:col-span-2">
-              <label className="block text-[10px] font-semibold text-[#A9B3C7] uppercase tracking-wider mb-1.5">Badge Position</label>
+              <label className="block text-[10px] font-semibold text-[#A9B3C7] uppercase tracking-wider mb-1.5">{t('admin.badgePosition')}</label>
               <div className="relative">
                 <select
                   value={discountSettings.badge_position || 'top-right'}
                   onChange={(e) => setDiscountSettings({ ...discountSettings, badge_position: e.target.value })}
                   className="w-full px-3 py-3 pr-9 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-base focus:outline-none focus:border-[#2ED1B4] transition-colors appearance-none"
                 >
-                  <option value="top-right">Top right</option>
-                  <option value="top-left">Top left</option>
-                  <option value="bottom-right">Bottom right</option>
-                  <option value="bottom-left">Bottom left</option>
+                  <option value="top-right">{t('admin.settings.badgeTopRight')}</option>
+                  <option value="top-left">{t('admin.settings.badgeTopLeft')}</option>
+                  <option value="bottom-right">{t('admin.settings.badgeBottomRight')}</option>
+                  <option value="bottom-left">{t('admin.settings.badgeBottomLeft')}</option>
                 </select>
                 <ChevronDown className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 w-4 h-4 text-[#A9B3C7]" />
               </div>
@@ -3881,11 +3910,10 @@ function SettingsSection() {
         </div>
       </div>
 
-      {/* Free Gift Settings */}
       <div className="p-6 rounded-2xl bg-gradient-to-br from-[rgba(139,92,246,0.1)] to-[rgba(46,209,180,0.1)] border border-[rgba(139,92,246,0.2)]">
         <h3 className="text-lg font-semibold text-[#F4F6FA] mb-4 flex items-center gap-2">
           <Gift className="w-5 h-5 text-[#8B5CF6]" />
-          Free Gift Settings
+          {t('admin.settings.freeGift')}
         </h3>
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
           <div className="flex items-center gap-2">
@@ -3896,10 +3924,10 @@ function SettingsSection() {
               onChange={(e) => setFreeGiftSettings({ ...freeGiftSettings, enabled: e.target.checked })}
               className="rounded accent-[#8B5CF6] w-4 h-4"
             />
-            <label htmlFor="free-gift-enabled" className="text-sm text-[#A9B3C7]">Free gift enabled (add to cart when threshold met)</label>
+            <label htmlFor="free-gift-enabled" className="text-sm text-[#A9B3C7]">{t('admin.settings.freeGiftEnabled')}</label>
           </div>
           <div>
-            <label className="text-[10px] text-[#A9B3C7] uppercase">Gift name</label>
+            <label className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.giftName')}</label>
             <input
               type="text"
               value={freeGiftSettings.name || ''}
@@ -3909,7 +3937,7 @@ function SettingsSection() {
             />
           </div>
           <div>
-            <label className="text-[10px] text-[#A9B3C7] uppercase">Threshold (SEK)</label>
+            <label className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.settings.threshold')}</label>
             <input
               type="number"
               value={freeGiftSettings.threshold}
@@ -3918,7 +3946,7 @@ function SettingsSection() {
             />
           </div>
           <div>
-            <label className="text-[10px] text-[#A9B3C7] uppercase">Product ID</label>
+            <label className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.productId')}</label>
             <input
               type="text"
               value={freeGiftSettings.product_id}
@@ -3928,7 +3956,7 @@ function SettingsSection() {
             />
           </div>
           <div>
-            <label className="text-[10px] text-[#A9B3C7] uppercase">Dosage</label>
+            <label className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.settings.dosage')}</label>
             <input
               type="text"
               value={freeGiftSettings.dosage}
@@ -3939,19 +3967,18 @@ function SettingsSection() {
           </div>
         </div>
         <p className="text-xs text-[#A9B3C7] mt-3">
-          When enabled, the free gift is added to cart when customer spends kr {freeGiftSettings.threshold} or more.
+          {t('admin.settings.freeGiftHint', { threshold: freeGiftSettings.threshold })}
         </p>
       </div>
 
-      {/* Support Links */}
       <div className="p-6 rounded-2xl bg-gradient-to-br from-[rgba(139,92,246,0.1)] to-[rgba(46,209,180,0.1)] border border-[rgba(139,92,246,0.2)]">
         <h3 className="text-lg font-semibold text-[#F4F6FA] mb-4 flex items-center gap-2">
           <Mail className="w-5 h-5 text-[#8B5CF6]" />
-          Support Links
+          {t('admin.settings.supportLinks')}
         </h3>
         <div className="space-y-4">
           <div>
-            <label className="text-[10px] text-[#A9B3C7] uppercase">Telegram Link</label>
+            <label className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.telegramLink')}</label>
             <input
               type="url"
               value={supportLinks.telegram_link || ''}
@@ -3961,7 +3988,7 @@ function SettingsSection() {
             />
           </div>
           <div>
-            <label className="text-[10px] text-[#A9B3C7] uppercase">WhatsApp Link</label>
+            <label className="text-[10px] text-[#A9B3C7] uppercase">{t('admin.whatsappLink')}</label>
             <input
               type="url"
               value={supportLinks.whatsapp_link || ''}
@@ -3971,7 +3998,7 @@ function SettingsSection() {
             />
           </div>
           <p className="text-xs text-[#A9B3C7]">
-            WhatsApp button will only show when the link is set.
+            {t('admin.settings.whatsappHint')}
           </p>
         </div>
       </div>
@@ -3994,33 +4021,33 @@ function SettingsSection() {
           className="w-full sm:w-auto px-6 py-3.5 rounded-xl bg-[#2ED1B4] text-white hover:bg-[#25b89d] active:scale-[0.98] disabled:opacity-50 flex items-center justify-center gap-2 font-semibold transition-all"
         >
           <Save className="w-5 h-5" />
-          {isSaving ? 'Saving...' : 'Save All Settings'}
+          {isSaving ? t('admin.common.saving') : t('admin.common.saveAllSettings')}
         </button>
       </div>
 
       {/* Order Processing Guide */}
       <div className="p-6 rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
-        <h3 className="text-lg font-semibold text-[#F4F6FA] mb-4">How Order Processing Works</h3>
+        <h3 className="text-lg font-semibold text-[#F4F6FA] mb-4">{t('admin.settings.orderGuide')}</h3>
         <div className="space-y-3 text-sm text-[#A9B3C7]">
           <p className="flex items-start gap-2">
             <span className="text-[#2ED1B4] font-bold">1.</span>
-            Customer places order → Status: "Awaiting Payment"
+            {t('admin.settings.step1')}
           </p>
           <p className="flex items-start gap-2">
             <span className="text-[#2ED1B4] font-bold">2.</span>
-            Customer pays via bank transfer with order number as reference
+            {t('admin.settings.step2')}
           </p>
           <p className="flex items-start gap-2">
             <span className="text-[#2ED1B4] font-bold">3.</span>
-            You check your bank and click "I Received Payment" in admin
+            {t('admin.settings.step3')}
           </p>
           <p className="flex items-start gap-2">
             <span className="text-[#2ED1B4] font-bold">4.</span>
-            Pack order and add tracking number → Status: "Shipped"
+            {t('admin.settings.step4')}
           </p>
           <p className="flex items-start gap-2">
             <span className="text-[#2ED1B4] font-bold">5.</span>
-            Mark as "Delivered" when customer receives it
+            {t('admin.settings.step5')}
           </p>
         </div>
       </div>
@@ -4061,6 +4088,8 @@ function getStatusColor(status: string) {
 // ============================================
 
 function AffiliatesSection() {
+  const { t, language } = useTranslation();
+  const dateLocale = language === 'sv' ? 'sv-SE' : 'en-GB';
   const [promoters, setPromoters] = useState<Promoter[]>([]);
   const [affOrders, setAffOrders] = useState<(AffiliateOrder & { promoter_name?: string; promoter_code?: string })[]>([]);
   const [loading, setLoading] = useState(true);
@@ -4099,7 +4128,7 @@ function AffiliatesSection() {
     setCreateError('');
     setCreateSuccess(null);
     if (!createForm.name.trim() || !createForm.email.trim() || !createForm.referral_code.trim()) {
-      setCreateError('Name, email, and promo code are required');
+      setCreateError(t('admin.affiliates.requiredFields'));
       return;
     }
     setCreateLoading(true);
@@ -4112,22 +4141,14 @@ function AffiliatesSection() {
     });
     setCreateLoading(false);
     if (!result.ok) {
-      setCreateError(result.error || 'Failed to create influencer');
+      setCreateError(result.error || t('admin.affiliates.failCreate'));
       return;
     }
     const sent = result.email_sent;
     if (result.account_action === 'created') {
-      setCreateSuccess(
-        sent
-          ? 'Influencer account created. They were emailed a temporary password, promo code, and a link to set a new password.'
-          : 'Influencer account created, but the welcome email was not sent (check Resend / pending queue). Share the code manually if needed.',
-      );
+      setCreateSuccess(sent ? t('admin.affiliates.createdWithEmail') : t('admin.affiliates.createdNoEmail'));
     } else {
-      setCreateSuccess(
-        sent
-          ? 'Linked to an existing Viron Labs login. They were emailed their promo code and a password reset link.'
-          : 'Linked to an existing account. Email could not be sent — share the code from the list below if needed.',
-      );
+      setCreateSuccess(sent ? t('admin.affiliates.linkedWithEmail') : t('admin.affiliates.linkedNoEmail'));
     }
     setShowCreate(false);
     setCreateForm({ name: '', email: '', referral_code: '', commission_percent: '10', customer_discount_percent: '10' });
@@ -4148,7 +4169,7 @@ function AffiliatesSection() {
   };
 
   const handleDelete = async (id: string) => {
-    if (!confirm('Delete this influencer? This cannot be undone.')) return;
+    if (!confirm(t('admin.affiliates.deleteConfirm'))) return;
     await deletePromoter(id);
     loadData();
   };
@@ -4165,7 +4186,7 @@ function AffiliatesSection() {
   const handleCreditOrder = async (orderId: string) => {
     const result = await creditAffiliateCommission(orderId);
     if (result.ok) loadData();
-    else alert(result.error || 'Failed to credit');
+    else alert(result.error || t('admin.affiliates.failCredit'));
   };
 
   const handleCopy = (code: string) => {
@@ -4199,17 +4220,17 @@ function AffiliatesSection() {
     <div className="space-y-4 lg:space-y-6">
       {/* Stats */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-        <StatCard icon={Users} value={promoters.length.toString()} label="Influencers" color="#8B5CF6" />
-        <StatCard icon={CheckCircle} value={activePromoters.toString()} label="Active codes" color="#22C55E" />
-        <StatCard icon={DollarSign} value={`kr ${totalSales.toFixed(0)}`} label="Tracked sales" color="#2ED1B4" />
-        <StatCard icon={CreditCard} value={`kr ${totalCommission.toFixed(0)}`} label="Commission earned" color="#F59E0B" />
+        <StatCard icon={Users} value={promoters.length.toString()} label={t('admin.affiliates.influencers')} color="#8B5CF6" />
+        <StatCard icon={CheckCircle} value={activePromoters.toString()} label={t('admin.affiliates.activeCodes')} color="#22C55E" />
+        <StatCard icon={DollarSign} value={`kr ${totalSales.toFixed(0)}`} label={t('admin.affiliates.trackedSales')} color="#2ED1B4" />
+        <StatCard icon={CreditCard} value={`kr ${totalCommission.toFixed(0)}`} label={t('admin.affiliates.commissionEarned')} color="#F59E0B" />
       </div>
 
       {createSuccess && (
         <div className="p-4 rounded-xl bg-[rgba(34,197,94,0.12)] border border-[rgba(34,197,94,0.35)] text-sm text-[#F4F6FA] flex flex-wrap items-start justify-between gap-3">
           <p className="text-[#22C55E] font-medium pr-2">{createSuccess}</p>
           <button type="button" onClick={() => setCreateSuccess(null)} className="text-xs text-[#A9B3C7] hover:text-[#F4F6FA] shrink-0">
-            Dismiss
+            {t('admin.common.dismiss')}
           </button>
         </div>
       )}
@@ -4221,13 +4242,13 @@ function AffiliatesSection() {
             onClick={() => setView('promoters')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-colors ${view === 'promoters' ? 'bg-[rgba(46,209,180,0.15)] text-[#2ED1B4]' : 'bg-[rgba(244,246,250,0.05)] text-[#A9B3C7] hover:text-[#F4F6FA]'}`}
           >
-            Influencers
+            {t('admin.affiliates.influencers')}
           </button>
           <button
             onClick={() => setView('orders')}
             className={`px-4 py-2 rounded-xl text-xs font-medium transition-colors ${view === 'orders' ? 'bg-[rgba(46,209,180,0.15)] text-[#2ED1B4]' : 'bg-[rgba(244,246,250,0.05)] text-[#A9B3C7] hover:text-[#F4F6FA]'}`}
           >
-            Code usage
+            {t('admin.affiliates.codeUsage')}
           </button>
         </div>
         <div className="flex gap-2">
@@ -4237,7 +4258,7 @@ function AffiliatesSection() {
               type="text"
               value={search}
               onChange={e => setSearch(e.target.value)}
-              placeholder="Search..."
+              placeholder={t('admin.common.search')}
               className="pl-9 pr-3 py-2 rounded-xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)] text-xs text-[#F4F6FA] placeholder-[#A9B3C7] focus:outline-none focus:border-[#2ED1B4] w-40 sm:w-56"
             />
           </div>
@@ -4245,7 +4266,7 @@ function AffiliatesSection() {
             onClick={() => { setShowCreate(true); setCreateError(''); setCreateSuccess(null); }}
             className="flex items-center gap-1.5 px-4 py-2 rounded-xl bg-[#22C55E] text-[#070A12] text-xs font-semibold hover:bg-[#16A34A] transition-colors"
           >
-            <Plus className="w-3.5 h-3.5" /> Add influencer
+            <Plus className="w-3.5 h-3.5" /> {t('admin.affiliates.addInfluencer')}
           </button>
         </div>
       </div>
@@ -4253,9 +4274,9 @@ function AffiliatesSection() {
       {/* Create influencer */}
       {showCreate && (
         <div className="p-4 sm:p-6 rounded-2xl bg-[rgba(17,24,39,0.9)] border border-[rgba(34,197,94,0.3)]">
-          <h3 className="text-sm font-semibold text-[#F4F6FA] mb-1">New influencer</h3>
+          <h3 className="text-sm font-semibold text-[#F4F6FA] mb-1">{t('admin.affiliates.newInfluencer')}</h3>
           <p className="text-[11px] text-[#A9B3C7] mb-3">
-            Creates a promo code, links or creates their login, and emails them the code (new accounts also get a temporary password and reset link).
+            {t('admin.affiliates.createDesc')}
           </p>
           {createError && (
             <p className="text-xs text-[#EF4444] mb-2 p-2 rounded-lg bg-[rgba(239,68,68,0.1)]">{createError}</p>
@@ -4264,25 +4285,25 @@ function AffiliatesSection() {
             <input
               value={createForm.name}
               onChange={e => setCreateForm(f => ({ ...f, name: e.target.value }))}
-              placeholder="Name"
+              placeholder={t('admin.common.name')}
               className="px-3 py-2.5 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.1)] text-sm text-[#F4F6FA] placeholder-[#A9B3C7] focus:outline-none focus:border-[#2ED1B4]"
             />
             <input
               value={createForm.email}
               onChange={e => setCreateForm(f => ({ ...f, email: e.target.value }))}
-              placeholder="Email"
+              placeholder={t('admin.common.email')}
               type="email"
               className="px-3 py-2.5 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.1)] text-sm text-[#F4F6FA] placeholder-[#A9B3C7] focus:outline-none focus:border-[#2ED1B4]"
             />
             <input
               value={createForm.referral_code}
               onChange={e => setCreateForm(f => ({ ...f, referral_code: e.target.value.toUpperCase() }))}
-              placeholder="Promo code (e.g. MIKE10)"
+              placeholder={t('admin.affiliates.promoCodePlaceholder')}
               className="px-3 py-2.5 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.1)] text-sm text-[#F4F6FA] placeholder-[#A9B3C7] focus:outline-none focus:border-[#2ED1B4] uppercase"
             />
             <div className="grid grid-cols-2 gap-2">
               <div>
-                <label className="text-[10px] text-[#A9B3C7] block mb-1">Commission %</label>
+                <label className="text-[10px] text-[#A9B3C7] block mb-1">{t('admin.affiliates.commissionPct')}</label>
                 <input
                   value={createForm.commission_percent}
                   onChange={e => setCreateForm(f => ({ ...f, commission_percent: e.target.value }))}
@@ -4293,7 +4314,7 @@ function AffiliatesSection() {
                 />
               </div>
               <div>
-                <label className="text-[10px] text-[#A9B3C7] block mb-1">Customer Discount %</label>
+                <label className="text-[10px] text-[#A9B3C7] block mb-1">{t('admin.affiliates.customerDiscountPct')}</label>
                 <input
                   value={createForm.customer_discount_percent}
                   onChange={e => setCreateForm(f => ({ ...f, customer_discount_percent: e.target.value }))}
@@ -4311,7 +4332,7 @@ function AffiliatesSection() {
               disabled={createLoading}
               className="px-6 py-2.5 rounded-xl bg-[#22C55E] text-[#070A12] text-xs font-semibold disabled:opacity-50"
             >
-              {createLoading ? 'Creating...' : 'Create influencer'}
+              {createLoading ? t('admin.affiliates.creating') : t('admin.affiliates.createInfluencer')}
             </button>
             <button onClick={() => { setShowCreate(false); setCreateError(''); }} className="px-4 py-2.5 rounded-xl border border-[rgba(244,246,250,0.15)] text-xs text-[#A9B3C7]">
               Cancel
@@ -4326,7 +4347,7 @@ function AffiliatesSection() {
           {filtered.length === 0 ? (
             <div className="text-center py-12 text-[#A9B3C7]">
               <Users className="w-10 h-10 mx-auto opacity-30 mb-2" />
-              <p className="text-sm">No influencers found</p>
+              <p className="text-sm">{t('admin.affiliates.noInfluencers')}</p>
             </div>
           ) : filtered.map(p => (
             <div key={p.id} className="p-4 rounded-xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
@@ -4338,21 +4359,21 @@ function AffiliatesSection() {
                       value={editForm.name ?? p.name}
                       onChange={e => setEditForm(f => ({ ...f, name: e.target.value }))}
                       className="px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-sm text-[#F4F6FA] focus:outline-none focus:border-[#2ED1B4]"
-                      placeholder="Name"
+                      placeholder={t('admin.common.name')}
                     />
                     <input
                       value={editForm.commission_percent ?? String(p.commission_percent)}
                       onChange={e => setEditForm(f => ({ ...f, commission_percent: e.target.value }))}
                       type="number"
                       className="px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-sm text-[#F4F6FA] focus:outline-none focus:border-[#2ED1B4]"
-                      placeholder="Commission %"
+                      placeholder="{t('admin.affiliates.commissionPct')}"
                     />
                     <input
                       value={editForm.customer_discount_percent ?? String(p.customer_discount_percent)}
                       onChange={e => setEditForm(f => ({ ...f, customer_discount_percent: e.target.value }))}
                       type="number"
                       className="px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-sm text-[#F4F6FA] focus:outline-none focus:border-[#2ED1B4]"
-                      placeholder="Discount %"
+                      placeholder={t('admin.affiliates.discountPct')}
                     />
                   </div>
                   <div className="flex items-center gap-2">
@@ -4363,12 +4384,12 @@ function AffiliatesSection() {
                         onChange={e => setEditForm(f => ({ ...f, is_active: e.target.checked ? 'true' : 'false' }))}
                         className="w-3.5 h-3.5 accent-[#22C55E]"
                       />
-                      Active
+                      {t('admin.common.active')}
                     </label>
                   </div>
                   <div className="flex gap-2">
-                    <button onClick={() => handleSaveEdit(p.id)} className="px-4 py-1.5 rounded-lg bg-[#22C55E] text-[#070A12] text-xs font-semibold">Save</button>
-                    <button onClick={() => { setEditId(null); setEditForm({}); }} className="px-4 py-1.5 rounded-lg border border-[rgba(244,246,250,0.15)] text-xs text-[#A9B3C7]">Cancel</button>
+                    <button onClick={() => handleSaveEdit(p.id)} className="px-4 py-1.5 rounded-lg bg-[#22C55E] text-[#070A12] text-xs font-semibold">{t('admin.save')}</button>
+                    <button onClick={() => { setEditId(null); setEditForm({}); }} className="px-4 py-1.5 rounded-lg border border-[rgba(244,246,250,0.15)] text-xs text-[#A9B3C7]">{t('admin.common.cancel')}</button>
                   </div>
                 </div>
               ) : (
@@ -4379,73 +4400,73 @@ function AffiliatesSection() {
                       <div className="flex items-center gap-2 flex-wrap">
                         <span className="text-sm font-semibold text-[#F4F6FA]">{p.name}</span>
                         <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${p.is_active ? 'bg-[rgba(34,197,94,0.15)] text-[#22C55E]' : 'bg-[rgba(239,68,68,0.15)] text-[#EF4444]'}`}>
-                          {p.is_active ? 'Active' : 'Inactive'}
+                          {p.is_active ? t('admin.common.active') : t('admin.common.inactive')}
                         </span>
                         <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-[rgba(245,158,11,0.15)] text-[#F59E0B]">{p.tier}</span>
                       </div>
                       <p className="text-xs text-[#A9B3C7] truncate">{p.email}</p>
                     </div>
                     <div className="flex items-center gap-1.5 shrink-0">
-                      <button onClick={() => handleCopy(p.referral_code)} className="p-1.5 rounded-lg bg-[rgba(34,197,94,0.1)] text-[#22C55E] hover:bg-[rgba(34,197,94,0.2)] transition-colors" title="Copy code">
+                      <button onClick={() => handleCopy(p.referral_code)} className="p-1.5 rounded-lg bg-[rgba(34,197,94,0.1)] text-[#22C55E] hover:bg-[rgba(34,197,94,0.2)] transition-colors" title={t('admin.common.copyCode')}>
                         {copiedCode === p.referral_code ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
                       </button>
-                      <button onClick={() => { setEditId(p.id); setEditForm({}); }} className="p-1.5 rounded-lg bg-[rgba(139,92,246,0.1)] text-[#8B5CF6] hover:bg-[rgba(139,92,246,0.2)] transition-colors" title="Edit">
+                      <button onClick={() => { setEditId(p.id); setEditForm({}); }} className="p-1.5 rounded-lg bg-[rgba(139,92,246,0.1)] text-[#8B5CF6] hover:bg-[rgba(139,92,246,0.2)] transition-colors" title={t('admin.common.edit')}>
                         <Pencil className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => setCreditPromoId(p.id)} className="p-1.5 rounded-lg bg-[rgba(245,158,11,0.1)] text-[#F59E0B] hover:bg-[rgba(245,158,11,0.2)] transition-colors" title="Adjust credit">
+                      <button onClick={() => setCreditPromoId(p.id)} className="p-1.5 rounded-lg bg-[rgba(245,158,11,0.1)] text-[#F59E0B] hover:bg-[rgba(245,158,11,0.2)] transition-colors" title={t('admin.common.adjustCredit')}>
                         <DollarSign className="w-3.5 h-3.5" />
                       </button>
-                      <button onClick={() => handleDelete(p.id)} className="p-1.5 rounded-lg bg-[rgba(239,68,68,0.1)] text-[#EF4444] hover:bg-[rgba(239,68,68,0.2)] transition-colors" title="Delete">
+                      <button onClick={() => handleDelete(p.id)} className="p-1.5 rounded-lg bg-[rgba(239,68,68,0.1)] text-[#EF4444] hover:bg-[rgba(239,68,68,0.2)] transition-colors" title={t('admin.common.delete')}>
                         <Trash2 className="w-3.5 h-3.5" />
                       </button>
                     </div>
                   </div>
                   <div className="flex flex-wrap items-center gap-x-4 gap-y-1 text-xs mb-2">
                     <span className="font-mono text-[#22C55E] font-semibold">{p.referral_code}</span>
-                    <span className="text-[#A9B3C7]">{p.commission_percent}% commission</span>
-                    <span className="text-[#A9B3C7]">{p.customer_discount_percent}% customer discount</span>
+                    <span className="text-[#A9B3C7]">{t('admin.affiliates.commissionLabel', { pct: p.commission_percent })}</span>
+                    <span className="text-[#A9B3C7]">{t('admin.affiliates.customerDiscountLabel', { pct: p.customer_discount_percent })}</span>
                   </div>
                   <div className="grid grid-cols-4 gap-2 text-center">
                     <div className="p-2 rounded-lg bg-[rgba(7,10,18,0.5)]">
                       <p className="text-sm font-bold text-[#F4F6FA]">{p.total_orders}</p>
-                      <p className="text-[10px] text-[#A9B3C7]">Orders</p>
+                      <p className="text-[10px] text-[#A9B3C7]">{t('admin.affiliates.orders')}</p>
                     </div>
                     <div className="p-2 rounded-lg bg-[rgba(7,10,18,0.5)]">
                       <p className="text-sm font-bold text-[#F4F6FA]">kr {Number(p.total_sales || 0).toFixed(0)}</p>
-                      <p className="text-[10px] text-[#A9B3C7]">Sales</p>
+                      <p className="text-[10px] text-[#A9B3C7]">{t('admin.affiliates.sales')}</p>
                     </div>
                     <div className="p-2 rounded-lg bg-[rgba(7,10,18,0.5)]">
                       <p className="text-sm font-bold text-[#F59E0B]">kr {Number(p.total_commission || 0).toFixed(2)}</p>
-                      <p className="text-[10px] text-[#A9B3C7]">Earned</p>
+                      <p className="text-[10px] text-[#A9B3C7]">{t('admin.affiliates.earned')}</p>
                     </div>
                     <div className="p-2 rounded-lg bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)]">
                       <p className="text-sm font-bold text-[#22C55E]">kr {Number(p.store_credit || 0).toFixed(2)}</p>
-                      <p className="text-[10px] text-[#22C55E]">Credit</p>
+                      <p className="text-[10px] text-[#22C55E]">{t('admin.affiliates.credit')}</p>
                     </div>
                   </div>
 
                   {/* Inline credit adjustment */}
                   {creditPromoId === p.id && (
                     <div className="mt-3 p-3 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(245,158,11,0.2)]">
-                      <p className="text-xs font-semibold text-[#F4F6FA] mb-2">Adjust Store Credit</p>
+                      <p className="text-xs font-semibold text-[#F4F6FA] mb-2">{t('admin.affiliates.adjustStoreCredit')}</p>
                       <div className="flex gap-2">
                         <input
                           value={creditAmount}
                           onChange={e => setCreditAmount(e.target.value)}
                           type="number"
-                          placeholder="Amount (negative to deduct)"
+                          placeholder={t('admin.affiliates.amountPlaceholder')}
                           className="flex-1 px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-sm text-[#F4F6FA] focus:outline-none focus:border-[#F59E0B]"
                         />
                         <input
                           value={creditDesc}
                           onChange={e => setCreditDesc(e.target.value)}
-                          placeholder="Reason"
+                          placeholder={t('admin.common.reason')}
                           className="flex-1 px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-sm text-[#F4F6FA] focus:outline-none focus:border-[#F59E0B]"
                         />
                       </div>
                       <div className="flex gap-2 mt-2">
-                        <button onClick={handleAdjustCredit} className="px-4 py-1.5 rounded-lg bg-[#F59E0B] text-[#070A12] text-xs font-semibold">Apply</button>
-                        <button onClick={() => { setCreditPromoId(null); setCreditAmount(''); setCreditDesc(''); }} className="px-4 py-1.5 rounded-lg border border-[rgba(244,246,250,0.15)] text-xs text-[#A9B3C7]">Cancel</button>
+                        <button onClick={handleAdjustCredit} className="px-4 py-1.5 rounded-lg bg-[#F59E0B] text-[#070A12] text-xs font-semibold">{t('admin.common.apply')}</button>
+                        <button onClick={() => { setCreditPromoId(null); setCreditAmount(''); setCreditDesc(''); }} className="px-4 py-1.5 rounded-lg border border-[rgba(244,246,250,0.15)] text-xs text-[#A9B3C7]">{t('admin.common.cancel')}</button>
                       </div>
                     </div>
                   )}
@@ -4462,24 +4483,24 @@ function AffiliatesSection() {
           {affOrders.length > 0 && (
             <div className="flex flex-wrap gap-4 text-xs text-[#A9B3C7] p-3 rounded-xl bg-[rgba(7,10,18,0.45)] border border-[rgba(244,246,250,0.06)]">
               <span>
-                <strong className="text-[#F4F6FA]">{affOrders.length}</strong> orders with an influencer code
+                <strong className="text-[#F4F6FA]">{affOrders.length}</strong> {t('admin.affiliates.ordersWithCode', { count: affOrders.length }).replace('{{count}}', '{affOrders.length}')}
               </span>
               <span>
-                Total customer discount given: <strong className="text-[#8B5CF6]">kr {totalCodeDiscountGiven.toFixed(2)}</strong>
+                {t('admin.affiliates.totalDiscountGiven')} <strong className="text-[#8B5CF6]">kr {totalCodeDiscountGiven.toFixed(2)}</strong>
               </span>
             </div>
           )}
           {affOrders.length === 0 ? (
             <div className="text-center py-12 text-[#A9B3C7]">
               <ShoppingCart className="w-10 h-10 mx-auto opacity-30 mb-2" />
-              <p className="text-sm">No orders with a promo code yet</p>
+              <p className="text-sm">{t('admin.affiliates.noCodeOrders')}</p>
             </div>
           ) : affOrders.map(o => (
             <div key={o.id} className="p-4 rounded-xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
               <div className="flex items-center justify-between mb-2">
                 <div>
                   <span className="text-sm font-mono font-semibold text-[#F4F6FA]">{o.order_number}</span>
-                  <span className="text-xs text-[#A9B3C7] ml-2">{new Date(o.created_at).toLocaleDateString('en-GB')}</span>
+                  <span className="text-xs text-[#A9B3C7] ml-2">{new Date(o.created_at).toLocaleDateString(dateLocale)}</span>
                 </div>
                 <div className="flex items-center gap-2">
                   <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${
@@ -4490,18 +4511,18 @@ function AffiliatesSection() {
                       onClick={() => handleCreditOrder(o.order_id)}
                       className="px-3 py-1 rounded-lg bg-[#22C55E] text-[#070A12] text-[10px] font-semibold hover:bg-[#16A34A] transition-colors"
                     >
-                      Credit Now
+                      {t('admin.affiliates.creditNow')}
                     </button>
                   )}
                 </div>
               </div>
               <div className="flex flex-wrap gap-x-4 gap-y-1 text-xs text-[#A9B3C7]">
-                <span>Influencer: <strong className="text-[#F4F6FA]">{o.promoter_name || '—'}</strong> ({o.promoter_code})</span>
-                <span>Customer: {o.customer_email}</span>
-                <span>Order: kr {Number(o.order_total).toFixed(2)}</span>
-                <span className="text-[#22C55E] font-semibold">Commission: kr {Number(o.commission_amount).toFixed(2)} ({o.commission_percent}%)</span>
+                <span>{t('admin.affiliates.influencer')}: <strong className="text-[#F4F6FA]">{o.promoter_name || '—'}</strong> ({o.promoter_code})</span>
+                <span>{t('admin.affiliates.customer')}: {o.customer_email}</span>
+                <span>{t('admin.affiliates.orderTotal')}: kr {Number(o.order_total).toFixed(2)}</span>
+                <span className="text-[#22C55E] font-semibold">{t('admin.affiliates.commission')}: kr {Number(o.commission_amount).toFixed(2)} ({o.commission_percent}%)</span>
                 {o.customer_discount > 0 && (
-                  <span className="text-[#8B5CF6]">Customer Discount: kr {Number(o.customer_discount).toFixed(2)}</span>
+                  <span className="text-[#8B5CF6]">{t('admin.affiliates.customerDiscount')}: kr {Number(o.customer_discount).toFixed(2)}</span>
                 )}
               </div>
             </div>

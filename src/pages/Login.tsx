@@ -1,22 +1,21 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ArrowLeft, Mail, Lock, Eye, EyeOff, User, History, Star } from 'lucide-react';
+import { Mail, Lock, Eye, EyeOff, User, History, Star } from 'lucide-react';
 import { supabase, signUp, signIn, getCurrentUser } from '@/lib/supabase';
 import { checkIsAdmin } from '@/lib/supabase-db';
 import { sendSignUpWelcome } from '@/lib/email';
-
-const EMAIL_NOT_CONFIRMED_COPY =
-  "We've sent you a confirmation email. Please check your inbox and verify your account.";
-
-/** Replace Supabase’s terse “Email not confirmed” with clearer storefront copy. */
-function friendlyAuthErrorMessage(raw: string | undefined | null): string {
-  const m = (raw || '').trim();
-  if (/email\s+not\s+confirmed/i.test(m)) return EMAIL_NOT_CONFIRMED_COPY;
-  return m || 'An error occurred';
-}
+import PageTopBar from '@/components/PageTopBar';
+import { useTranslation } from '@/i18n';
 
 export default function Login() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
+
+  const friendlyAuthErrorMessage = (raw: string | undefined | null): string => {
+    const m = (raw || '').trim();
+    if (/email\s+not\s+confirmed/i.test(m)) return t('auth.emailNotConfirmed');
+    return m || t('common.error');
+  };
   const [isLoading, setIsLoading] = useState(true);
   const [isSignUp, setIsSignUp] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
@@ -163,40 +162,19 @@ export default function Login() {
       {/* Grid Overlay */}
       <div className="absolute inset-0 grid-overlay opacity-60" />
 
-      {/* Navigation */}
-      <nav className="relative z-50 px-6 lg:px-12 py-4">
-        <div className="flex items-center justify-between">
-          <a href="/" className="flex flex-col items-start">
-            <img
-              src="/logo.png"
-              alt="Viron Labs"
-              className="h-10 sm:h-12 lg:h-14 w-auto object-contain select-none"
-              draggable={false}
-            />
-          </a>
-          <a
-            href="/"
-            className="flex items-center gap-2 text-sm text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Shop
-          </a>
-        </div>
-      </nav>
+      <PageTopBar backHref="/" backLabel={t('auth.backToShop')} />
 
       {/* Main Content */}
       <main className="relative z-10 px-6 lg:px-12 py-6 lg:py-8 flex-1 flex items-center">
         <div className="max-w-md mx-auto w-full">
           {/* Header */}
           <div className="text-center mb-5">
-            <span className="eyebrow mb-2 block">MEMBERS AREA</span>
+            <span className="eyebrow mb-2 block">{t('auth.membersArea')}</span>
             <h1 className="text-3xl sm:text-4xl font-bold text-[#F4F6FA] mb-2">
-              {isSignUp ? 'Create Account' : 'Welcome Back'}
+              {isSignUp ? t('auth.createAccount') : t('auth.welcomeBack')}
             </h1>
             <p className="text-[#A9B3C7]">
-              {isSignUp
-                ? 'Join Viron Labs to track your orders and manage your account'
-                : 'Sign in to access your account and order history'}
+              {isSignUp ? t('auth.signUpSubtitle') : t('auth.signInSubtitle')}
             </p>
           </div>
 
@@ -212,7 +190,7 @@ export default function Login() {
             <form onSubmit={handleSubmit} className="space-y-5">
               {isSignUp && (
                 <div>
-                  <label className="block text-sm text-[#A9B3C7] mb-2">Full Name</label>
+                  <label className="block text-sm text-[#A9B3C7] mb-2">{t('auth.fullName')}</label>
                   <div className="relative">
                     <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A9B3C7]" />
                     <input
@@ -221,14 +199,14 @@ export default function Login() {
                       onChange={(e) => setFormData({ ...formData, name: e.target.value })}
                       required
                       className="w-full pl-12 pr-4 py-3 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] placeholder-[#A9B3C7] focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/25 transition-colors"
-                      placeholder="Your name"
+                      placeholder={t('auth.yourName')}
                     />
                   </div>
                 </div>
               )}
 
               <div>
-                <label className="block text-sm text-[#A9B3C7] mb-2">Email Address</label>
+                <label className="block text-sm text-[#A9B3C7] mb-2">{t('auth.email')}</label>
                 <div className="relative">
                   <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A9B3C7]" />
                   <input
@@ -237,17 +215,17 @@ export default function Login() {
                     onChange={(e) => setFormData({ ...formData, email: e.target.value })}
                     required
                     className="w-full pl-12 pr-4 py-3 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] placeholder-[#A9B3C7] focus:outline-none focus:border-amber-400 focus:ring-1 focus:ring-amber-400/25 transition-colors"
-                    placeholder="you@example.com"
+                    placeholder={t('auth.emailPlaceholder')}
                   />
                 </div>
               </div>
 
               <div>
                 <div className="flex items-center justify-between mb-2">
-                  <label className="text-sm text-[#A9B3C7]">Password</label>
+                  <label className="text-sm text-[#A9B3C7]">{t('auth.password')}</label>
                   {!isSignUp && (
                     <a href="/forgot-password" className="text-xs text-amber-400 hover:text-amber-300 hover:underline">
-                      Forgot password?
+                      {t('auth.forgotPassword')}
                     </a>
                   )}
                 </div>
@@ -280,11 +258,11 @@ export default function Login() {
                 {isLoading ? (
                   <>
                     <div className="w-4 h-4 border-2 border-current border-t-transparent rounded-full animate-spin" />
-                    {isSignUp ? 'Creating Account...' : 'Signing In...'}
+                    {isSignUp ? t('auth.creatingAccount') : t('auth.signingIn')}
                   </>
                 ) : (
                   <>
-                    {isSignUp ? 'Create Account' : 'Sign In'}
+                    {isSignUp ? t('auth.createAccount') : t('auth.signIn')}
                   </>
                 )}
               </button>
@@ -295,18 +273,18 @@ export default function Login() {
                 <div className="w-full border-t border-[rgba(244,246,250,0.1)]" />
               </div>
               <div className="relative flex justify-center">
-                <span className="px-4 bg-[#111827] text-xs text-[#A9B3C7]">or</span>
+                <span className="px-4 bg-[#111827] text-xs text-[#A9B3C7]">{t('common.or')}</span>
               </div>
             </div>
 
             <p className="text-center text-sm text-[#A9B3C7]">
-              {isSignUp ? 'Already have an account?' : "Don't have an account?"}{' '}
+              {isSignUp ? t('auth.haveAccount') : t('auth.noAccount')}{' '}
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
                 className="text-amber-400 hover:text-amber-300 hover:underline font-medium"
               >
-                {isSignUp ? 'Sign In' : 'Create Account'}
+                {isSignUp ? t('auth.signIn') : t('auth.createAccount')}
               </button>
             </p>
           </div>
@@ -314,13 +292,13 @@ export default function Login() {
           <div className="mt-5 grid grid-cols-2 gap-3">
             <div className="p-3 rounded-xl bg-[rgba(17,24,39,0.4)] border border-[rgba(244,246,250,0.05)] text-center">
               <History className="w-6 h-6 text-sky-400 mx-auto mb-2" />
-              <p className="text-sm text-[#F4F6FA] font-medium">Track Orders</p>
-              <p className="text-xs text-[#A9B3C7]">View purchase history</p>
+              <p className="text-sm text-[#F4F6FA] font-medium">{t('auth.trackOrders')}</p>
+              <p className="text-xs text-[#A9B3C7]">{t('auth.viewHistory')}</p>
             </div>
             <div className="p-3 rounded-xl bg-[rgba(17,24,39,0.4)] border border-[rgba(244,246,250,0.05)] text-center">
               <Star className="w-6 h-6 text-[#F59E0B] mx-auto mb-2" />
-              <p className="text-sm text-[#F4F6FA] font-medium">Leave Reviews</p>
-              <p className="text-xs text-[#A9B3C7]">After purchase</p>
+              <p className="text-sm text-[#F4F6FA] font-medium">{t('auth.leaveReviews')}</p>
+              <p className="text-xs text-[#A9B3C7]">{t('auth.afterPurchase')}</p>
             </div>
           </div>
         </div>
@@ -330,7 +308,7 @@ export default function Login() {
       <footer className="relative z-10 px-6 lg:px-12 py-4 border-t border-amber-500/15">
         <div className="max-w-md mx-auto text-center">
           <p className="text-xs text-[#A9B3C7]">
-            © 2026 Viron Labs. All rights reserved.
+            {t('auth.copyright')}
           </p>
         </div>
       </footer>

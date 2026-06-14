@@ -1,7 +1,13 @@
-import { ArrowLeft, RotateCcw, AlertCircle, CheckCircle, XCircle, Package, Mail, Phone } from 'lucide-react';
+import { RotateCcw, AlertCircle, CheckCircle, XCircle, Package, Mail, Phone } from 'lucide-react';
 import { SEO } from '@/components/SEO';
+import PageTopBar from '@/components/PageTopBar';
+import { useTranslation, useLanguage } from '@/i18n';
 
 export default function Refund() {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  const dateLocale = language === 'sv' ? 'sv-SE' : 'en-GB';
+
   return (
     <div className="min-h-screen bg-[#070A12]">
       <SEO
@@ -9,31 +15,14 @@ export default function Refund() {
         description="Viron Labs Returns & Refunds Policy - British Consumer Law compliant. Learn about our return and refund procedures."
       />
 
-      {/* Navigation */}
-      <nav className="px-4 py-4 border-b border-white/10">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <a href="/" className="inline-flex items-center">
-            <img
-              src="/logo.png"
-              alt="Viron Labs"
-              className="h-9 w-auto object-contain select-none"
-              draggable={false}
-            />
-          </a>
-          <a href="/" className="text-sm text-gray-400 flex items-center gap-2 hover:text-white transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </a>
-        </div>
-      </nav>
+      <PageTopBar backHref="/" backLabel={t('legal.backToHome')} />
 
-      {/* Content */}
       <main className="max-w-4xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <RotateCcw className="w-16 h-16 mx-auto text-[#2ED1B4] mb-4" />
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">Returns & Refunds Policy</h1>
-          <p className="text-gray-400">Last Updated: {new Date().toLocaleDateString('en-GB')}</p>
-          <p className="text-sm text-[#2ED1B4] mt-2">Compliant with British Consumer Law (ACL)</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">{t('legal.refund.fullTitle')}</h1>
+          <p className="text-gray-400">{t('legal.lastUpdated', { date: new Date().toLocaleDateString(dateLocale) })}</p>
+          <p className="text-sm text-[#2ED1B4] mt-2">{t('legal.refund.compliance')}</p>
         </div>
 
         <div className="space-y-8">
@@ -41,7 +30,7 @@ export default function Refund() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Package className="w-5 h-5 text-[#8B5CF6]" />
-              1. Overview
+              {t('legal.refund.overview')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               At Viron Labs, we are committed to providing high-quality research products. Due to the nature of our products
@@ -58,7 +47,7 @@ export default function Refund() {
           <section className="p-6 rounded-2xl bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.2)]">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <XCircle className="w-5 h-5 text-[#EF4444]" />
-              2. Products Not Eligible for Return
+              {t('legal.refund.notEligible')}
             </h2>
             <p className="text-gray-400 mb-4">
               Due to safety and quality control reasons, <strong className="text-white">we cannot accept returns</strong> for:
@@ -91,7 +80,7 @@ export default function Refund() {
           <section className="p-6 rounded-2xl bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.2)]">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <CheckCircle className="w-5 h-5 text-[#22C55E]" />
-              3. Products Eligible for Refund/Replacement
+              {t('legal.refund.eligible')}
             </h2>
             <p className="text-gray-400 mb-4">
               We may offer a refund or replacement for:
@@ -120,7 +109,7 @@ export default function Refund() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Mail className="w-5 h-5 text-[#8B5CF6]" />
-              4. How to Request a Refund/Replacement
+              {t('legal.refund.howToRequest')}
             </h2>
             <p className="text-gray-400 mb-4">
               To request a refund or replacement:
@@ -151,7 +140,7 @@ export default function Refund() {
 
           {/* Assessment */}
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
-            <h2 className="text-xl font-semibold text-white mb-4">5. Assessment Process</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('legal.refund.assessment')}</h2>
             <p className="text-gray-400 leading-relaxed">
               Once we receive your request:
             </p>
@@ -177,7 +166,7 @@ export default function Refund() {
 
           {/* ACL Rights */}
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
-            <h2 className="text-xl font-semibold text-white mb-4">6. Your Rights Under British Consumer Law</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('legal.refund.aclRights')}</h2>
             <p className="text-gray-400 leading-relaxed">
               Our products come with guarantees that cannot be excluded under the <strong className="text-white">British Consumer Law (ACL)</strong>.
               You are entitled to:
@@ -217,7 +206,7 @@ export default function Refund() {
 
           {/* Cancellations */}
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
-            <h2 className="text-xl font-semibold text-white mb-4">7. Order Cancellations</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('legal.refund.cancellations')}</h2>
             <p className="text-gray-400 leading-relaxed">
               You may request to cancel your order if:
             </p>
@@ -238,7 +227,7 @@ export default function Refund() {
 
           {/* Shipping Costs */}
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
-            <h2 className="text-xl font-semibold text-white mb-4">8. Shipping Costs for Returns</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('legal.refund.shippingCosts')}</h2>
             <p className="text-gray-400 leading-relaxed">
               For approved returns/replacements:
             </p>
@@ -256,7 +245,7 @@ export default function Refund() {
 
           {/* Contact */}
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
-            <h2 className="text-xl font-semibold text-white mb-4">9. Contact Us</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('legal.refund.contact')}</h2>
             <div className="p-4 rounded-xl bg-[rgba(46,209,180,0.1)] border border-[rgba(46,209,180,0.2)]">
               <p className="text-white font-medium">Viron Labs</p>
               <p className="text-gray-400">Email: <a href="mailto:contact@vironlabs.com" className="text-[#2ED1B4] hover:underline">contact@vironlabs.com</a></p>

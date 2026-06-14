@@ -7,6 +7,7 @@ import { CartProvider } from '@/context/CartContext';
 import { RewardsProvider } from '@/context/RewardsContext';
 import { AffiliateProvider } from '@/context/AffiliateContext';
 import { CurrencyProvider } from '@/context/CurrencyContext';
+import { LanguageProvider } from '@/i18n';
 import { getSiteSetting, DEFAULT_LANDING_PAGE_SETTINGS } from '@/lib/settings';
 import Navigation from '@/components/Navigation';
 import CartDrawer from '@/components/CartDrawer';
@@ -14,6 +15,7 @@ import TrustMetrics from '@/components/landing/TrustMetrics';
 import WhyViron from '@/components/landing/WhyViron';
 import LandingFAQ from '@/components/landing/LandingFAQ';
 import FinalCta from '@/components/landing/FinalCta';
+import { useTranslation } from '@/i18n';
 
 import LandingSplash from '@/components/landing/LandingSplash';
 import LandingHero from '@/sections/LandingHero';
@@ -149,14 +151,14 @@ function HomePage() {
 }
 
 function LandingPageUnavailable() {
+  const { t } = useTranslation();
   return (
     <div className="min-h-screen bg-[#030308] flex items-center justify-center px-4">
       <div className="w-full max-w-xl rounded-2xl border border-amber-500/30 bg-[rgba(12,14,26,0.85)] backdrop-blur-xl p-7 text-center shadow-[0_0_60px_rgba(234,179,8,0.12)]">
         <p className="text-[11px] tracking-[0.28em] uppercase text-amber-300 mb-2 font-mono">VIRON</p>
-        <h1 className="text-3xl font-bold text-[#F4F6FA] mb-3 font-['Syne',sans-serif]">Coming Soon</h1>
+        <h1 className="text-3xl font-bold text-[#F4F6FA] mb-3 font-['Syne',sans-serif]">{t('app.comingSoon')}</h1>
         <p className="text-sm text-[#A9B3C7] leading-relaxed">
-          We are rolling out feature updates and improving your shopping experience.
-          The storefront will be back shortly.
+          {t('app.comingSoonMessage')}
         </p>
       </div>
     </div>
@@ -313,6 +315,7 @@ function StaleTabReloader() {
 
 function App() {
   return (
+    <LanguageProvider>
     <CurrencyProvider>
       <CartProvider>
         <RewardsProvider>
@@ -354,6 +357,7 @@ function App() {
         </RewardsProvider>
       </CartProvider>
     </CurrencyProvider>
+    </LanguageProvider>
   );
 }
 

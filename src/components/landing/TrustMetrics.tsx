@@ -3,6 +3,7 @@ import { motion, useInView, useReducedMotion } from 'framer-motion';
 import { Microscope, ShieldCheck, Truck, Zap } from 'lucide-react';
 import type { LucideIcon } from 'lucide-react';
 import { fadeUp, staggerContainer } from './motion';
+import { useTranslation } from '@/i18n';
 
 function useCountUp(target: number, durationMs: number, enabled: boolean, decimals = 0) {
   const [v, setV] = useState(0);
@@ -25,49 +26,24 @@ function useCountUp(target: number, durationMs: number, enabled: boolean, decima
   return v;
 }
 
-const metrics = [
-  {
-    icon: Microscope,
-    value: 99,
-    prefix: '',
-    suffix: '%',
-    decimals: 0,
-    label: 'Purity floor',
-    sub: 'Batch HPLC identity & purity',
-  },
-  {
-    icon: ShieldCheck,
-    value: 3,
-    prefix: '',
-    suffix: '',
-    decimals: 0,
-    label: 'QC gates',
-    sub: 'Documentation you can trace',
-  },
-  {
-    icon: Truck,
-    value: 2500,
-    prefix: '',
-    suffix: ' SEK',
-    decimals: 0,
-    label: 'Free shipping',
-    sub: 'Standard shipping threshold',
-  },
-  {
-    icon: Zap,
-    value: 30,
-    prefix: '',
-    suffix: '',
-    decimals: 0,
-    label: 'Day cold stability',
-    sub: 'Post-reconstitution guidance',
-  },
+const METRIC_DEFS = [
+  { icon: Microscope, value: 99, prefix: '', suffix: '%', decimals: 0 },
+  { icon: ShieldCheck, value: 3, prefix: '', suffix: '', decimals: 0 },
+  { icon: Truck, value: 2500, prefix: '', suffix: ' SEK', decimals: 0 },
+  { icon: Zap, value: 30, prefix: '', suffix: '', decimals: 0 },
 ] as const;
 
 export default function TrustMetrics() {
+  const { t } = useTranslation();
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-12%' });
   const reduced = useReducedMotion();
+
+  const metrics = METRIC_DEFS.map((m, i) => ({
+    ...m,
+    label: t(`landing.trust.metrics.${i}.label`),
+    sub: t(`landing.trust.metrics.${i}.sub`),
+  }));
 
   return (
     <section
@@ -85,13 +61,13 @@ export default function TrustMetrics() {
           className="text-center mb-10 sm:mb-14"
         >
           <motion.p variants={fadeUp} className="font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--viron-cyan)] mb-3">
-            Signal you can measure
+            {t('landing.trust.eyebrow')}
           </motion.p>
           <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl md:text-5xl font-bold text-[var(--viron-text)] tracking-tight">
-            Built for <span className="gradient-text">precision labs</span>
+            {t('landing.trust.title')} <span className="gradient-text">{t('landing.trust.titleHighlight')}</span>
           </motion.h2>
           <motion.p variants={fadeUp} className="mt-4 text-sm sm:text-base text-[var(--viron-muted)] max-w-2xl mx-auto leading-relaxed">
-            Every interaction is designed to reduce friction from discovery to documentation—without compromising compliance narrative.
+            {t('landing.trust.subtitle')}
           </motion.p>
         </motion.div>
 

@@ -9,12 +9,15 @@ import {
   AlertTriangle,
   Check
 } from 'lucide-react';
+import PageTopBar from '@/components/PageTopBar';
+import { useTranslation } from '@/i18n';
 
 interface AdminLoginProps {
   onLogin?: () => void;
 }
 
 export default function AdminLogin({ onLogin }: AdminLoginProps) {
+  const { t } = useTranslation();
   const [credentials, setCredentials] = useState({
     username: '',
     password: '',
@@ -50,7 +53,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
         if (twoFactorCode.length === 6) {
           completeLogin();
         } else {
-          setError('Invalid 2FA code');
+          setError(t('adminLogin.invalid2fa'));
           setIsLoading(false);
         }
       } else {
@@ -59,7 +62,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
         setIsLoading(false);
       }
     } else {
-      setError('Invalid username or password');
+      setError(t('adminLogin.invalidCredentials'));
       setIsLoading(false);
     }
   };
@@ -84,26 +87,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
       <div className="noise-overlay" aria-hidden="true" />
       <div className="absolute inset-0 grid-overlay opacity-50 pointer-events-none" />
 
-      {/* Navigation */}
-      <nav className="relative z-50 px-6 lg:px-12 py-6">
-        <div className="flex items-center justify-between">
-          <a href="/" className="flex flex-col items-start">
-            <img
-              src="/logo.png"
-              alt="Viron Labs"
-              className="h-10 sm:h-12 lg:h-14 w-auto object-contain select-none"
-              draggable={false}
-            />
-          </a>
-          <a
-            href="/login"
-            className="flex items-center gap-2 text-sm text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to User Login
-          </a>
-        </div>
-      </nav>
+      <PageTopBar backHref="/login" backLabel={t('auth.backToLogin')} />
 
       {/* Main Content */}
       <main className="relative z-10 px-6 lg:px-12 py-12 lg:py-20">
@@ -112,7 +96,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
           <div className="flex justify-center mb-8">
             <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)]">
               <Shield className="w-5 h-5 text-[#EF4444]" />
-              <span className="text-sm font-medium text-[#EF4444]">Admin Portal</span>
+              <span className="text-sm font-medium text-[#EF4444]">{t('adminLogin.restricted')}</span>
             </div>
           </div>
 
@@ -120,10 +104,10 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
           <div className="p-8 rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
             <div className="text-center mb-8">
               <h1 className="text-2xl sm:text-3xl font-bold text-[#F4F6FA] mb-2">
-                Admin <span className="gradient-text">Login</span>
+                {t('adminLogin.title')}
               </h1>
               <p className="text-[#A9B3C7]">
-                {show2FA ? 'Enter 2FA code to continue' : 'Sign in to access the admin dashboard'}
+                {show2FA ? t('adminLogin.twoFactor') : t('adminLogin.subtitle')}
               </p>
             </div>
 
@@ -139,7 +123,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
                 <>
                   {/* Username */}
                   <div>
-                    <label className="block text-sm text-[#A9B3C7] mb-2">Username</label>
+                    <label className="block text-sm text-[#A9B3C7] mb-2">{t('adminLogin.username')}</label>
                     <div className="relative">
                       <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A9B3C7]" />
                       <input
@@ -155,7 +139,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
 
                   {/* Password */}
                   <div>
-                    <label className="block text-sm text-[#A9B3C7] mb-2">Password</label>
+                    <label className="block text-sm text-[#A9B3C7] mb-2">{t('adminLogin.password')}</label>
                     <div className="relative">
                       <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A9B3C7]" />
                       <input
@@ -179,7 +163,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
               ) : (
                 /* 2FA Code */
                 <div>
-                  <label className="block text-sm text-[#A9B3C7] mb-2">2FA Code</label>
+                  <label className="block text-sm text-[#A9B3C7] mb-2">{t('adminLogin.twoFactor')}</label>
                   <div className="relative">
                     <Shield className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A9B3C7]" />
                     <input
@@ -189,7 +173,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
                       required
                       maxLength={6}
                       className="w-full pl-12 pr-4 py-3 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] placeholder-[#A9B3C7] focus:outline-none focus:border-[#EF4444] transition-colors text-center tracking-[0.5em] text-lg"
-                      placeholder="000000"
+                      placeholder={t('adminLogin.twoFactorPlaceholder')}
                     />
                   </div>
                   <p className="text-xs text-[#A9B3C7] mt-2 text-center">
@@ -207,17 +191,17 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
                 {isLoading ? (
                   <>
                     <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                    <span>Verifying...</span>
+                    <span>{t('adminLogin.signingIn')}</span>
                   </>
                 ) : show2FA ? (
                   <>
                     <Check className="w-5 h-5" />
-                    <span>Verify & Login</span>
+                    <span>{t('adminLogin.verify')}</span>
                   </>
                 ) : (
                   <>
                     <Shield className="w-5 h-5" />
-                    <span>Login as Admin</span>
+                    <span>{t('adminLogin.login')}</span>
                   </>
                 )}
               </button>
@@ -225,7 +209,7 @@ export default function AdminLogin({ onLogin }: AdminLoginProps) {
 
             {/* Demo Credentials */}
             <div className="mt-8 p-4 rounded-xl bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.2)]">
-              <p className="text-xs text-[#F59E0B] font-medium mb-2">Demo Credentials:</p>
+              <p className="text-xs text-[#F59E0B] font-medium mb-2">{t('adminLogin.demoHint')}</p>
               <p className="text-xs text-[#A9B3C7]">Username: <span className="text-[#F4F6FA]">admin</span></p>
               <p className="text-xs text-[#A9B3C7]">Password: <span className="text-[#F4F6FA]">vironlabs2026</span></p>
             </div>

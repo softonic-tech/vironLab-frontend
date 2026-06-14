@@ -3,29 +3,19 @@ import { motion, useInView } from 'framer-motion';
 import { ArrowUpRight } from 'lucide-react';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { fadeUp, staggerContainer } from './motion';
+import { useTranslation } from '@/i18n';
 
-const items = [
-  {
-    q: 'Are VIRON products for human use?',
-    a: 'No. Materials are sold strictly for laboratory research. They are not intended for human consumption, clinical, diagnostic, or cosmetic use. Always follow local regulations and institutional policies.',
-  },
-  {
-    q: 'How is purity verified?',
-    a: 'Peptides are marketed with batch documentation including HPLC-oriented verification workflows. COA availability depends on the SKU—use the on-card or product page actions when provided.',
-  },
-  {
-    q: 'How should I reconstitute and store peptides?',
-    a: 'Use bacteriostatic water where appropriate, avoid aggressive agitation, and prefer cold, stable storage after reconstitution. The on-site tutorial includes a calculator to translate mg/mL into practical draw volumes.',
-  },
-  {
-    q: 'What about shipping and support?',
-    a: 'Shipping tiers and rewards thresholds are shown in the catalog ribbon. For operational questions, use Telegram/WhatsApp when enabled, or the contact routes linked in the footer.',
-  },
-] as const;
+const FAQ_COUNT = 4;
 
 export default function LandingFAQ() {
+  const { t } = useTranslation();
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-10%' });
+
+  const items = Array.from({ length: FAQ_COUNT }, (_, i) => ({
+    q: t(`landing.faq.items.${i}.q`),
+    a: t(`landing.faq.items.${i}.a`),
+  }));
 
   return (
     <section
@@ -42,13 +32,13 @@ export default function LandingFAQ() {
           className="text-center mb-10"
         >
           <motion.p variants={fadeUp} className="font-mono text-[11px] uppercase tracking-[0.22em] text-[var(--viron-cyan)] mb-3">
-            FAQ
+            {t('landing.faq.eyebrow')}
           </motion.p>
           <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-bold text-[var(--viron-text)] tracking-tight">
-            Answers, <span className="gradient-text">without the noise</span>
+            {t('landing.faq.title')} <span className="gradient-text">{t('landing.faq.titleHighlight')}</span>
           </motion.h2>
           <motion.p variants={fadeUp} className="mt-3 text-sm text-[var(--viron-muted)]">
-            Quick clarity on how we position materials and how to use the site responsibly.
+            {t('landing.faq.subtitle')}
           </motion.p>
         </motion.div>
 
@@ -62,7 +52,7 @@ export default function LandingFAQ() {
             <Accordion type="single" collapsible className="w-full">
               {items.map((it, i) => (
                 <AccordionItem
-                  key={it.q}
+                  key={`faq-${i}`}
                   value={`item-${i}`}
                   className="border-white/[0.06] data-[state=open]:bg-white/[0.02] rounded-xl px-2"
                 >
@@ -82,7 +72,7 @@ export default function LandingFAQ() {
               href="/faq"
               className="inline-flex items-center gap-2 text-sm font-medium text-blue-400 hover:text-amber-200 transition-colors"
             >
-              View full FAQ
+              {t('landing.faq.fullFaq')}
               <ArrowUpRight className="h-4 w-4" aria-hidden />
             </a>
           </motion.div>

@@ -3,11 +3,13 @@ import { motion, useInView } from 'framer-motion';
 import { Mail, ArrowRight, Shield, Beaker, CreditCard, Hexagon } from 'lucide-react';
 import { getSiteSetting, DEFAULT_SUPPORT_LINKS } from '@/lib/settings';
 import { fadeUp, staggerContainer } from '@/components/landing/motion';
+import { useTranslation } from '@/i18n';
 
 const socialBtn =
   'inline-flex h-10 w-10 items-center justify-center rounded-xl border border-white/[0.1] bg-white/[0.04] text-slate-300 transition-all hover:border-amber-400/45 hover:bg-amber-500/12 hover:text-amber-100 hover:shadow-[0_0_22px_rgba(234,179,8,0.22)]';
 
 export default function Footer() {
+  const { t } = useTranslation();
   const sectionRef = useRef<HTMLElement>(null);
   const footerLinksRef = useRef<HTMLDivElement>(null);
   const headlineRef = useRef(null);
@@ -46,26 +48,26 @@ export default function Footer() {
         <div ref={headlineRef} className="max-w-3xl mx-auto text-center mb-16">
           <motion.div initial="hidden" animate={inViewHead ? 'show' : 'hidden'} variants={staggerContainer}>
             <motion.span variants={fadeUp} className="inline-flex items-center gap-2 rounded-full border border-amber-500/30 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.24em] text-amber-200/90 mb-5">
-              <Hexagon className="h-3.5 w-3.5" aria-hidden /> Field notes
+              <Hexagon className="h-3.5 w-3.5" aria-hidden /> {t('footer.fieldNotes')}
             </motion.span>
             <motion.h2 variants={fadeUp} className="text-3xl sm:text-4xl font-bold text-white mb-4 font-['Syne',sans-serif] tracking-tight">
-              Stay calibrated with <span className="gradient-text">VIRON</span>
+              {t('footer.stayCalibrated')} <span className="gradient-text">{t('common.brand')}</span>
             </motion.h2>
             <motion.p variants={fadeUp} className="text-slate-400 mb-8 text-sm sm:text-base max-w-xl mx-auto">
-              Drops, QC explainers, and stability guidance—minimal noise, maximal signal.
+              {t('footer.newsletterSub')}
             </motion.p>
             <motion.div variants={fadeUp} className="flex flex-col sm:flex-row gap-3 max-w-lg mx-auto">
               <div className="relative flex-1">
                 <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
                 <input
                   type="email"
-                  placeholder="research@organization.io"
+                  placeholder={t('footer.emailPlaceholder')}
                   className="w-full pl-11 pr-4 py-3.5 rounded-full bg-[rgba(8,10,18,0.75)] border border-white/[0.1] text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/35 focus:border-amber-500/40 transition-all backdrop-blur-md"
-                  aria-label="Email for newsletter"
+                  aria-label={t('footer.emailAria')}
                 />
               </div>
               <button type="button" className="btn-primary flex items-center justify-center gap-2 whitespace-nowrap rounded-full">
-                Subscribe
+                {t('footer.subscribe')}
                 <ArrowRight className="w-4 h-4" />
               </button>
             </motion.div>
@@ -76,9 +78,9 @@ export default function Footer() {
         <div className="mb-16 py-10 border-y border-amber-500/15 rounded-3xl px-4 sm:px-8 bg-[linear-gradient(105deg,rgba(234,179,8,0.07),rgba(59,130,246,0.06),rgba(239,68,68,0.04),rgba(30,14,54,0.2))] backdrop-blur-md shadow-[inset_0_1px_0_rgba(255,255,255,0.04)]">
           <div className="grid grid-cols-2 md:grid-cols-4 gap-6 mb-8">
             {[
-              { icon: Beaker, title: 'HPLC-verified', sub: '≥99% purity' },
-              { icon: Shield, title: 'Lab tested', sub: 'Traceable QA' },
-              { icon: CreditCard, title: 'Secure checkout', sub: 'Encrypted payments' },
+              { icon: Beaker, title: t('footer.hplcVerified'), sub: t('footer.purityFloor') },
+              { icon: Shield, title: t('footer.labTested'), sub: t('footer.traceableQa') },
+              { icon: CreditCard, title: t('footer.secureCheckout'), sub: t('footer.encryptedPayments') },
             ].map((f) => (
               <div key={f.title} className="flex items-center gap-3">
                 <div className="flex h-10 w-10 items-center justify-center rounded-xl border border-amber-500/30 bg-gradient-to-br from-amber-500/14 via-blue-600/10 to-red-600/8 text-amber-100">
@@ -92,7 +94,7 @@ export default function Footer() {
             ))}
           </div>
           <p className="text-center text-[11px] text-slate-500 tracking-wide uppercase">
-            Research use protocols · Institutional-grade UX · Transparent labeling
+            {t('footer.stripTagline')}
           </p>
         </div>
 
@@ -105,20 +107,20 @@ export default function Footer() {
         >
           {[
             {
-              title: 'Shop',
+              title: t('footer.shop'),
               links: (
                 <>
-                  <li><a href="/" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">All products</a></li>
-                  <li><a href="/#catalog" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">Catalog</a></li>
-                  <li><button type="button" onClick={() => document.getElementById('why-viron')?.scrollIntoView({ behavior: 'smooth' })} className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm text-left">Why VIRON</button></li>
+                  <li><a href="/" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('footer.allProducts')}</a></li>
+                  <li><a href="/#catalog" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('footer.catalog')}</a></li>
+                  <li><button type="button" onClick={() => document.getElementById('why-viron')?.scrollIntoView({ behavior: 'smooth' })} className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm text-left">{t('footer.whyViron')}</button></li>
                 </>
               ),
             },
             {
-              title: 'Quality',
+              title: t('footer.quality'),
               links: (
                 <>
-                  <li><a href="/standards" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">Our standards</a></li>
+                  <li><a href="/standards" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('footer.ourStandards')}</a></li>
                   <li>
                     <button
                       type="button"
@@ -127,34 +129,34 @@ export default function Footer() {
                       }}
                       className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm text-left"
                     >
-                      Reconstitution guide
+                      {t('footer.reconstitutionGuide')}
                     </button>
                   </li>
                 </>
               ),
             },
             {
-              title: 'Support',
+              title: t('footer.support'),
               links: (
                 <>
-                  <li><a href="/track-order" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">Track order</a></li>
-                  <li><a href="/contact-info" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">Contact</a></li>
+                  <li><a href="/track-order" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('footer.trackOrder')}</a></li>
+                  <li><a href="/contact-info" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('common.contact')}</a></li>
                   <li><a href={telegramLink} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">Telegram</a></li>
                   {whatsappLink ? (
                     <li><a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">WhatsApp</a></li>
                   ) : null}
-                  <li><a href="/shipping" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">Shipping</a></li>
+                  <li><a href="/shipping" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('footer.shipping')}</a></li>
                 </>
               ),
             },
             {
-              title: 'Legal',
+              title: t('footer.legal'),
               links: (
                 <>
-                  <li><a href="/privacy" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">Privacy</a></li>
-                  <li><a href="/terms" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">Terms</a></li>
-                  <li><a href="/refund" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">Refunds</a></li>
-                  <li><a href="/legal" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">Compliance</a></li>
+                  <li><a href="/privacy" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('footer.privacy')}</a></li>
+                  <li><a href="/terms" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('footer.terms')}</a></li>
+                  <li><a href="/refund" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('footer.refunds')}</a></li>
+                  <li><a href="/legal" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('footer.compliance')}</a></li>
                 </>
               ),
             },
@@ -193,11 +195,11 @@ export default function Footer() {
             </div>
 
             <p className="text-xs text-slate-500 text-center max-w-md leading-relaxed">
-              For research use only. Not for human consumption. Products are supplied as reference materials suitable for laboratory research workflows.
+              {t('common.researchUseOnly')}
             </p>
 
             <p className="text-xs font-mono text-slate-500">
-              © 2026 VIRON
+              {t('footer.copyright')}
             </p>
           </div>
         </div>

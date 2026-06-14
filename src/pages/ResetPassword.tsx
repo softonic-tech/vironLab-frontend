@@ -3,15 +3,17 @@ import { Lock, Eye, EyeOff, CheckCircle, Loader2 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { request, sessionStore } from '@/lib/api/client';
 import type { AuthSession } from '@/lib/api/auth';
+import PageTopBar from '@/components/PageTopBar';
+import { useTranslation } from '@/i18n';
 
 export default function ResetPassword() {
+  const { t } = useTranslation();
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [isSuccess, setIsSuccess] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  /** Recovery JWT from email link (`?token=`) */
   const [recoveryToken, setRecoveryToken] = useState<string | null>(null);
   const [linkReady, setLinkReady] = useState(false);
   const [isValidLink, setIsValidLink] = useState(true);
@@ -22,10 +24,10 @@ export default function ResetPassword() {
     const run = async () => {
       try {
         const params = new URLSearchParams(window.location.search);
-        const t = params.get('token');
-        if (t) {
+        const token = params.get('token');
+        if (token) {
           if (!cancelled) {
-            setRecoveryToken(t);
+            setRecoveryToken(token);
             setIsValidLink(true);
           }
           return;
@@ -52,12 +54,12 @@ export default function ResetPassword() {
     e.preventDefault();
 
     if (password !== confirmPassword) {
-      setError('Passwords do not match');
+      setError(t('auth.passwordsNoMatch'));
       return;
     }
 
     if (password.length < 8) {
-      setError('Password must be at least 8 characters');
+      setError(t('auth.passwordMin8Error'));
       return;
     }
 
@@ -97,7 +99,7 @@ export default function ResetPassword() {
         }
       }
     } catch {
-      setError('Something went wrong. Please try again.');
+      setError(t('auth.tryAgain'));
     } finally {
       setIsLoading(false);
     }
@@ -106,7 +108,7 @@ export default function ResetPassword() {
   if (!linkReady) {
     return (
       <div className="min-h-screen flex items-center justify-center" style={{ background: '#070A12' }}>
-        <Loader2 className="w-10 h-10 text-amber-400 animate-spin" aria-label="Loading" />
+        <Loader2 className="w-10 h-10 text-amber-400 animate-spin" aria-label={t('common.loading')} />
       </div>
     );
   }
@@ -115,18 +117,17 @@ export default function ResetPassword() {
     return (
       <div className="min-h-screen" style={{ background: '#070A12' }}>
         <div className="absolute inset-0 grid-overlay opacity-60" />
+        <PageTopBar backHref="/forgot-password" backLabel={t('auth.passwordReset')} />
         <main className="relative z-10 px-6 lg:px-12 py-12 lg:py-20">
           <div className="max-w-md mx-auto text-center">
             <div className="p-6 sm:p-8 rounded-2xl bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)]">
-              <h1 className="text-2xl font-bold text-[#F4F6FA] mb-4">Invalid or Expired Link</h1>
-              <p className="text-[#A9B3C7] mb-6">
-                This password reset link is invalid or has expired. Please request a new one.
-              </p>
+              <h1 className="text-2xl font-bold text-[#F4F6FA] mb-4">{t('auth.invalidOrExpiredLink')}</h1>
+              <p className="text-[#A9B3C7] mb-6">{t('auth.invalidLinkDesc')}</p>
               <a
                 href="/forgot-password"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 hover:from-amber-400 hover:to-amber-500 shadow-[0_6px_24px_rgba(245,158,11,0.28)] transition-colors"
               >
-                Request New Link
+                {t('auth.requestNewLink')}
               </a>
             </div>
           </div>
@@ -137,52 +138,32 @@ export default function ResetPassword() {
 
   return (
     <div className="min-h-screen" style={{ background: '#070A12' }}>
-      {/* Grid Overlay */}
       <div className="absolute inset-0 grid-overlay opacity-60" />
+      <PageTopBar backHref="/login" backLabel={t('auth.backToLogin')} />
 
-      {/* Navigation */}
-      <nav className="relative z-50 px-6 lg:px-12 py-6">
-        <div className="flex items-center justify-between">
-          <a href="/" className="flex flex-col items-start">
-            <img
-              src="/logo.png"
-              alt="Viron Labs"
-              className="h-10 sm:h-12 lg:h-14 w-auto object-contain select-none"
-              draggable={false}
-            />
-          </a>
-        </div>
-      </nav>
-
-      {/* Main Content */}
       <main className="relative z-10 px-6 lg:px-12 py-12 lg:py-20">
         <div className="max-w-md mx-auto">
-          {/* Header */}
           <div className="text-center mb-8">
-            <span className="eyebrow mb-4 block">NEW PASSWORD</span>
+            <span className="eyebrow mb-4 block">{t('auth.newPasswordEyebrow')}</span>
             <h1 className="text-3xl sm:text-4xl font-bold text-[#F4F6FA] mb-2">
-              {isSuccess ? 'Password Updated!' : 'Set New Password'}
+              {isSuccess ? t('auth.passwordUpdated') : t('auth.setNewPassword')}
             </h1>
             <p className="text-[#A9B3C7]">
-              {isSuccess
-                ? 'Your password has been successfully changed'
-                : 'Create a new password for your account'}
+              {isSuccess ? t('auth.passwordChangedSubtitle') : t('auth.createNewPassword')}
             </p>
           </div>
 
-          {/* Error Message */}
           {error && (
             <div className="mb-4 p-4 rounded-xl bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)]">
               <p className="text-sm text-[#EF4444]">{error}</p>
             </div>
           )}
 
-          {/* Form */}
           {!isSuccess ? (
             <div className="p-6 sm:p-8 rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
               <form onSubmit={handleSubmit} className="space-y-5">
                 <div>
-                  <label className="block text-sm text-[#A9B3C7] mb-2">New Password</label>
+                  <label className="block text-sm text-[#A9B3C7] mb-2">{t('auth.newPassword')}</label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A9B3C7]" />
                     <input
@@ -202,11 +183,11 @@ export default function ResetPassword() {
                       {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                     </button>
                   </div>
-                  <p className="text-xs text-[#A9B3C7] mt-1">Minimum 8 characters</p>
+                  <p className="text-xs text-[#A9B3C7] mt-1">{t('auth.min8Chars')}</p>
                 </div>
 
                 <div>
-                  <label className="block text-sm text-[#A9B3C7] mb-2">Confirm Password</label>
+                  <label className="block text-sm text-[#A9B3C7] mb-2">{t('auth.confirmPassword')}</label>
                   <div className="relative">
                     <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A9B3C7]" />
                     <input
@@ -228,10 +209,10 @@ export default function ResetPassword() {
                   {isLoading ? (
                     <>
                       <Loader2 className="w-4 h-4 animate-spin" />
-                      Updating...
+                      {t('auth.updating')}
                     </>
                   ) : (
-                    'Update Password'
+                    t('auth.updatePassword')
                   )}
                 </button>
               </form>
@@ -239,14 +220,12 @@ export default function ResetPassword() {
           ) : (
             <div className="p-6 sm:p-8 rounded-2xl bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] text-center">
               <CheckCircle className="w-16 h-16 mx-auto text-[#22C55E] mb-4" />
-              <p className="text-[#F4F6FA] mb-6">
-                Your password has been successfully updated. You can now log in with your new password.
-              </p>
+              <p className="text-[#F4F6FA] mb-6">{t('auth.passwordUpdatedLogin')}</p>
               <a
                 href="/login"
                 className="inline-flex items-center gap-2 px-6 py-3 rounded-xl font-semibold bg-gradient-to-r from-amber-500 to-amber-600 text-zinc-950 hover:from-amber-400 hover:to-amber-500 shadow-[0_6px_24px_rgba(245,158,11,0.28)] transition-colors"
               >
-                Go to Login
+                {t('auth.goToLogin')}
               </a>
             </div>
           )}

@@ -92,9 +92,9 @@ export function getStorefrontSavings(
  * 2) apply an additional "extra" discount for Buy 2 / Buy 3
  *
  * Example:
- * - Buy1 = 20% off original → £88
- * - Buy2 total = (£88 * 2) - extra 5%
- * - Buy3 total = (£88 * 3) - extra 10%
+ * - Buy1 = 20% off original → 880 kr
+ * - Buy2 total = (880 kr × 2) - extra 5%
+ * - Buy3 total = (880 kr × 3) - extra 10%
  */
 export function getStorefrontBundleUnitPrice(
   originalPrice: number,

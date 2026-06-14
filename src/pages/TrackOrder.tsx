@@ -21,11 +21,12 @@ import {
   lookupOrderTracking,
   resolveCurrentStageIndex,
   isCancelled,
-  TRACKING_STAGES,
   type TrackOrderResult,
 } from '@/lib/trackOrder';
 import { sendOrderTrackingUpdate } from '@/lib/email';
 import { formatOrderNumberDisplay } from '@/utils/order-number';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslation } from '@/i18n';
 
 // Throttle duplicate status emails so re-submits don't spam the customer.
 // Keyed by (order_number, email) and stored in sessionStorage — resets every tab.
@@ -81,6 +82,7 @@ function formatShippingMethod(m: string | null): string {
 }
 
 export default function TrackOrder() {
+  const { t } = useTranslation();
   const location = useLocation();
 
   const [orderInput, setOrderInput] = useState('');
@@ -190,13 +192,16 @@ export default function TrackOrder() {
               draggable={false}
             />
           </a>
-          <a
-            href="/"
-            className="flex items-center gap-2 text-sm text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4" />
-            Back to Shop
-          </a>
+          <div className="flex items-center gap-3 sm:gap-4">
+            <LanguageSwitcher />
+            <a
+              href="/"
+              className="flex items-center gap-2 text-sm text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4" />
+              {t('track.backToShop')}
+            </a>
+          </div>
         </div>
       </nav>
 
@@ -207,13 +212,11 @@ export default function TrackOrder() {
             <div className="w-16 h-16 mx-auto rounded-2xl bg-[rgba(46,209,180,0.1)] flex items-center justify-center mb-6">
               <Package className="w-8 h-8 text-[#2ED1B4]" />
             </div>
-            <span className="eyebrow mb-4 block">ORDER TRACKING</span>
+            <span className="eyebrow mb-4 block">{t('track.eyebrow')}</span>
             <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold text-[#F4F6FA] mb-4">
-              Track your <span className="gradient-text">order</span>
+              {t('track.title')} <span className="gradient-text">{t('track.titleHighlight')}</span>
             </h1>
-            <p className="text-base sm:text-lg text-[#A9B3C7]">
-              Enter your order number and the email you used at checkout.
-            </p>
+            <p className="text-base sm:text-lg text-[#A9B3C7]">{t('track.subtitle')}</p>
           </div>
 
           {/* Lookup form */}
@@ -227,7 +230,7 @@ export default function TrackOrder() {
                   htmlFor="trk-order"
                   className="block text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider mb-2"
                 >
-                  Order Number
+                  {t('track.orderNumber')}
                 </label>
                 <input
                   id="trk-order"
@@ -238,7 +241,7 @@ export default function TrackOrder() {
                   spellCheck={false}
                   value={orderInput}
                   onChange={(e) => setOrderInput(e.target.value)}
-                  placeholder="e.g. ABCD1234"
+                  placeholder={t('track.orderNumberPlaceholder')}
                   className="w-full px-4 py-3 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.08)] text-[#F4F6FA] placeholder-[#5A667E] font-mono tracking-wider focus:outline-none focus:border-[#2ED1B4] transition-colors"
                   disabled={submitting}
                   required
@@ -249,7 +252,7 @@ export default function TrackOrder() {
                   htmlFor="trk-email"
                   className="block text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider mb-2"
                 >
-                  Email used at checkout
+                  {t('track.emailAtCheckout')}
                 </label>
                 <input
                   id="trk-email"
@@ -258,7 +261,7 @@ export default function TrackOrder() {
                   autoComplete="email"
                   value={emailInput}
                   onChange={(e) => setEmailInput(e.target.value)}
-                  placeholder="you@example.com"
+                  placeholder={t('track.emailPlaceholder')}
                   className="w-full px-4 py-3 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.08)] text-[#F4F6FA] placeholder-[#5A667E] focus:outline-none focus:border-[#2ED1B4] transition-colors"
                   disabled={submitting}
                   required
@@ -274,12 +277,12 @@ export default function TrackOrder() {
               {submitting ? (
                 <>
                   <Loader2 className="w-4 h-4 animate-spin" />
-                  Looking up…
+                  {t('track.lookingUp')}
                 </>
               ) : (
                 <>
                   <Search className="w-4 h-4" />
-                  Track Order
+                  {t('track.trackOrder')}
                 </>
               )}
             </button>
@@ -293,7 +296,7 @@ export default function TrackOrder() {
 
             <p className="mt-4 flex items-center gap-2 text-xs text-[#5A667E]">
               <ShieldCheck className="w-3.5 h-3.5" />
-              We only show status details — no billing or personal information.
+              {t('track.privacyNote')}
             </p>
           </form>
 
@@ -304,7 +307,7 @@ export default function TrackOrder() {
               <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 pb-5 mb-6 border-b border-[rgba(244,246,250,0.06)]">
                 <div>
                   <p className="text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider mb-1">
-                    Order Number
+                    {t('track.orderNumber')}
                   </p>
                   <div className="flex items-center gap-2">
                     <span className="text-xl sm:text-2xl font-bold text-[#F4F6FA] font-mono tracking-wider">
@@ -313,7 +316,7 @@ export default function TrackOrder() {
                     <button
                       type="button"
                       onClick={copyOrderNumber}
-                      title="Copy order number"
+                      title={t('track.copyOrderNumber')}
                       className="p-1.5 rounded-lg text-[#A9B3C7] hover:text-[#2ED1B4] hover:bg-[rgba(46,209,180,0.08)] transition-colors"
                     >
                       {copied ? <Check className="w-3.5 h-3.5" /> : <Copy className="w-3.5 h-3.5" />}
@@ -338,11 +341,10 @@ export default function TrackOrder() {
                   <XCircle className="w-5 h-5 text-[#EF4444] flex-shrink-0 mt-0.5" />
                   <div>
                     <p className="text-sm font-semibold text-[#F4F6FA] mb-1">
-                      This order has been cancelled.
+                      {t('track.orderCancelled')}
                     </p>
                     <p className="text-sm text-[#A9B3C7]">
-                      If this wasn’t expected, please contact our support team and we’ll sort it
-                      out right away.
+                      {t('track.orderCancelledDesc')}
                     </p>
                   </div>
                 </div>
@@ -357,14 +359,14 @@ export default function TrackOrder() {
                     <Truck className="w-5 h-5 text-[#2ED1B4] flex-shrink-0 mt-0.5" />
                     <div className="min-w-0">
                       <p className="text-xs font-semibold text-[#2ED1B4] uppercase tracking-wider mb-1">
-                        Tracking Number
+                        {t('track.trackingNumber')}
                       </p>
                       <p className="text-sm font-mono text-[#F4F6FA] break-all">
                         {result.tracking_number}
                       </p>
                       {result.shipping_method && (
                         <p className="text-xs text-[#A9B3C7] mt-1">
-                          Shipping via {formatShippingMethod(result.shipping_method)}
+                          {t('track.shippingVia', { method: formatShippingMethod(result.shipping_method) })}
                         </p>
                       )}
                     </div>
@@ -376,7 +378,7 @@ export default function TrackOrder() {
               {result.items.length > 0 && (
                 <div className="mt-6">
                   <p className="text-xs font-semibold text-[#A9B3C7] uppercase tracking-wider mb-3">
-                    Items ({result.items.length})
+                    {t('track.items', { count: String(result.items.length) })}
                   </p>
                   <div className="rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.06)] divide-y divide-[rgba(244,246,250,0.04)]">
                     {result.items.map((item, idx) => (
@@ -386,7 +388,7 @@ export default function TrackOrder() {
                             {item.name}
                             {item.is_free && (
                               <span className="ml-2 inline-block px-1.5 py-0.5 rounded text-[10px] font-semibold text-[#34D399] bg-[rgba(52,211,153,0.1)] uppercase tracking-wider">
-                                Free
+                                {t('track.free')}
                               </span>
                             )}
                           </p>
@@ -403,9 +405,9 @@ export default function TrackOrder() {
 
               {/* Totals */}
               <div className="mt-6 grid grid-cols-3 gap-3 text-center">
-                <Totals label="Subtotal" value={result.subtotal} />
-                <Totals label="Shipping" value={result.shipping_cost} />
-                <Totals label="Total" value={result.total} emphasize />
+                <Totals label={t('track.subtotal')} value={result.subtotal} />
+                <Totals label={t('track.shipping')} value={result.shipping_cost} />
+                <Totals label={t('track.total')} value={result.total} emphasize />
               </div>
             </div>
           )}
@@ -413,8 +415,7 @@ export default function TrackOrder() {
           {/* Helpful info when no result yet */}
           {!result && !error && !submitting && (
             <div className="text-center text-sm text-[#5A667E] leading-relaxed">
-              Can’t find your order number? Check the confirmation email we sent when you placed
-              the order — the number is printed near the top.
+              {t('track.helpText')}
             </div>
           )}
         </div>
@@ -424,31 +425,32 @@ export default function TrackOrder() {
 }
 
 function StatusBadge({ status, cancelled }: { status: string; cancelled: boolean }) {
+  const { t } = useTranslation();
   const s = (status || '').toLowerCase();
   let color = '#A9B3C7';
   let bg = 'rgba(169,179,199,0.12)';
-  let label = status || 'Unknown';
+  let label = status || t('track.statusUnknown');
 
   if (cancelled) {
     color = '#EF4444';
     bg = 'rgba(239,68,68,0.12)';
-    label = 'Cancelled';
+    label = t('track.statusCancelled');
   } else if (s === 'delivered') {
     color = '#22C55E';
     bg = 'rgba(34,197,94,0.12)';
-    label = 'Delivered';
+    label = t('track.statusDelivered');
   } else if (s === 'shipped') {
     color = '#2ED1B4';
     bg = 'rgba(46,209,180,0.12)';
-    label = 'Shipped';
+    label = t('track.statusShipped');
   } else if (s === 'processing') {
     color = '#8B5CF6';
     bg = 'rgba(139,92,246,0.12)';
-    label = 'Processing';
+    label = t('track.statusProcessing');
   } else if (s === 'pending_payment') {
     color = '#F59E0B';
     bg = 'rgba(245,158,11,0.12)';
-    label = 'Awaiting Payment';
+    label = t('track.statusAwaitingPayment');
   }
 
   return (
@@ -466,14 +468,23 @@ function StatusBadge({ status, cancelled }: { status: string; cancelled: boolean
 }
 
 function Timeline({ currentStage, order }: { currentStage: number; order: TrackOrderResult }) {
+  const { t } = useTranslation();
+  const stages = [
+    { key: 'placed', label: t('track.stagePlaced'), description: t('track.stagePlacedDesc') },
+    { key: 'paid', label: t('track.stagePaid'), description: t('track.stagePaidDesc') },
+    { key: 'processing', label: t('track.stageProcessing'), description: t('track.stageProcessingDesc') },
+    { key: 'shipped', label: t('track.stageShipped'), description: t('track.stageShippedDesc') },
+    { key: 'delivered', label: t('track.stageDelivered'), description: t('track.stageDeliveredDesc') },
+  ];
+
   return (
     <ol className="relative">
-      {TRACKING_STAGES.map((stage, idx) => {
+      {stages.map((stage, idx) => {
         const Icon = STAGE_ICONS[idx] ?? Package;
         const isDone = idx < currentStage;
         const isActive = idx === currentStage;
         const isUpcoming = idx > currentStage;
-        const isLast = idx === TRACKING_STAGES.length - 1;
+        const isLast = idx === stages.length - 1;
 
         // Stage-specific timestamp (only when we have one).
         let ts = '';
@@ -525,7 +536,7 @@ function Timeline({ currentStage, order }: { currentStage: number; order: TrackO
                 </p>
                 {isActive && (
                   <span className="inline-block px-2 py-0.5 rounded text-[10px] font-semibold text-[#2ED1B4] bg-[rgba(46,209,180,0.12)] uppercase tracking-wider">
-                    Current
+                    {t('track.stageCurrent')}
                   </span>
                 )}
               </div>
@@ -548,6 +559,7 @@ function EmailStatusStrip({
   state: 'sending' | 'sent' | 'cooldown' | 'failed';
   email: string;
 }) {
+  const { t } = useTranslation();
   let tone: { color: string; bg: string; border: string };
   let icon: React.ReactNode;
   let message: React.ReactNode;
@@ -560,11 +572,7 @@ function EmailStatusStrip({
         border: 'rgba(169,179,199,0.2)',
       };
       icon = <Loader2 className="w-4 h-4 animate-spin flex-shrink-0" style={{ color: '#A9B3C7' }} />;
-      message = (
-        <>
-          Sending a copy of this update to <strong className="text-[#F4F6FA]">{email}</strong>…
-        </>
-      );
+      message = t('track.emailSending', { email });
       break;
     case 'sent':
       tone = {
@@ -573,12 +581,7 @@ function EmailStatusStrip({
         border: 'rgba(46,209,180,0.24)',
       };
       icon = <Mail className="w-4 h-4 flex-shrink-0" style={{ color: '#2ED1B4' }} />;
-      message = (
-        <>
-          We’ve emailed this update to <strong className="text-[#F4F6FA]">{email}</strong>. Check
-          your inbox (and spam folder, just in case).
-        </>
-      );
+      message = t('track.emailSent', { email });
       break;
     case 'cooldown':
       tone = {
@@ -587,12 +590,7 @@ function EmailStatusStrip({
         border: 'rgba(244,246,250,0.08)',
       };
       icon = <Mail className="w-4 h-4 flex-shrink-0" style={{ color: '#A9B3C7' }} />;
-      message = (
-        <>
-          We already emailed this status to <strong className="text-[#F4F6FA]">{email}</strong> a
-          moment ago — we won’t send it again right away.
-        </>
-      );
+      message = t('track.emailCooldown', { email });
       break;
     case 'failed':
     default:
@@ -602,12 +600,7 @@ function EmailStatusStrip({
         border: 'rgba(245,158,11,0.24)',
       };
       icon = <AlertCircle className="w-4 h-4 flex-shrink-0" style={{ color: '#F59E0B' }} />;
-      message = (
-        <>
-          We couldn’t send the status email to <strong className="text-[#F4F6FA]">{email}</strong>{' '}
-          right now — the status above is still up to date.
-        </>
-      );
+      message = t('track.emailFailed', { email });
       break;
   }
 
@@ -629,7 +622,7 @@ function Totals({ label, value, emphasize }: { label: string; value: number; emp
       <p
         className={`mt-1 font-mono ${emphasize ? 'text-base font-bold text-[#2ED1B4]' : 'text-sm text-[#F4F6FA]'}`}
       >
-        £{(value ?? 0).toFixed(2)}
+        kr {(value ?? 0).toFixed(2)}
       </p>
     </div>
   );

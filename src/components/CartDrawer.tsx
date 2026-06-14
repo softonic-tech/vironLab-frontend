@@ -6,8 +6,10 @@ import { loadEssentialProductsFromSupabase } from '@/lib/supabase-db';
 import { getSiteSetting, DEFAULT_DISCOUNT_SETTINGS } from '@/lib/settings';
 import { getStorefrontPrice, getListPriceDiscountPercent } from '@/utils/pricing';
 import { useCurrency } from '@/context/CurrencyContext';
+import { useTranslation } from '@/i18n';
 
 export default function CartDrawer() {
+  const { t } = useTranslation();
   const {
     items,
     addItem,
@@ -40,8 +42,8 @@ export default function CartDrawer() {
   const paidItems = items.filter(item => !item.isFree);
   const paidTotal = paidItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   
-  // Calculate points to be earned (1 point per £1 on subtotal)
-  const pointsToEarn = Math.floor(paidTotal);
+  // Calculate points to be earned (1 point per 100 kr on subtotal)
+  const pointsToEarn = Math.floor(paidTotal / 100);
   
   // Calculate total savings using originalPrice stored on each CartItem
   const totalSavings = paidItems.reduce((sum, item) => {
@@ -140,7 +142,7 @@ export default function CartDrawer() {
         <div className="flex items-center justify-between p-3 sm:p-4 border-b border-[rgba(244,246,250,0.08)]">
           <div className="flex items-center gap-2">
             <ShoppingBag className="w-4 h-4 sm:w-5 sm:h-5 text-[#2ED1B4]" />
-            <h2 className="text-sm sm:text-base font-semibold text-[#F4F6FA]">Your Cart</h2>
+            <h2 className="text-sm sm:text-base font-semibold text-[#F4F6FA]">{t('cart.title')}</h2>
             <span className="px-1.5 py-0.5 rounded-full bg-[rgba(46,209,180,0.15)] text-[#2ED1B4] text-[10px] sm:text-xs font-medium">
               {totalItems}
             </span>
@@ -187,9 +189,9 @@ export default function CartDrawer() {
           {paidItems.length === 0 ? (
             <div className="flex flex-col items-center justify-center h-full text-center p-4 sm:p-6">
               <ShoppingBag className="w-10 h-10 sm:w-12 sm:h-12 text-[rgba(244,246,250,0.2)] mb-2 sm:mb-3" />
-              <p className="text-[#A9B3C7] text-sm mb-0.5">Your cart is empty</p>
+              <p className="text-[#A9B3C7] text-sm mb-0.5">{t('cart.empty')}</p>
               <p className="text-[10px] sm:text-xs text-[rgba(169,179,199,0.6)]">
-                Add some peptides to get started
+                {t('cart.emptyHint')}
               </p>
             </div>
           ) : (
@@ -217,7 +219,7 @@ export default function CartDrawer() {
                         if (pct <= 0) return null;
                         return (
                           <span className="px-1 py-0.5 rounded bg-[rgba(34,197,94,0.15)] text-[#22C55E] text-[7px] sm:text-[8px] font-bold">
-                            {pct}% OFF
+                            {pct}% {t('common.off')}
                           </span>
                         );
                       })()}
@@ -261,7 +263,7 @@ export default function CartDrawer() {
               {/* Suggested: all Essentials category products from Supabase (one query) */}
               {paidItems.length > 0 && suggestedToShow.length > 0 && (
                 <div className="mt-3 sm:mt-4 pt-3 sm:pt-4 border-t border-[rgba(244,246,250,0.08)]">
-                  <p className="text-[10px] sm:text-xs text-[#A9B3C7] mb-2">You might also need:</p>
+                  <p className="text-[10px] sm:text-xs text-[#A9B3C7] mb-2">{t('cart.youMightNeed')}</p>
                   <div className="space-y-1.5 sm:space-y-2">
                     {suggestedToShow.map((s) => (
                       <div
@@ -289,7 +291,7 @@ export default function CartDrawer() {
                             </span>
                             {s.discountEnabled && s.savings > 0 ? (
                               <span className="text-[9px] sm:text-[10px] text-[#22C55E] font-medium">
-                                {`Save ${s.discountPercentage}% (${format(s.savings)})`}
+                                {t('cart.savePercent', { percent: s.discountPercentage, amount: format(s.savings) })}
                               </span>
                             ) : null}
                           </div>
@@ -323,7 +325,7 @@ export default function CartDrawer() {
               <div className="p-1.5 sm:p-2 rounded-lg bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] flex items-center gap-1.5 sm:gap-2">
                 <Tag className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#22C55E]" />
                 <span className="text-[10px] sm:text-xs text-[#22C55E] font-medium">
-                  Saving <span className="font-bold">{format(totalSavings)}</span>
+                  {t('cart.saving')} <span className="font-bold">{format(totalSavings)}</span>
                 </span>
               </div>
             )}
@@ -335,12 +337,12 @@ export default function CartDrawer() {
                   <Award className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#8B5CF6]" />
                   <span className="text-[10px] sm:text-xs text-[#A9B3C7]">Points to earn</span>
                 </div>
-                <span className="text-[10px] sm:text-xs font-bold text-[#8B5CF6]">{pointsToEarn} pts</span>
+                <span className="text-[10px] sm:text-xs font-bold text-[#8B5CF6]">{t('cart.earnPoints', { points: pointsToEarn })}</span>
               </div>
             </div>
             
             <div className="flex items-center justify-between pt-1">
-              <span className="text-xs sm:text-sm text-[#A9B3C7]">Subtotal</span>
+              <span className="text-xs sm:text-sm text-[#A9B3C7]">{t('cart.subtotal')}</span>
               <span className="text-base sm:text-lg font-semibold text-[#F4F6FA]">
                 {format(paidTotal)}
               </span>
@@ -350,7 +352,7 @@ export default function CartDrawer() {
               onClick={() => setIsCartOpen(false)}
               className="w-full py-2 sm:py-2.5 rounded-full bg-[#2ED1B4] text-[#070A12] font-medium text-xs sm:text-sm flex items-center justify-center gap-2 hover:bg-[#25b89d] transition-colors"
             >
-              <span>Checkout</span>
+              <span>{t('cart.checkout')}</span>
               <span className="opacity-80">{format(paidTotal)}</span>
             </a>
             <p className="text-[9px] sm:text-[10px] text-center text-[rgba(169,179,199,0.6)]">

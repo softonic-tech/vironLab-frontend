@@ -1,0 +1,18 @@
+export const nav = {
+  catalog: 'Katalog',
+  trust: 'Förtroende',
+  quality: 'Kvalitet',
+  labGuide: 'Labbguide',
+  contact: 'Kontakt',
+  faq: 'FAQ',
+  login: 'Logga in',
+  dashboard: 'Instrumentpanel',
+  promoter: 'Partner',
+  promoterDashboard: 'Partnerpanel',
+  accountSettings: 'Kontoinställningar',
+  backToTop: 'VIRON — tillbaka till toppen',
+  primary: 'Primär navigering',
+  switchToSwedish: 'Byt till svenska',
+  switchToEnglish: 'Byt till engelska',
+  language: 'Språk',
+};

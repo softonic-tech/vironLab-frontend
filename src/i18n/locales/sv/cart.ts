@@ -1,0 +1,15 @@
+export const cart = {
+  title: 'Din varukorg',
+  empty: 'Din varukorg är tom',
+  emptyHint: 'Lägg till peptider för att komma igång',
+  youMightNeed: 'Du kanske också behöver:',
+  savePercent: 'Spara {{percent}} % ({{amount}})',
+  saving: 'Du sparar',
+  subtotal: 'Delsumma',
+  total: 'Totalt',
+  checkout: 'Till kassan',
+  continueShopping: 'Fortsätt handla',
+  addForFreeShipping: 'Lägg till {{amount}} för fri frakt',
+  freeShippingUnlocked: 'FRI FRAKT upplåst!',
+  earnPoints: '{{points}} poäng',
+};

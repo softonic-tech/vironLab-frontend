@@ -16,6 +16,8 @@ import {
 import { getCurrentUser, signOut } from '@/lib/supabase';
 import { supabase } from '@/lib/supabase';
 import { Skeleton } from '@/components/ui/skeleton';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslation } from '@/i18n';
 
 interface UserSettings {
   name: string;
@@ -30,10 +32,10 @@ interface UserSettings {
   };
 }
 
-function formatMemberSince(createdAt: string | undefined): string {
+function formatMemberSince(createdAt: string | undefined, locale: string): string {
   if (!createdAt) return '';
   const d = new Date(createdAt);
-  return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric' });
+  return d.toLocaleDateString(locale === 'sv' ? 'sv-SE' : 'en-US', { month: 'long', year: 'numeric' });
 }
 
 function getInitials(name: string): string {
@@ -79,6 +81,7 @@ function ToggleSwitch({
 }
 
 export default function Settings() {
+  const { t, language } = useTranslation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [isLoadingUser, setIsLoadingUser] = useState(true);
   const [userData, setUserData] = useState({ name: '', email: '', joinDate: '' });
@@ -115,7 +118,7 @@ export default function Settings() {
         const name = (user.user_metadata?.name ?? user.user_metadata?.full_name ?? user.email?.split('@')[0] ?? '') as string;
         const email = user.email ?? '';
         const notif = user.user_metadata?.notifications as Partial<typeof DEFAULT_NOTIFICATIONS> | undefined;
-        setUserData({ name, email, joinDate: formatMemberSince(user.created_at) });
+        setUserData({ name, email, joinDate: formatMemberSince(user.created_at, language) });
         setSettings((prev) => ({
           ...prev,
           name,
@@ -153,21 +156,21 @@ export default function Settings() {
     try {
       const user = await getCurrentUser();
       if (!user) {
-        setSaveError('Session expired. Please sign in again.');
+        setSaveError(t('settings.sessionExpired'));
         return;
       }
 
       if (activeTab === 'password') {
-        if (!settings.currentPassword) { setSaveError('Please enter your current password.'); return; }
-        if (!settings.newPassword || !settings.confirmPassword) { setSaveError('Please fill in new password and confirmation.'); return; }
-        if (settings.newPassword !== settings.confirmPassword) { setSaveError('Passwords do not match.'); return; }
-        if (settings.newPassword.length < 6) { setSaveError('Password must be at least 6 characters.'); return; }
+        if (!settings.currentPassword) { setSaveError(t('settings.enterCurrentPassword')); return; }
+        if (!settings.newPassword || !settings.confirmPassword) { setSaveError(t('settings.fillNewPassword')); return; }
+        if (settings.newPassword !== settings.confirmPassword) { setSaveError(t('settings.passwordsNoMatch')); return; }
+        if (settings.newPassword.length < 6) { setSaveError(t('settings.passwordMin6')); return; }
 
         const { error: signInError } = await supabase.auth.signInWithPassword({
           email: user.email!,
           password: settings.currentPassword,
         });
-        if (signInError) { setSaveError('Current password is incorrect.'); return; }
+        if (signInError) { setSaveError(t('settings.currentPasswordIncorrect')); return; }
 
         const passwordUpdatePromise = supabase.auth.updateUser({ password: settings.newPassword });
         const result = await Promise.race([
@@ -208,7 +211,7 @@ export default function Settings() {
       const msg =
         e && typeof e === 'object' && 'message' in e
           ? String((e as { message: string }).message)
-          : 'Failed to save. Please try again.';
+          : t('settings.saveFailed');
       setSaveError(msg);
     } finally {
       setIsSaving(false);
@@ -222,9 +225,9 @@ export default function Settings() {
   };
 
   const tabs = [
-    { id: 'profile' as const, label: 'Profile', icon: User },
-    { id: 'password' as const, label: 'Password', icon: Lock },
-    { id: 'notifications' as const, label: 'Alerts', icon: Bell },
+    { id: 'profile' as const, label: t('settings.profile'), icon: User },
+    { id: 'password' as const, label: t('settings.password'), icon: Lock },
+    { id: 'notifications' as const, label: t('settings.alerts'), icon: Bell },
   ];
 
   // ── Loading skeleton ──────────────────────────────────────────────────────────
@@ -271,7 +274,7 @@ export default function Settings() {
         <a
           href="/dashboard"
           className="flex items-center justify-center w-9 h-9 rounded-xl bg-[rgba(244,246,250,0.06)] text-[#A9B3C7] hover:text-[#F4F6FA] hover:bg-[rgba(244,246,250,0.1)] transition-colors"
-          aria-label="Back to dashboard"
+          aria-label={t('settings.backToDashboard')}
         >
           <ArrowLeft className="w-5 h-5" />
         </a>
@@ -285,8 +288,7 @@ export default function Settings() {
           />
         </a>
 
-        {/* Spacer to center logo */}
-        <div className="w-9" aria-hidden="true" />
+        <LanguageSwitcher />
       </nav>
 
       <main className="relative z-10 px-4 sm:px-6 py-6 max-w-2xl mx-auto lg:max-w-5xl">
@@ -303,11 +305,11 @@ export default function Settings() {
 
           <div className="min-w-0">
             <p className="text-base sm:text-lg font-semibold text-[#F4F6FA] truncate">
-              {userData.name || 'Your Account'}
+              {userData.name || t('settings.yourAccount')}
             </p>
             <p className="text-sm text-[#A9B3C7] truncate">{userData.email}</p>
             {userData.joinDate && (
-              <p className="text-xs text-[#6B7280] mt-0.5">Member since {userData.joinDate}</p>
+              <p className="text-xs text-[#6B7280] mt-0.5">{t('settings.memberSince', { date: userData.joinDate })}</p>
             )}
           </div>
         </div>
@@ -348,7 +350,7 @@ export default function Settings() {
                     }`}
                   >
                     <Icon className="w-5 h-5 shrink-0" />
-                    <span className="font-medium">{label === 'Alerts' ? 'Notifications' : label}</span>
+                    <span className="font-medium">{id === 'notifications' ? t('settings.notifications') : label}</span>
                   </button>
                 ))}
 
@@ -358,7 +360,7 @@ export default function Settings() {
                     className="w-full flex items-center gap-3 px-4 py-3 rounded-xl text-left text-[#EF4444] hover:bg-[rgba(239,68,68,0.1)] transition-colors"
                   >
                     <LogOut className="w-5 h-5 shrink-0" />
-                    <span className="font-medium">Sign Out</span>
+                    <span className="font-medium">{t('settings.signOut')}</span>
                   </button>
                 </div>
               </div>
@@ -373,13 +375,13 @@ export default function Settings() {
               {activeTab === 'profile' && (
                 <div className="p-5 sm:p-6 space-y-5">
                   <div>
-                    <h2 className="text-lg sm:text-xl font-semibold text-[#F4F6FA]">Profile Information</h2>
-                    <p className="text-sm text-[#A9B3C7] mt-0.5">Update your personal details</p>
+                    <h2 className="text-lg sm:text-xl font-semibold text-[#F4F6FA]">{t('settings.profileInfo')}</h2>
+                    <p className="text-sm text-[#A9B3C7] mt-0.5">{t('settings.profileInfoDesc')}</p>
                   </div>
 
                   <div className="space-y-4">
                     <div>
-                      <label className="block text-sm font-medium text-[#A9B3C7] mb-2">Full Name</label>
+                      <label className="block text-sm font-medium text-[#A9B3C7] mb-2">{t('settings.fullName')}</label>
                       <div className="relative">
                         <User className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280] pointer-events-none" />
                         <input
@@ -387,14 +389,14 @@ export default function Settings() {
                           value={settings.name}
                           onChange={(e) => handleInputChange('name', e.target.value)}
                           className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] placeholder-[#6B7280] focus:outline-none focus:border-[#2ED1B4] focus:bg-[rgba(7,10,18,0.8)] transition-colors text-base"
-                          placeholder="Your full name"
+                          placeholder={t('settings.fullNamePlaceholder')}
                           autoComplete="name"
                         />
                       </div>
                     </div>
 
                     <div>
-                      <label className="block text-sm font-medium text-[#A9B3C7] mb-2">Email Address</label>
+                      <label className="block text-sm font-medium text-[#A9B3C7] mb-2">{t('settings.emailAddress')}</label>
                       <div className="relative">
                         <Mail className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280] pointer-events-none" />
                         <input
@@ -402,7 +404,7 @@ export default function Settings() {
                           value={settings.email}
                           onChange={(e) => handleInputChange('email', e.target.value)}
                           className="w-full pl-12 pr-4 py-3.5 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] placeholder-[#6B7280] focus:outline-none focus:border-[#2ED1B4] focus:bg-[rgba(7,10,18,0.8)] transition-colors text-base"
-                          placeholder="your@email.com"
+                          placeholder={t('settings.emailPlaceholder')}
                           autoComplete="email"
                         />
                       </div>
@@ -415,14 +417,14 @@ export default function Settings() {
               {activeTab === 'password' && (
                 <div className="p-5 sm:p-6 space-y-5">
                   <div>
-                    <h2 className="text-lg sm:text-xl font-semibold text-[#F4F6FA]">Change Password</h2>
-                    <p className="text-sm text-[#A9B3C7] mt-0.5">Update your account password</p>
+                    <h2 className="text-lg sm:text-xl font-semibold text-[#F4F6FA]">{t('settings.changePassword')}</h2>
+                    <p className="text-sm text-[#A9B3C7] mt-0.5">{t('settings.changePasswordDesc')}</p>
                   </div>
 
                   <div className="space-y-4">
                     {/* Current password */}
                     <div>
-                      <label className="block text-sm font-medium text-[#A9B3C7] mb-2">Current Password</label>
+                      <label className="block text-sm font-medium text-[#A9B3C7] mb-2">{t('settings.currentPassword')}</label>
                       <div className="relative">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280] pointer-events-none" />
                         <input
@@ -430,14 +432,14 @@ export default function Settings() {
                           value={settings.currentPassword}
                           onChange={(e) => handleInputChange('currentPassword', e.target.value)}
                           className="w-full pl-12 pr-14 py-3.5 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] placeholder-[#6B7280] focus:outline-none focus:border-[#2ED1B4] focus:bg-[rgba(7,10,18,0.8)] transition-colors text-base"
-                          placeholder="Enter current password"
+                          placeholder={t('settings.currentPasswordPlaceholder')}
                           autoComplete="current-password"
                         />
                         <button
                           type="button"
                           onClick={() => setShowCurrentPassword(!showCurrentPassword)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-[#6B7280] hover:text-[#F4F6FA] hover:bg-[rgba(244,246,250,0.08)] transition-colors"
-                          aria-label={showCurrentPassword ? 'Hide password' : 'Show password'}
+                          aria-label={showCurrentPassword ? t('settings.hidePassword') : t('settings.showPassword')}
                         >
                           {showCurrentPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
@@ -446,7 +448,7 @@ export default function Settings() {
 
                     {/* New password */}
                     <div>
-                      <label className="block text-sm font-medium text-[#A9B3C7] mb-2">New Password</label>
+                      <label className="block text-sm font-medium text-[#A9B3C7] mb-2">{t('settings.newPassword')}</label>
                       <div className="relative">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280] pointer-events-none" />
                         <input
@@ -454,14 +456,14 @@ export default function Settings() {
                           value={settings.newPassword}
                           onChange={(e) => handleInputChange('newPassword', e.target.value)}
                           className="w-full pl-12 pr-14 py-3.5 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] placeholder-[#6B7280] focus:outline-none focus:border-[#2ED1B4] focus:bg-[rgba(7,10,18,0.8)] transition-colors text-base"
-                          placeholder="Enter new password"
+                          placeholder={t('settings.newPasswordPlaceholder')}
                           autoComplete="new-password"
                         />
                         <button
                           type="button"
                           onClick={() => setShowNewPassword(!showNewPassword)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-[#6B7280] hover:text-[#F4F6FA] hover:bg-[rgba(244,246,250,0.08)] transition-colors"
-                          aria-label={showNewPassword ? 'Hide password' : 'Show password'}
+                          aria-label={showNewPassword ? t('settings.hidePassword') : t('settings.showPassword')}
                         >
                           {showNewPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
@@ -470,7 +472,7 @@ export default function Settings() {
 
                     {/* Confirm password */}
                     <div>
-                      <label className="block text-sm font-medium text-[#A9B3C7] mb-2">Confirm New Password</label>
+                      <label className="block text-sm font-medium text-[#A9B3C7] mb-2">{t('settings.confirmNewPassword')}</label>
                       <div className="relative">
                         <Lock className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#6B7280] pointer-events-none" />
                         <input
@@ -482,14 +484,14 @@ export default function Settings() {
                               ? 'border-[#EF4444] focus:border-[#EF4444]'
                               : 'border-[rgba(244,246,250,0.1)] focus:border-[#2ED1B4]'
                           }`}
-                          placeholder="Confirm new password"
+                          placeholder={t('settings.confirmPasswordPlaceholder')}
                           autoComplete="new-password"
                         />
                         <button
                           type="button"
                           onClick={() => setShowConfirmPassword(!showConfirmPassword)}
                           className="absolute right-3 top-1/2 -translate-y-1/2 p-1.5 rounded-lg text-[#6B7280] hover:text-[#F4F6FA] hover:bg-[rgba(244,246,250,0.08)] transition-colors"
-                          aria-label={showConfirmPassword ? 'Hide password' : 'Show password'}
+                          aria-label={showConfirmPassword ? t('settings.hidePassword') : t('settings.showPassword')}
                         >
                           {showConfirmPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
                         </button>
@@ -499,14 +501,14 @@ export default function Settings() {
                     {settings.newPassword && settings.confirmPassword && settings.newPassword !== settings.confirmPassword && (
                       <div className="flex items-center gap-2 text-[#EF4444] text-sm bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.2)] px-4 py-3 rounded-xl">
                         <AlertTriangle className="w-4 h-4 shrink-0" />
-                        <span>Passwords do not match</span>
+                        <span>{t('settings.passwordsNoMatch')}</span>
                       </div>
                     )}
 
                     {/* Password hint */}
                     <p className="text-xs text-[#6B7280] flex items-center gap-1.5">
                       <Shield className="w-3.5 h-3.5 shrink-0" />
-                      Minimum 6 characters required
+                      {t('settings.min6Chars')}
                     </p>
                   </div>
                 </div>
@@ -516,8 +518,8 @@ export default function Settings() {
               {activeTab === 'notifications' && (
                 <div className="p-5 sm:p-6 space-y-5">
                   <div>
-                    <h2 className="text-lg sm:text-xl font-semibold text-[#F4F6FA]">Notification Preferences</h2>
-                    <p className="text-sm text-[#A9B3C7] mt-0.5">Choose what updates you want to receive</p>
+                    <h2 className="text-lg sm:text-xl font-semibold text-[#F4F6FA]">{t('settings.notificationPrefs')}</h2>
+                    <p className="text-sm text-[#A9B3C7] mt-0.5">{t('settings.notificationPrefsDesc')}</p>
                   </div>
 
                   <div className="space-y-3">
@@ -531,8 +533,8 @@ export default function Settings() {
                           <Mail className="w-5 h-5 text-[#2ED1B4]" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium text-[#F4F6FA] text-sm sm:text-base">Order Updates</p>
-                          <p className="text-xs sm:text-sm text-[#6B7280] truncate">Shipping & delivery notifications</p>
+                          <p className="font-medium text-[#F4F6FA] text-sm sm:text-base">{t('settings.orderUpdates')}</p>
+                          <p className="text-xs sm:text-sm text-[#6B7280] truncate">{t('settings.orderUpdatesDesc')}</p>
                         </div>
                       </div>
                       <div className="ml-3 shrink-0">
@@ -554,8 +556,8 @@ export default function Settings() {
                           <Bell className="w-5 h-5 text-[#8B5CF6]" />
                         </div>
                         <div className="min-w-0">
-                          <p className="font-medium text-[#F4F6FA] text-sm sm:text-base">Promotions & Offers</p>
-                          <p className="text-xs sm:text-sm text-[#6B7280] truncate">Sales and special deals</p>
+                          <p className="font-medium text-[#F4F6FA] text-sm sm:text-base">{t('settings.promotions')}</p>
+                          <p className="text-xs sm:text-sm text-[#6B7280] truncate">{t('settings.promotionsDesc')}</p>
                         </div>
                       </div>
                       <div className="ml-3 shrink-0">
@@ -583,7 +585,7 @@ export default function Settings() {
                 {saveSuccess && !saveError && (
                   <div className="flex items-center gap-3 text-[#22C55E] bg-[rgba(34,197,94,0.08)] border border-[rgba(34,197,94,0.2)] px-4 py-3 rounded-xl">
                     <Check className="w-5 h-5 shrink-0" />
-                    <span className="text-sm font-medium">Changes saved successfully!</span>
+                    <span className="text-sm font-medium">{t('settings.saved')}</span>
                   </div>
                 )}
 
@@ -595,12 +597,12 @@ export default function Settings() {
                   {isSaving ? (
                     <>
                       <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
-                      <span>Saving...</span>
+                      <span>{t('settings.saving')}</span>
                     </>
                   ) : (
                     <>
                       <Save className="w-5 h-5" />
-                      <span>Save Changes</span>
+                      <span>{t('settings.saveChanges')}</span>
                     </>
                   )}
                 </button>
@@ -614,7 +616,7 @@ export default function Settings() {
                 className="w-full flex items-center justify-center gap-2 px-6 py-3.5 rounded-xl border border-[rgba(239,68,68,0.3)] text-[#EF4444] font-medium hover:bg-[rgba(239,68,68,0.08)] active:scale-[0.98] transition-all text-base"
               >
                 <LogOut className="w-5 h-5" />
-                <span>Sign Out</span>
+                <span>{t('settings.signOut')}</span>
               </button>
             </div>
           </div>
@@ -624,7 +626,7 @@ export default function Settings() {
       {/* Footer */}
       <footer className="relative z-10 px-4 py-6 border-t border-[rgba(244,246,250,0.06)] mt-8">
         <p className="text-center text-xs text-[#4B5563]">
-          © 2026 Viron Labs. All rights reserved. For research use only.
+          {t('contact.footer')}
         </p>
       </footer>
     </div>

@@ -3,32 +3,19 @@ import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion } from 'framer-motion';
 import { Droplets, Syringe, RotateCw, Calculator, Beaker, Sparkles } from 'lucide-react';
+import { useTranslation } from '@/i18n';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const steps = [
-  {
-    number: '01',
-    icon: Droplets,
-    title: 'Swab the vial',
-    description: 'Wipe the stopper with alcohol.',
-  },
-  {
-    number: '02',
-    icon: Syringe,
-    title: 'Draw BAC water',
-    description: 'Pull 1–2 mL slowly.',
-  },
-  {
-    number: '03',
-    icon: RotateCw,
-    title: 'Inject & swirl',
-    description: 'Add to peptide; do not shake.',
-  },
-];
+const STEP_DEFS = [
+  { number: '01', icon: Droplets },
+  { number: '02', icon: Syringe },
+  { number: '03', icon: RotateCw },
+] as const;
 
 // Reconstitution Calculator Component
 function ReconstitutionCalculator() {
+  const { t } = useTranslation();
   const [peptideAmount, setPeptideAmount] = useState<number>(5);
   const [bacWater, setBacWater] = useState<number>(1);
   const [desiredDose, setDesiredDose] = useState<number>(0.25);
@@ -64,10 +51,10 @@ function ReconstitutionCalculator() {
           <div>
             <div className="flex items-center gap-2 mb-1">
               <Sparkles className="h-4 w-4 text-violet-300" aria-hidden />
-              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-amber-400/85">Bench utility</span>
+              <span className="font-mono text-[10px] uppercase tracking-[0.2em] text-amber-400/85">{t('landing.tutorial.calcEyebrow')}</span>
             </div>
-            <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">Reconstitution calculator</h3>
-            <p className="text-sm text-slate-400 mt-1">Translate mass, solvent volume, and target dose identically across runs.</p>
+            <h3 className="text-xl sm:text-2xl font-bold text-white tracking-tight">{t('landing.tutorial.calcTitle')}</h3>
+            <p className="text-sm text-slate-400 mt-1">{t('landing.tutorial.calcSubtitle')}</p>
           </div>
         </div>
         <Beaker className="hidden xl:block h-10 w-10 text-slate-600/70" aria-hidden />
@@ -75,7 +62,7 @@ function ReconstitutionCalculator() {
 
       <div className="relative grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
         <div className="space-y-2">
-          <label className="text-xs font-mono uppercase tracking-wider text-slate-500 block">Peptide amount</label>
+          <label className="text-xs font-mono uppercase tracking-wider text-slate-500 block">{t('landing.tutorial.peptideAmount')}</label>
           <div className="flex items-center gap-2">
             <input
               type="number"
@@ -84,14 +71,14 @@ function ReconstitutionCalculator() {
               className={inp}
               step="0.1"
               min="0.1"
-              aria-label="Peptide amount in milligrams"
+              aria-label={t('landing.tutorial.peptideAria')}
             />
             <span className="text-xs font-mono text-amber-500/70 shrink-0">mg</span>
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-mono uppercase tracking-wider text-slate-500 block">BAC water</label>
+          <label className="text-xs font-mono uppercase tracking-wider text-slate-500 block">{t('landing.tutorial.bacWater')}</label>
           <div className="flex items-center gap-2">
             <input
               type="number"
@@ -100,14 +87,14 @@ function ReconstitutionCalculator() {
               className={inp}
               step="0.1"
               min="0.1"
-              aria-label="Bacteriostatic water volume in milliliters"
+              aria-label={t('landing.tutorial.bacAria')}
             />
             <span className="text-xs font-mono text-amber-500/70 shrink-0">mL</span>
           </div>
         </div>
 
         <div className="space-y-2">
-          <label className="text-xs font-mono uppercase tracking-wider text-slate-500 block">Desired dose</label>
+          <label className="text-xs font-mono uppercase tracking-wider text-slate-500 block">{t('landing.tutorial.desiredDose')}</label>
           <div className="flex items-center gap-2">
             <input
               type="number"
@@ -116,7 +103,7 @@ function ReconstitutionCalculator() {
               className={inp}
               step="0.01"
               min="0.01"
-              aria-label="Desired dose in milligrams"
+              aria-label={t('landing.tutorial.doseAria')}
             />
             <span className="text-xs font-mono text-amber-500/70 shrink-0">mg</span>
           </div>
@@ -126,27 +113,27 @@ function ReconstitutionCalculator() {
       <div className="relative grid grid-cols-2 lg:grid-cols-4 gap-3 mb-8">
         {[
           {
-            title: 'Concentration',
+            title: t('landing.tutorial.concentration'),
             value: concentration.toFixed(2),
             unit: 'mg/mL',
             ring: 'from-amber-400/70 to-blue-600/60',
           },
           {
-            title: 'Volume to draw',
+            title: t('landing.tutorial.volumeToDraw'),
             value: volumeToDraw.toFixed(3),
             unit: 'mL',
             ring: 'from-blue-400/65 to-indigo-600/55',
           },
           {
-            title: 'Syringe grad.',
+            title: t('landing.tutorial.syringeUnits'),
             value: unitsOnSyringe.toFixed(1),
-            unit: 'units',
+            unit: t('landing.tutorial.units'),
             ring: 'from-violet-400/65 to-purple-700/55',
           },
           {
-            title: 'Total doses',
+            title: t('landing.tutorial.dosesPerVial'),
             value: String(totalDoses),
-            unit: 'doses',
+            unit: t('landing.tutorial.doses'),
             ring: 'from-amber-400/60 to-blue-600/55',
           },
         ].map((r) => (
@@ -199,6 +186,7 @@ function ReconstitutionCalculator() {
 }
 
 export default function Tutorial() {
+  const { t } = useTranslation();
   const sectionRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const stepsRef = useRef<HTMLDivElement>(null);
@@ -250,6 +238,12 @@ export default function Tutorial() {
     return () => ctx.revert();
   }, []);
 
+  const steps = STEP_DEFS.map((step, i) => ({
+    ...step,
+    title: t(`landing.tutorial.steps.${i}.title`),
+    description: t(`landing.tutorial.steps.${i}.description`),
+  }));
+
   return (
     <section
       ref={sectionRef}
@@ -270,13 +264,13 @@ export default function Tutorial() {
             className="text-center mb-12 sm:mb-14"
           >
             <span className="inline-flex items-center rounded-full border border-amber-500/25 bg-amber-500/5 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.24em] text-amber-300 mb-6">
-              Reconstitution guide
+              {t('landing.tutorial.eyebrow')}
             </span>
             <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-5 font-['Syne',sans-serif] tracking-tight">
-              How to <span className="gradient-text">reconstitute</span>
+              {t('landing.tutorial.title')} <span className="gradient-text">{t('landing.tutorial.titleHighlight')}</span>
             </h2>
             <p className="text-base sm:text-lg text-slate-400 max-w-xl mx-auto leading-relaxed">
-              Bench protocol distilled into three tactile steps—the same logic our calculator assumes below.
+              {t('landing.tutorial.subtitle')}
             </p>
           </motion.div>
         </div>

@@ -6,8 +6,11 @@ import type { Product } from '@/products';
 import { getVironProductBySlug } from '@/data/viron-catalog';
 import { getProductBySlug } from '@/lib/supabase-db';
 import { Skeleton } from '@/components/ui/skeleton';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslation } from '@/i18n';
 
 export default function ProductPage() {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const params = useParams();
   const slug = (params as { slug?: string }).slug;
@@ -20,7 +23,7 @@ export default function ProductPage() {
     let cancelled = false;
     if (!slug) {
       setLoading(false);
-      setError('Missing product slug.');
+      setError(t('product.missingSlug'));
       return;
     }
 
@@ -34,7 +37,7 @@ export default function ProductPage() {
         const resolved = dbProduct || fallback || null;
         if (!resolved) {
           setProduct(null);
-          setError('Product not found.');
+          setError(t('product.notFound'));
         } else {
           setProduct(resolved);
         }
@@ -44,7 +47,7 @@ export default function ProductPage() {
         const fallback = getVironProductBySlug(slug);
         if (!fallback) {
           setProduct(null);
-          setError('Product not found.');
+          setError(t('product.notFound'));
         } else {
           setProduct(fallback);
         }
@@ -56,7 +59,7 @@ export default function ProductPage() {
     return () => {
       cancelled = true;
     };
-  }, [slug]);
+  }, [slug, t]);
 
   const seo = useMemo(() => {
     if (!product) return null;
@@ -72,7 +75,6 @@ export default function ProductPage() {
         <div className="max-w-6xl mx-auto px-6 py-10">
           <Skeleton className="h-4 w-16 rounded mb-6" />
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
-            {/* Card placeholder */}
             <div className="rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)] overflow-hidden">
               <Skeleton className="h-64 w-full rounded-none" />
               <div className="p-5 space-y-3">
@@ -85,7 +87,6 @@ export default function ProductPage() {
                 </div>
               </div>
             </div>
-            {/* Info panel placeholder */}
             <div className="p-6 rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)] space-y-4">
               <Skeleton className="h-7 w-3/4 rounded" />
               <Skeleton className="h-4 w-full rounded" />
@@ -107,13 +108,16 @@ export default function ProductPage() {
   if (!product || error) {
     return (
       <div className="min-h-screen flex flex-col items-center justify-center px-6" style={{ background: '#070A12' }}>
-        <p className="text-[#EF4444] text-sm mb-4">{error || 'Product not found.'}</p>
+        <div className="absolute top-4 right-4">
+          <LanguageSwitcher />
+        </div>
+        <p className="text-[#EF4444] text-sm mb-4">{error || t('product.notFound')}</p>
         <button
           className="px-4 py-2 rounded-xl bg-[#2ED1B4] text-white hover:bg-[#25b89d]"
           type="button"
           onClick={() => navigate('/')}
         >
-          Back to shop
+          {t('product.backToShop')}
         </button>
       </div>
     );
@@ -125,14 +129,15 @@ export default function ProductPage() {
 
       <main className="min-h-screen" style={{ background: '#070A12' }}>
         <div className="max-w-6xl mx-auto px-6 py-10">
-          <div className="mb-6">
+          <div className="mb-6 flex items-center justify-between">
             <button
               type="button"
               onClick={() => navigate('/')}
               className="text-sm text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors"
             >
-              ← Back
+              {t('product.back')}
             </button>
+            <LanguageSwitcher />
           </div>
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6 items-start">
@@ -146,7 +151,7 @@ export default function ProductPage() {
 
               {product.moreInfo ? (
                 <div className="mt-6 p-4 rounded-xl bg-[rgba(239,68,68,0.08)] border border-[rgba(239,68,68,0.2)]">
-                  <h2 className="text-sm font-semibold text-[#EF4444] mb-3">More Information</h2>
+                  <h2 className="text-sm font-semibold text-[#EF4444] mb-3">{t('product.moreInformation')}</h2>
                   <div className="text-[10px] text-[#A9B3C7] whitespace-pre-wrap">{product.moreInfo}</div>
                 </div>
               ) : null}
@@ -157,4 +162,3 @@ export default function ProductPage() {
     </>
   );
 }
-

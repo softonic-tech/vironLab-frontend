@@ -8,10 +8,10 @@ export { SIGNUP_BONUS, FIRST_ORDER_BONUS, calculatePurchasePoints };
 export const POINTS_DISABLED = true;
 
 export const REDEMPTION_TIERS = [
-  { points: 100, value: 5, label: '£5 Off' },
-  { points: 200, value: 10, label: '£10 Off' },
-  { points: 500, value: 30, label: '£30 Off' },
-  { points: 1000, value: 70, label: '£70 Off' },
+  { points: 100, value: 5, label: '5 kr off' },
+  { points: 200, value: 10, label: '10 kr off' },
+  { points: 500, value: 30, label: '30 kr off' },
+  { points: 1000, value: 70, label: '70 kr off' },
 ];
 
 export const BONUS_POINTS = {

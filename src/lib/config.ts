@@ -72,12 +72,12 @@ export const CONFIG = {
 
   // Rewards
   REWARDS: {
-    POINTS_PER_POUND: 1,
+    POINTS_PER_100_SEK: 1,
     MIN_LIFETIME_SPEND: 500,
     REDEMPTION_TIERS: [
-      { points: 100, value: 10, label: '£10 off' },
-      { points: 250, value: 30, label: '£30 off' },
-      { points: 500, value: 75, label: '£75 off' },
+      { points: 100, value: 10, label: '10 kr off' },
+      { points: 250, value: 30, label: '30 kr off' },
+      { points: 500, value: 75, label: '75 kr off' },
     ],
   },
 

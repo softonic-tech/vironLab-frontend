@@ -9,8 +9,12 @@ import { supabase, getCurrentUser, signOut } from '@/lib/supabase';
 import { useAffiliate } from '@/context/AffiliateContext';
 import { COMMISSION_TIERS, getTierForSales, type AffiliateOrder, type StoreCreditTransaction } from '@/lib/affiliates';
 import { CONFIG } from '@/lib/config';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslation, useLanguage } from '@/i18n';
 
 export default function PromoterDashboard() {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
   const navigate = useNavigate();
   const {
     myPromoter,
@@ -64,9 +68,9 @@ export default function PromoterDashboard() {
   };
 
   const formatDate = (d: string) =>
-    new Date(d).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
+    new Date(d).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-GB', { day: 'numeric', month: 'short', year: 'numeric' });
 
-  const formatCurrency = (n: number) => `£${Number(n || 0).toFixed(2)}`;
+  const formatCurrency = (n: number) => `${Number(n || 0).toFixed(2)} kr`;
 
   if (isLoading || isPromoterLoading) {
     return (
@@ -102,19 +106,17 @@ export default function PromoterDashboard() {
           <div className="w-16 h-16 rounded-full bg-[rgba(139,92,246,0.15)] border border-[rgba(139,92,246,0.3)] flex items-center justify-center mx-auto mb-4">
             <Users className="w-8 h-8 text-[#8B5CF6]" />
           </div>
-          <h1 className="text-xl font-bold text-[#F4F6FA] mb-2">Not a Promoter Yet</h1>
-          <p className="text-sm text-[#A9B3C7] mb-6">
-            You don't have a promoter account. Contact us to become a Viron Labs affiliate and start earning commissions.
-          </p>
+          <h1 className="text-xl font-bold text-[#F4F6FA] mb-2">{t('dashboard.promoter.notYet')}</h1>
+          <p className="text-sm text-[#A9B3C7] mb-6">{t('dashboard.promoter.notYetDesc')}</p>
           <div className="flex flex-col gap-3">
             <a
               href="/dashboard"
               className="px-6 py-3 rounded-xl bg-gradient-to-r from-[#2ED1B4] to-[#8B5CF6] text-white font-semibold text-sm text-center"
             >
-              Go to My Dashboard
+              {t('dashboard.promoter.goDashboard')}
             </a>
             <a href="/" className="text-sm text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors">
-              Back to Shop
+              {t('dashboard.backToShop')}
             </a>
           </div>
         </div>
@@ -150,11 +152,14 @@ export default function PromoterDashboard() {
               className="h-8 w-auto object-contain select-none"
               draggable={false}
             />
-            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#22C55E] mt-0.5">PROMOTER</span>
+            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#22C55E] mt-0.5">{t('dashboard.promoter.eyebrow')}</span>
           </div>
-          <button onClick={handleLogout} className="w-9 h-9 rounded-xl bg-[rgba(244,246,250,0.06)] flex items-center justify-center text-[#A9B3C7] hover:text-[#EF4444] transition-colors">
-            <LogOut className="w-4 h-4" />
-          </button>
+          <div className="flex items-center gap-1.5">
+            <LanguageSwitcher />
+            <button onClick={handleLogout} className="w-9 h-9 rounded-xl bg-[rgba(244,246,250,0.06)] flex items-center justify-center text-[#A9B3C7] hover:text-[#EF4444] transition-colors">
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
       </nav>
 
@@ -167,14 +172,15 @@ export default function PromoterDashboard() {
               className="h-14 w-auto object-contain select-none"
               draggable={false}
             />
-            <span className="text-sm font-mono uppercase tracking-[0.5em] text-[#22C55E] mt-0.5">PROMOTER PANEL</span>
+            <span className="text-sm font-mono uppercase tracking-[0.5em] text-[#22C55E] mt-0.5">{t('dashboard.promoter.panel')}</span>
           </a>
           <div className="flex items-center gap-4">
+            <LanguageSwitcher />
             <a href="/dashboard" className="text-sm text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors">
-              My Account
+              {t('dashboard.promoter.myAccount')}
             </a>
             <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-[#A9B3C7] hover:text-[#EF4444] transition-colors">
-              <LogOut className="w-4 h-4" /> Logout
+              <LogOut className="w-4 h-4" /> {t('dashboard.logout')}
             </button>
           </div>
         </div>
@@ -186,9 +192,9 @@ export default function PromoterDashboard() {
           {/* Welcome */}
           <div className="hidden lg:block mb-8">
             <h1 className="text-3xl font-bold text-[#F4F6FA] mb-1">
-              Welcome, <span className="text-[#22C55E]">{myPromoter.name}</span>
+              {t('dashboard.promoter.welcome')} <span className="text-[#22C55E]">{myPromoter.name}</span>
             </h1>
-            <p className="text-[#A9B3C7]">Manage your affiliate program and track earnings</p>
+            <p className="text-[#A9B3C7]">{t('dashboard.promoter.subtitle')}</p>
           </div>
 
           {/* Referral Code & Link */}
@@ -198,14 +204,14 @@ export default function PromoterDashboard() {
                 <Link2 className="w-5 h-5 text-[#22C55E]" />
               </div>
               <div>
-                <h2 className="text-base sm:text-lg font-semibold text-[#F4F6FA]">Your Referral</h2>
-                <p className="text-xs text-[#A9B3C7]">Share your code or link to earn commissions</p>
+                <h2 className="text-base sm:text-lg font-semibold text-[#F4F6FA]">{t('dashboard.promoter.yourReferral')}</h2>
+                <p className="text-xs text-[#A9B3C7]">{t('dashboard.promoter.shareCode')}</p>
               </div>
             </div>
             <div className="grid sm:grid-cols-2 gap-3">
               {/* Code */}
               <div className="p-3 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.08)]">
-                <p className="text-[10px] uppercase tracking-wider text-[#A9B3C7] mb-1.5">Your Code</p>
+                <p className="text-[10px] uppercase tracking-wider text-[#A9B3C7] mb-1.5">{t('dashboard.promoter.yourCode')}</p>
                 <div className="flex items-center justify-between">
                   <span className="text-xl font-bold text-[#22C55E] font-mono tracking-wider">{myPromoter.referral_code}</span>
                   <button onClick={handleCopyCode} className="p-2 rounded-lg bg-[rgba(34,197,94,0.2)] text-[#22C55E] hover:bg-[rgba(34,197,94,0.3)] transition-colors">
@@ -215,7 +221,7 @@ export default function PromoterDashboard() {
               </div>
               {/* Link */}
               <div className="p-3 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.08)]">
-                <p className="text-[10px] uppercase tracking-wider text-[#A9B3C7] mb-1.5">Your Link</p>
+                <p className="text-[10px] uppercase tracking-wider text-[#A9B3C7] mb-1.5">{t('dashboard.promoter.yourLink')}</p>
                 <div className="flex items-center gap-2">
                   <input type="text" readOnly value={referralLink} className="flex-1 bg-transparent text-xs text-[#A9B3C7] outline-none min-w-0 truncate" />
                   <button onClick={handleCopyLink} className="p-2 rounded-lg bg-[rgba(139,92,246,0.2)] text-[#8B5CF6] hover:bg-[rgba(139,92,246,0.3)] transition-colors shrink-0">
@@ -226,7 +232,7 @@ export default function PromoterDashboard() {
             </div>
             <div className="mt-3 flex items-center gap-2 text-xs text-[#A9B3C7]">
               <Award className="w-3.5 h-3.5 text-[#22C55E]" />
-              <span>Customers get <strong className="text-[#F4F6FA]">{myPromoter.customer_discount_percent}% off</strong> — you earn <strong className="text-[#22C55E]">{myPromoter.commission_percent}% commission</strong></span>
+              <span>{t('dashboard.promoter.customerDiscount')} <strong className="text-[#F4F6FA]">{myPromoter.customer_discount_percent}% off</strong> — {t('dashboard.promoter.youEarn')} <strong className="text-[#22C55E]">{myPromoter.commission_percent}% {t('dashboard.promoter.commission')}</strong></span>
             </div>
           </div>
 
@@ -235,22 +241,22 @@ export default function PromoterDashboard() {
             <div className="p-3 sm:p-4 rounded-xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
               <DollarSign className="w-5 h-5 text-[#22C55E] mb-1.5" />
               <p className="text-xl sm:text-2xl font-bold text-[#F4F6FA]">{formatCurrency(myPromoter.total_sales)}</p>
-              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">Total Sales</p>
+              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">{t('dashboard.promoter.totalSales')}</p>
             </div>
             <div className="p-3 sm:p-4 rounded-xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
               <ShoppingBag className="w-5 h-5 text-[#8B5CF6] mb-1.5" />
               <p className="text-xl sm:text-2xl font-bold text-[#F4F6FA]">{myPromoter.total_orders}</p>
-              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">Orders</p>
+              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">{t('dashboard.orders')}</p>
             </div>
             <div className="p-3 sm:p-4 rounded-xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
               <TrendingUp className="w-5 h-5 text-[#F59E0B] mb-1.5" />
               <p className="text-xl sm:text-2xl font-bold text-[#F4F6FA]">{formatCurrency(myPromoter.total_commission)}</p>
-              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">Total Earned</p>
+              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">{t('dashboard.promoter.totalEarned')}</p>
             </div>
             <div className="p-3 sm:p-4 rounded-xl bg-gradient-to-br from-[rgba(34,197,94,0.15)] to-[rgba(34,197,94,0.05)] border border-[rgba(34,197,94,0.3)]">
               <CreditCard className="w-5 h-5 text-[#22C55E] mb-1.5" />
               <p className="text-xl sm:text-2xl font-bold text-[#22C55E]">{formatCurrency(myPromoter.store_credit)}</p>
-              <p className="text-[10px] sm:text-xs text-[#22C55E]">Store Credit</p>
+              <p className="text-[10px] sm:text-xs text-[#22C55E]">{t('dashboard.promoter.storeCredit')}</p>
             </div>
           </div>
 
@@ -259,7 +265,7 @@ export default function PromoterDashboard() {
             <div className="flex items-center justify-between mb-3">
               <div className="flex items-center gap-2">
                 <Award className="w-5 h-5 text-[#F59E0B]" />
-                <h3 className="text-sm sm:text-base font-semibold text-[#F4F6FA]">Commission Tier</h3>
+                <h3 className="text-sm sm:text-base font-semibold text-[#F4F6FA]">{t('dashboard.promoter.commissionTier')}</h3>
               </div>
               <span className="px-3 py-1 rounded-full bg-[rgba(245,158,11,0.15)] text-[#F59E0B] text-xs font-semibold">
                 {currentTier.label} — {currentTier.commission}%
@@ -268,8 +274,8 @@ export default function PromoterDashboard() {
             {nextTier && (
               <>
                 <div className="flex items-center justify-between text-xs text-[#A9B3C7] mb-2">
-                  <span>{formatCurrency(myPromoter.total_sales)} sales</span>
-                  <span>Next: {nextTier.label} at {formatCurrency(nextTier.minSales)}</span>
+                  <span>{t('dashboard.promoter.sales', { amount: formatCurrency(myPromoter.total_sales) })}</span>
+                  <span>{t('dashboard.promoter.nextTier', { label: nextTier.label, amount: formatCurrency(nextTier.minSales) })}</span>
                 </div>
                 <div className="h-2 rounded-full bg-[rgba(244,246,250,0.08)] overflow-hidden">
                   <div
@@ -280,16 +286,16 @@ export default function PromoterDashboard() {
               </>
             )}
             <div className="mt-3 flex flex-wrap gap-2">
-              {COMMISSION_TIERS.map(t => (
+              {COMMISSION_TIERS.map((tier) => (
                 <span
-                  key={t.name}
+                  key={tier.name}
                   className={`px-2.5 py-1 rounded-full text-[10px] font-medium ${
-                    t.name === currentTier.name
+                    tier.name === currentTier.name
                       ? 'bg-[rgba(245,158,11,0.2)] text-[#F59E0B] border border-[rgba(245,158,11,0.3)]'
                       : 'bg-[rgba(244,246,250,0.05)] text-[#A9B3C7] border border-[rgba(244,246,250,0.08)]'
                   }`}
                 >
-                  {t.label}: {t.commission}% (${t.minSales}+)
+                  {tier.label}: {tier.commission}% (${tier.minSales}+)
                 </span>
               ))}
             </div>
@@ -300,19 +306,19 @@ export default function PromoterDashboard() {
             <div className="flex items-center justify-between mb-4">
               <div className="flex items-center gap-2">
                 <ShoppingBag className="w-5 h-5 text-[#8B5CF6]" />
-                <h3 className="text-sm sm:text-base font-semibold text-[#F4F6FA]">Referral Orders</h3>
+                <h3 className="text-sm sm:text-base font-semibold text-[#F4F6FA]">{t('dashboard.promoter.referralOrders')}</h3>
               </div>
               <div className="flex items-center gap-3 text-xs">
-                <span className="text-[#22C55E]">{creditedOrders.length} credited</span>
+                <span className="text-[#22C55E]">{t('dashboard.promoter.credited', { count: String(creditedOrders.length) })}</span>
                 {pendingOrders.length > 0 && (
-                  <span className="text-[#F59E0B]">{pendingOrders.length} pending</span>
+                  <span className="text-[#F59E0B]">{t('dashboard.promoter.pending', { count: String(pendingOrders.length) })}</span>
                 )}
               </div>
             </div>
             {myAffiliateOrders.length === 0 ? (
               <div className="text-center py-8">
                 <ShoppingBag className="w-10 h-10 mx-auto text-[rgba(244,246,250,0.15)] mb-2" />
-                <p className="text-sm text-[#A9B3C7]">No referral orders yet. Share your code to start earning!</p>
+                <p className="text-sm text-[#A9B3C7]">{t('dashboard.promoter.noReferralOrders')}</p>
               </div>
             ) : (
               <>
@@ -328,10 +334,10 @@ export default function PromoterDashboard() {
                           order.status === 'credited'
                             ? 'bg-[rgba(34,197,94,0.15)] text-[#22C55E]'
                             : 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B]'
-                        }`}>{order.status}</span>
+                        }`}>{order.status === 'credited' ? t('dashboard.promoter.statusCredited') : t('dashboard.promoter.statusPending')}</span>
                       </div>
                       <div className="flex items-center justify-between text-xs">
-                        <span className="text-[#A9B3C7]">Order: {formatCurrency(order.order_total)}</span>
+                        <span className="text-[#A9B3C7]">{t('dashboard.promoter.orderLabel')} {formatCurrency(order.order_total)}</span>
                         <span className="text-[#22C55E] font-semibold">+{formatCurrency(order.commission_amount)}</span>
                       </div>
                     </div>
@@ -342,7 +348,7 @@ export default function PromoterDashboard() {
                     onClick={() => setShowAllOrders(!showAllOrders)}
                     className="w-full mt-3 py-2.5 text-xs text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors rounded-xl"
                   >
-                    {showAllOrders ? 'Show Less' : `Show All (${myAffiliateOrders.length})`}
+                    {showAllOrders ? t('dashboard.promoter.showLess') : t('dashboard.promoter.showAll', { count: String(myAffiliateOrders.length) })}
                   </button>
                 )}
               </>
@@ -354,7 +360,7 @@ export default function PromoterDashboard() {
             <div className="p-4 sm:p-6 rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)] mb-4 lg:mb-6">
               <div className="flex items-center gap-2 mb-4">
                 <CreditCard className="w-5 h-5 text-[#22C55E]" />
-                <h3 className="text-sm sm:text-base font-semibold text-[#F4F6FA]">Credit History</h3>
+                <h3 className="text-sm sm:text-base font-semibold text-[#F4F6FA]">{t('dashboard.promoter.creditHistory')}</h3>
               </div>
               <div className="space-y-2">
                 {displayedCredits.map(txn => (
@@ -374,7 +380,7 @@ export default function PromoterDashboard() {
                   onClick={() => setShowAllCredits(!showAllCredits)}
                   className="w-full mt-3 py-2.5 text-xs text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors rounded-xl"
                 >
-                  {showAllCredits ? 'Show Less' : `Show All (${myCreditTransactions.length})`}
+                  {showAllCredits ? t('dashboard.promoter.showLess') : t('dashboard.promoter.showAll', { count: String(myCreditTransactions.length) })}
                 </button>
               )}
             </div>
@@ -382,21 +388,21 @@ export default function PromoterDashboard() {
 
           {/* Quick Actions */}
           <div className="p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-[rgba(46,209,180,0.1)] to-[rgba(139,92,246,0.1)] border border-[rgba(46,209,180,0.2)]">
-            <h3 className="text-sm font-semibold text-[#F4F6FA] mb-3">Quick Actions</h3>
+            <h3 className="text-sm font-semibold text-[#F4F6FA] mb-3">{t('dashboard.promoter.quickActions')}</h3>
             <div className="grid grid-cols-2 gap-3">
               <button
                 onClick={handleCopyLink}
                 className="p-3 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.08)] text-center hover:border-[rgba(34,197,94,0.3)] transition-colors"
               >
                 <Link2 className="w-5 h-5 mx-auto mb-1 text-[#22C55E]" />
-                <p className="text-xs text-[#F4F6FA]">Copy Link</p>
+                <p className="text-xs text-[#F4F6FA]">{t('dashboard.promoter.copyLink')}</p>
               </button>
               <a
                 href="/"
                 className="p-3 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.08)] text-center hover:border-[rgba(139,92,246,0.3)] transition-colors block"
               >
                 <ShoppingBag className="w-5 h-5 mx-auto mb-1 text-[#8B5CF6]" />
-                <p className="text-xs text-[#F4F6FA]">Shop Now</p>
+                <p className="text-xs text-[#F4F6FA]">{t('dashboard.promoter.shopNow')}</p>
               </a>
             </div>
           </div>
@@ -405,7 +411,7 @@ export default function PromoterDashboard() {
 
       <footer className="relative z-0 px-4 lg:px-12 py-6 border-t border-[rgba(244,246,250,0.08)]">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-[10px] text-[#A9B3C7]">© 2026 Viron Labs. Promoter Dashboard.</p>
+          <p className="text-[10px] text-[#A9B3C7]">{t('dashboard.promoter.footer')}</p>
         </div>
       </footer>
     </div>

@@ -1,7 +1,11 @@
-import { ArrowLeft, Scale, Shield, FileText, AlertTriangle, Gavel, ExternalLink } from 'lucide-react';
+import { Scale, Shield, FileText, AlertTriangle, Gavel, ExternalLink } from 'lucide-react';
 import { SEO } from '@/components/SEO';
+import PageTopBar from '@/components/PageTopBar';
+import { useTranslation } from '@/i18n';
 
 export default function Legal() {
+  const { t } = useTranslation();
+
   return (
     <div className="min-h-screen bg-[#070A12]">
       <SEO
@@ -9,30 +13,13 @@ export default function Legal() {
         description="Viron Labs Legal & Compliance Information - TGA, British Consumer Law, and research product regulations."
       />
 
-      {/* Navigation */}
-      <nav className="px-4 py-4 border-b border-white/10">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <a href="/" className="inline-flex items-center">
-            <img
-              src="/logo.png"
-              alt="Viron Labs"
-              className="h-9 w-auto object-contain select-none"
-              draggable={false}
-            />
-          </a>
-          <a href="/" className="text-sm text-gray-400 flex items-center gap-2 hover:text-white transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </a>
-        </div>
-      </nav>
+      <PageTopBar backHref="/" backLabel={t('legal.backToHome')} />
 
-      {/* Content */}
       <main className="max-w-4xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <Scale className="w-16 h-16 mx-auto text-[#2ED1B4] mb-4" />
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">Legal & Compliance</h1>
-          <p className="text-gray-400">Important legal information about our products and services</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">{t('legal.legalPage.title')}</h1>
+          <p className="text-gray-400">{t('legal.legalPage.subtitle')}</p>
         </div>
 
         <div className="space-y-8">
@@ -40,11 +27,11 @@ export default function Legal() {
           <section className="p-6 rounded-2xl bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.3)]">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <AlertTriangle className="w-6 h-6 text-[#F59E0B]" />
-              TGA (Therapeutic Goods Administration) Notice
+              {t('legal.legalPage.tgaNotice')}
             </h2>
             <div className="space-y-4">
               <div className="p-4 rounded-xl bg-[rgba(7,10,18,0.5)]">
-                <p className="text-[#F59E0B] font-bold text-lg mb-2">⚠️ NOT APPROVED BY THE TGA</p>
+                <p className="text-[#F59E0B] font-bold text-lg mb-2">⚠️ {t('legal.legalPage.notApproved')}</p>
                 <p className="text-gray-400 leading-relaxed">
                   The products sold on this website have <strong className="text-white">NOT been evaluated or approved</strong> by the
                   Therapeutic Goods Administration (TGA) of UK. Our products are:
@@ -77,10 +64,10 @@ export default function Legal() {
           <section className="p-6 rounded-2xl bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.3)]">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Shield className="w-6 h-6 text-[#EF4444]" />
-              For Research Purposes Only
+              {t('legal.legalPage.researchOnly')}
             </h2>
             <div className="p-4 rounded-xl bg-[rgba(7,10,18,0.5)]">
-              <p className="text-[#EF4444] font-bold text-lg mb-2">🔬 RESEARCH USE ONLY — NOT FOR HUMAN CONSUMPTION</p>
+              <p className="text-[#EF4444] font-bold text-lg mb-2">🔬 {t('legal.legalPage.researchBanner')}</p>
               <p className="text-gray-400 leading-relaxed">
                 All products sold by Viron Labs are intended <strong className="text-white">exclusively for laboratory research purposes</strong>. By purchasing, you agree that:
               </p>
@@ -109,10 +96,10 @@ export default function Legal() {
           <section className="p-6 rounded-2xl bg-[rgba(139,92,246,0.1)] border border-[rgba(139,92,246,0.3)]">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <AlertTriangle className="w-6 h-6 text-[#8B5CF6]" />
-              Not For Therapeutic Use
+              {t('legal.legalPage.notTherapeutic')}
             </h2>
             <div className="p-4 rounded-xl bg-[rgba(7,10,18,0.5)]">
-              <p className="text-[#8B5CF6] font-bold text-lg mb-2">🚫 NOT FOR THERAPEUTIC USE</p>
+              <p className="text-[#8B5CF6] font-bold text-lg mb-2">🚫 {t('legal.legalPage.notTherapeuticBanner')}</p>
               <p className="text-gray-400 leading-relaxed">
                 Our products are <strong className="text-white">NOT intended for</strong>:
               </p>
@@ -145,7 +132,7 @@ export default function Legal() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Gavel className="w-5 h-5 text-[#8B5CF6]" />
-              Age Verification (18+)
+              {t('legal.legalPage.ageVerification')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               By using this website and purchasing our products, you confirm that you are at least
@@ -162,7 +149,7 @@ export default function Legal() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <FileText className="w-5 h-5 text-[#8B5CF6]" />
-              Prescription Products
+              {t('legal.legalPage.prescriptionProducts')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               Certain products on our website (including Semaglutide, Cagrilintide, and related combinations)
@@ -187,7 +174,7 @@ export default function Legal() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Scale className="w-5 h-5 text-[#8B5CF6]" />
-              British Consumer Law
+              {t('legal.legalPage.consumerLaw')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               Our products come with guarantees that cannot be excluded under the
@@ -217,7 +204,7 @@ export default function Legal() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-[#8B5CF6]" />
-              Prohibited Products
+              {t('legal.legalPage.prohibitedProducts')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               The following products are <strong className="text-white">NOT available for public sale</strong> on our website:
@@ -237,7 +224,7 @@ export default function Legal() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Shield className="w-5 h-5 text-[#8B5CF6]" />
-              Limitation of Liability
+              {t('legal.legalPage.limitationLiability')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               Viron Labs is not liable for:
@@ -263,7 +250,7 @@ export default function Legal() {
 
           {/* Links */}
           <section className="p-6 rounded-2xl bg-gradient-to-br from-[rgba(46,209,180,0.1)] to-[rgba(139,92,246,0.1)] border border-[rgba(46,209,180,0.2)]">
-            <h2 className="text-xl font-semibold text-white mb-4">Related Legal Documents</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('legal.legalPage.relatedDocs')}</h2>
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
               <a href="/terms" className="p-4 rounded-xl bg-[rgba(7,10,18,0.5)] hover:bg-[rgba(7,10,18,0.8)] transition-colors text-center">
                 <FileText className="w-8 h-8 mx-auto text-[#2ED1B4] mb-2" />
@@ -285,7 +272,7 @@ export default function Legal() {
 
           {/* Contact */}
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
-            <h2 className="text-xl font-semibold text-white mb-4">Contact Us</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('legal.legalPage.contactUs')}</h2>
             <div className="p-4 rounded-xl bg-[rgba(46,209,180,0.1)] border border-[rgba(46,209,180,0.2)]">
               <p className="text-white font-medium">Viron Labs</p>
               <p className="text-gray-400">Email: <a href="mailto:contact@vironlabs.com" className="text-[#2ED1B4] hover:underline">contact@vironlabs.com</a></p>

@@ -4,6 +4,7 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion } from 'framer-motion';
 import { Star, ThumbsUp, CheckCircle } from 'lucide-react';
 import { getHomepageReviews, type HomepageReviewRow } from '@/lib/supabase-db';
+import { useTranslation } from '@/i18n';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -32,6 +33,7 @@ function useReviewsPerView() {
 }
 
 export default function Reviews() {
+  const { t } = useTranslation();
   const sectionRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const [reviews, setReviews] = useState<HomepageReview[]>([]);
@@ -52,7 +54,7 @@ export default function Reviews() {
         const rows: HomepageReview[] = data.map((row) => ({
           id: row.id,
           title: row.title || '',
-          product_name: row.products?.name || 'Product Review',
+          product_name: row.products?.name || t('landing.reviews.defaultProduct'),
           rating: Math.max(1, Math.min(5, Number(row.rating) || 5)),
           comment: row.comment || '',
           is_verified_purchase: Boolean(row.is_verified_purchase),
@@ -62,7 +64,7 @@ export default function Reviews() {
         setTotalVerifiedReviews(rows.filter((r) => r.is_verified_purchase).length);
       })
       .catch((err) => console.error('Failed to load homepage reviews:', err));
-  }, []);
+  }, [t]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -124,7 +126,7 @@ export default function Reviews() {
             viewport={{ once: true }}
             className="inline-flex rounded-full border border-white/10 px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.26em] text-amber-200/90 mb-5"
           >
-            Testimonials
+            {t('landing.reviews.eyebrow')}
           </motion.span>
           <motion.h2
             initial={{ opacity: 0, y: 12 }}
@@ -133,7 +135,7 @@ export default function Reviews() {
             transition={{ delay: 0.05 }}
             className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-6 font-['Syne',sans-serif] tracking-tight"
           >
-            Signal from the <span className="gradient-text">field</span>
+            {t('landing.reviews.title')} <span className="gradient-text">{t('landing.reviews.titleHighlight')}</span>
           </motion.h2>
 
           <div className="flex flex-col sm:flex-row items-center justify-center gap-6 mb-10">
@@ -149,7 +151,7 @@ export default function Reviews() {
             <div className="flex items-center gap-2 text-slate-400">
               <CheckCircle className="w-6 h-6 text-emerald-400" aria-hidden />
               <span>
-                (<span className="text-emerald-300 font-semibold">{totalVerifiedReviews}</span>) Verified purchases surfaced
+                (<span className="text-emerald-300 font-semibold">{totalVerifiedReviews}</span>) {t('landing.reviews.verifiedPurchases')}
               </span>
             </div>
           </div>
@@ -172,13 +174,13 @@ export default function Reviews() {
                   >
                     <div className="flex items-start justify-between gap-3 mb-5">
                       <div>
-                        <h4 className="font-semibold text-white">{review.title || 'Verified insight'}</h4>
+                        <h4 className="font-semibold text-white">{review.title || t('landing.reviews.verifiedInsight')}</h4>
                         <p className="text-xs uppercase tracking-[0.12em] text-violet-300/85 mt-1">{review.product_name}</p>
                       </div>
                       {review.is_verified_purchase && (
                         <div className="flex items-center gap-1 px-3 py-1 rounded-full bg-emerald-500/15 border border-emerald-400/35 text-emerald-300 shrink-0">
                           <CheckCircle className="w-3.5 h-3.5" aria-hidden />
-                          <span className="text-[10px] font-semibold tracking-wide uppercase">Verified</span>
+                          <span className="text-[10px] font-semibold tracking-wide uppercase">{t('landing.reviews.verified')}</span>
                         </div>
                       )}
                     </div>
@@ -218,7 +220,7 @@ export default function Reviews() {
                     className={`h-2 rounded-full transition-all duration-300 ${
                       i === currentIndex ? 'w-9 bg-gradient-to-r from-amber-400 to-blue-500' : 'w-2 bg-white/25 hover:bg-white/40'
                     }`}
-                    aria-label={`Show review slide ${i + 1}`}
+                    aria-label={t('landing.reviews.showSlide', { n: i + 1 })}
                   />
                 ))}
           </div>

@@ -1,0 +1,18 @@
+export const nav = {
+  catalog: 'Catalog',
+  trust: 'Trust',
+  quality: 'Quality',
+  labGuide: 'Lab guide',
+  contact: 'Contact',
+  faq: 'FAQ',
+  login: 'Login',
+  dashboard: 'Dashboard',
+  promoter: 'Promoter',
+  promoterDashboard: 'Promoter Dashboard',
+  accountSettings: 'Account Settings',
+  backToTop: 'VIRON — back to top',
+  primary: 'Primary',
+  switchToSwedish: 'Switch to Swedish',
+  switchToEnglish: 'Switch to English',
+  language: 'Language',
+};

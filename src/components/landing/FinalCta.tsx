@@ -1,8 +1,10 @@
 import { useRef } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { fadeUp, staggerContainer } from './motion';
+import { useTranslation } from '@/i18n';
 
 export default function FinalCta() {
+  const { t } = useTranslation();
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-15%' });
 
@@ -36,20 +38,20 @@ export default function FinalCta() {
             aria-hidden
           />
           <motion.p variants={fadeUp} className="relative font-mono text-[11px] uppercase tracking-[0.26em] text-amber-200/90 mb-4">
-            Launch sequence
+            {t('landing.cta.eyebrow')}
           </motion.p>
           <motion.h2 variants={fadeUp} className="relative text-3xl sm:text-4xl md:text-5xl font-bold text-white tracking-tight max-w-3xl mx-auto">
-            Calibrate your next assay with <span className="gradient-text">VIRON-grade</span> materials
+            {t('landing.cta.title')} <span className="gradient-text">{t('landing.cta.titleHighlight')}</span> {t('landing.cta.titleEnd')}
           </motion.h2>
           <motion.p variants={fadeUp} className="relative mt-4 text-sm sm:text-base text-[var(--viron-muted)] max-w-xl mx-auto leading-relaxed">
-            Browse verified SKUs, model reconstitution in seconds, and move from cart to compliant documentation flows without friction.
+            {t('landing.cta.subtitle')}
           </motion.p>
           <motion.div variants={fadeUp} className="relative mt-8 flex flex-col sm:flex-row gap-3 justify-center">
             <button type="button" onClick={toCatalog} className="btn-primary text-sm sm:text-base px-8 py-3.5">
-              Open catalog →
+              {t('landing.cta.openCatalog')}
             </button>
             <button type="button" onClick={toTutorial} className="btn-outline text-sm sm:text-base px-8 py-3.5">
-              Reconstitution lab
+              {t('landing.cta.reconstitutionLab')}
             </button>
           </motion.div>
         </motion.div>

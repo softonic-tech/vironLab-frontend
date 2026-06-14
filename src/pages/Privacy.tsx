@@ -1,7 +1,13 @@
-import { ArrowLeft, Shield, Lock, Eye, FileText, User, Mail, Cookie } from 'lucide-react';
+import { Shield, Lock, Eye, FileText, User, Mail, Cookie } from 'lucide-react';
 import { SEO } from '@/components/SEO';
+import PageTopBar from '@/components/PageTopBar';
+import { useTranslation, useLanguage } from '@/i18n';
 
 export default function Privacy() {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  const dateLocale = language === 'sv' ? 'sv-SE' : 'en-GB';
+
   return (
     <div className="min-h-screen bg-[#070A12]">
       <SEO
@@ -9,31 +15,14 @@ export default function Privacy() {
         description="Viron Labs Privacy Policy - British Privacy Principles compliant. Learn how we collect, use, and protect your personal information."
       />
 
-      {/* Navigation */}
-      <nav className="px-4 py-4 border-b border-white/10">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <a href="/" className="inline-flex items-center">
-            <img
-              src="/logo.png"
-              alt="Viron Labs"
-              className="h-9 w-auto object-contain select-none"
-              draggable={false}
-            />
-          </a>
-          <a href="/" className="text-sm text-gray-400 flex items-center gap-2 hover:text-white transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </a>
-        </div>
-      </nav>
+      <PageTopBar backHref="/" backLabel={t('legal.backToHome')} />
 
-      {/* Content */}
       <main className="max-w-4xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <Shield className="w-16 h-16 mx-auto text-[#2ED1B4] mb-4" />
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">Privacy Policy</h1>
-          <p className="text-gray-400">Last Updated: {new Date().toLocaleDateString('en-GB')}</p>
-          <p className="text-sm text-[#2ED1B4] mt-2">Compliant with British Privacy Principles (APPs)</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">{t('legal.privacy.title')}</h1>
+          <p className="text-gray-400">{t('legal.lastUpdated', { date: new Date().toLocaleDateString(dateLocale) })}</p>
+          <p className="text-sm text-[#2ED1B4] mt-2">{t('legal.privacy.compliance')}</p>
         </div>
 
         <div className="space-y-8">
@@ -41,7 +30,7 @@ export default function Privacy() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Lock className="w-5 h-5 text-[#8B5CF6]" />
-              1. Introduction
+              {t('legal.privacy.intro')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               Viron Labs ("we," "us," or "our") is committed to protecting your privacy in accordance with the
@@ -57,7 +46,7 @@ export default function Privacy() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Eye className="w-5 h-5 text-[#8B5CF6]" />
-              2. Information We Collect
+              {t('legal.privacy.collect')}
             </h2>
             <p className="text-gray-400 mb-4">We may collect the following types of personal information:</p>
             <ul className="space-y-2 text-gray-400">
@@ -88,7 +77,7 @@ export default function Privacy() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <FileText className="w-5 h-5 text-[#8B5CF6]" />
-              3. How We Collect Information
+              {t('legal.privacy.howCollect')}
             </h2>
             <p className="text-gray-400 mb-4">We collect personal information through:</p>
             <ul className="space-y-2 text-gray-400">
@@ -111,7 +100,7 @@ export default function Privacy() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <User className="w-5 h-5 text-[#8B5CF6]" />
-              4. Purpose of Collection
+              {t('legal.privacy.purpose')}
             </h2>
             <p className="text-gray-400 mb-4">We collect personal information to:</p>
             <ul className="space-y-2 text-gray-400">
@@ -150,7 +139,7 @@ export default function Privacy() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Mail className="w-5 h-5 text-[#8B5CF6]" />
-              5. Disclosure of Personal Information
+              {t('legal.privacy.disclosure')}
             </h2>
             <p className="text-gray-400 mb-4">We may disclose your personal information to:</p>
             <ul className="space-y-2 text-gray-400">
@@ -176,7 +165,7 @@ export default function Privacy() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Lock className="w-5 h-5 text-[#8B5CF6]" />
-              6. Security of Personal Information
+              {t('legal.privacy.security')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               We take reasonable steps to protect your personal information from misuse, interference, loss,
@@ -206,7 +195,7 @@ export default function Privacy() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Cookie className="w-5 h-5 text-[#8B5CF6]" />
-              7. Cookies and Tracking
+              {t('legal.privacy.cookies')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               We use cookies and similar technologies to enhance your browsing experience, analyse website traffic,
@@ -219,7 +208,7 @@ export default function Privacy() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <User className="w-5 h-5 text-[#8B5CF6]" />
-              8. Your Rights (APP Rights)
+              {t('legal.privacy.rights')}
             </h2>
             <p className="text-gray-400 mb-4">Under the Privacy Act 1988, you have the right to:</p>
             <ul className="space-y-2 text-gray-400">
@@ -253,7 +242,7 @@ export default function Privacy() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Mail className="w-5 h-5 text-[#8B5CF6]" />
-              9. Contact Us
+              {t('legal.privacy.contact')}
             </h2>
             <p className="text-gray-400 mb-4">
               If you have any questions about this Privacy Policy or wish to exercise your privacy rights, please contact us:
@@ -267,7 +256,7 @@ export default function Privacy() {
 
           {/* Complaints */}
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
-            <h2 className="text-xl font-semibold text-white mb-4">10. Complaints</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('legal.privacy.complaints')}</h2>
             <p className="text-gray-400 leading-relaxed">
               If you believe we have breached the British Privacy Principles, you may lodge a complaint with us
               using the contact details above. We will respond within 30 days. If you are not satisfied with our response,
@@ -278,7 +267,7 @@ export default function Privacy() {
 
           {/* Changes */}
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
-            <h2 className="text-xl font-semibold text-white mb-4">11. Changes to This Policy</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('legal.privacy.changes')}</h2>
             <p className="text-gray-400 leading-relaxed">
               We may update this Privacy Policy from time to time. Any changes will be posted on this page with an updated
               revision date. We encourage you to review this policy periodically.
@@ -291,9 +280,9 @@ export default function Privacy() {
       <footer className="border-t border-white/10 py-8">
         <div className="max-w-7xl mx-auto px-4 text-center">
           <p className="text-gray-500 text-sm">
-            © {new Date().getFullYear()} Viron Labs. All rights reserved.
-            <a href="/terms" className="text-[#2ED1B4] hover:underline ml-2">Terms</a>
-            <a href="/refund" className="text-[#2ED1B4] hover:underline ml-2">Returns</a>
+            {t('legal.copyright', { year: String(new Date().getFullYear()) })}
+            <a href="/terms" className="text-[#2ED1B4] hover:underline ml-2">{t('footer.terms')}</a>
+            <a href="/refund" className="text-[#2ED1B4] hover:underline ml-2">{t('legal.returnsLink')}</a>
           </p>
         </div>
       </footer>

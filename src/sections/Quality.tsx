@@ -4,40 +4,30 @@ import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion, useInView } from 'framer-motion';
 import { Check, FlaskConical, Shield, Award, MessageCircle, Pipette, ScanLine, Archive, Truck } from 'lucide-react';
 import { fadeUp, staggerContainer } from '@/components/landing/motion';
+import { useTranslation } from '@/i18n';
 
 gsap.registerPlugin(ScrollTrigger);
 
-const features = [
-  {
-    icon: FlaskConical,
-    title: 'Purity & quality',
-    description:
-      'Lyophilised reference materials with disciplined batch handling—so your baseline reads clean before the first injection.',
-  },
-  {
-    icon: Check,
-    title: 'Standards & testing',
-    description:
-      'HPLC-oriented verification, traceable documentation, and repeatable handling patterns that keep assays honest.',
-  },
-  {
-    icon: Shield,
-    title: 'Reliability',
-    description:
-      'Lab-grade presentation, transparent SKU context, and pragmatic support when your workflow needs a human.',
-  },
-];
+const FEATURE_ICONS = [FlaskConical, Check, Shield] as const;
 
-const pipeline = [
-  { step: '01', title: 'Synthesis intake', body: 'Controlled inputs, identity-first mindset.', icon: Pipette },
-  { step: '02', title: 'QA documentation', body: 'Chromatography-aligned release checks.', icon: ScanLine },
-  { step: '03', title: 'Stability framing', body: 'Cold-chain aware handling guidance.', icon: Archive },
-  { step: '04', title: 'Dispatch', body: 'Tracked logistics with clear comms.', icon: Truck },
+const PIPELINE_DEFS = [
+  { step: '01', icon: Pipette },
+  { step: '02', icon: ScanLine },
+  { step: '03', icon: Archive },
+  { step: '04', icon: Truck },
 ] as const;
 
 function ResearchPipeline() {
+  const { t } = useTranslation();
   const ref = useRef(null);
   const inView = useInView(ref, { once: true, margin: '-12%' });
+
+  const pipeline = PIPELINE_DEFS.map((p, i) => ({
+    ...p,
+    title: t(`landing.quality.pipeline.${i}.title`),
+    body: t(`landing.quality.pipeline.${i}.body`),
+  }));
+
   return (
     <div ref={ref} className="mt-16 lg:mt-20">
       <motion.div
@@ -47,10 +37,10 @@ function ResearchPipeline() {
         className="text-center mb-10"
       >
         <motion.p variants={fadeUp} className="font-mono text-[11px] uppercase tracking-[0.22em] text-amber-300/90 mb-3">
-          Laboratory pipeline
+          {t('landing.quality.pipelineEyebrow')}
         </motion.p>
         <motion.h3 variants={fadeUp} className="text-2xl sm:text-3xl font-bold text-white font-['Syne',sans-serif]">
-          From release to <span className="gradient-text">bench confidence</span>
+          {t('landing.quality.pipelineTitle')} <span className="gradient-text">{t('landing.quality.pipelineHighlight')}</span>
         </motion.h3>
       </motion.div>
       <motion.ol
@@ -80,6 +70,7 @@ function ResearchPipeline() {
 }
 
 export default function Quality() {
+  const { t } = useTranslation();
   const sectionRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const cardsRef = useRef<HTMLDivElement>(null);
@@ -131,6 +122,12 @@ export default function Quality() {
     return () => ctx.revert();
   }, []);
 
+  const features = FEATURE_ICONS.map((icon, i) => ({
+    icon,
+    title: t(`landing.quality.features.${i}.title`),
+    description: t(`landing.quality.features.${i}.description`),
+  }));
+
   return (
     <section ref={sectionRef} id="quality" className="relative z-20 py-20 lg:py-28" style={{ background: '#070A12' }}>
       <div className="absolute inset-0 grid-overlay opacity-45" />
@@ -138,13 +135,13 @@ export default function Quality() {
       <div className="relative z-10 px-6 lg:px-12 max-w-6xl mx-auto">
         <div ref={headerRef} className="text-center mb-14">
           <span className="inline-flex items-center justify-center rounded-full border border-white/10 bg-white/[0.03] px-4 py-1.5 font-mono text-[10px] uppercase tracking-[0.24em] text-amber-200/95 mb-6">
-            Why VIRON
+            {t('landing.quality.badge')}
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold text-white mb-5 font-['Syne',sans-serif] tracking-tight">
-            HPLC-verified <span className="gradient-text">peptides</span>
+            {t('landing.quality.title')} <span className="gradient-text">{t('landing.quality.titleHighlight')}</span>
           </h2>
           <p className="text-base sm:text-lg text-slate-400 max-w-2xl mx-auto leading-relaxed">
-            High-resolution materials engineered for reproducible assays—beautifully surfaced in a storefront that respects compliance boundaries.
+            {t('landing.quality.subtitle')}
           </p>
         </div>
 

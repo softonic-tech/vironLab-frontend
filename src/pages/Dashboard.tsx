@@ -9,8 +9,11 @@ import { getUserOrders, getUserReviews, createReview, getProductUuidBySlug, getU
 import { useAffiliate } from '@/context/AffiliateContext';
 import { invalidateCache } from '@/lib/cache';
 import { formatOrderNumberDisplay } from '@/utils/order-number';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslation } from '@/i18n';
 
 export default function Dashboard() {
+  const { t, language } = useTranslation();
   const navigate = useNavigate();
   const [user, setUser] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -174,7 +177,7 @@ export default function Dashboard() {
   const handleSubmitReview = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!user?.id || !reviewProductId.trim() || reviewRating < 1 || !reviewComment.trim()) {
-      setReviewError('Please select a product, give a rating (1–5 stars), and write a comment.');
+      setReviewError(t('dashboard.reviewValidation'));
       return;
     }
     setReviewError(null);
@@ -182,7 +185,7 @@ export default function Dashboard() {
     try {
       const productUuid = await getProductUuidBySlug(reviewProductId.trim());
       if (!productUuid) {
-        setReviewError('Product not found. Please try again or choose another product.');
+        setReviewError(t('dashboard.productNotFound'));
         return;
       }
 
@@ -204,7 +207,7 @@ export default function Dashboard() {
         setReviewSuccess(true);
         setTimeout(() => closeReviewModal(), 1500);
       } else {
-        setReviewError(result.error || 'Could not submit review. Please try again.');
+        setReviewError(result.error || t('dashboard.reviewSubmitFailed'));
       }
     } finally {
       setReviewSubmitting(false);
@@ -274,8 +277,8 @@ export default function Dashboard() {
 
   if (!user) return null;
 
-  const userName = user.user_metadata?.name || user.email?.split('@')[0] || 'Member';
-  const joinDate = new Date(user.created_at).toLocaleDateString('en-GB', { month: 'long', year: 'numeric' });
+  const userName = user.user_metadata?.name || user.email?.split('@')[0] || t('dashboard.member');
+  const joinDate = new Date(user.created_at).toLocaleDateString(language === 'sv' ? 'sv-SE' : 'en-GB', { month: 'long', year: 'numeric' });
 
   return (
     <div className="landing-page dashboard-page min-h-screen relative overflow-hidden">
@@ -286,7 +289,7 @@ export default function Dashboard() {
       {/* Mobile header */}
       <nav className="lg:hidden relative z-50 sticky top-0 bg-[rgba(7,10,18,0.95)] backdrop-blur-sm border-b border-[rgba(244,246,250,0.06)]">
         <div className="flex items-center justify-between px-4 py-3">
-          <a href="/" className="flex items-center justify-center w-9 h-9 rounded-xl bg-[rgba(244,246,250,0.06)] text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors" aria-label="Back to shop">
+          <a href="/" className="flex items-center justify-center w-9 h-9 rounded-xl bg-[rgba(244,246,250,0.06)] text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors" aria-label={t('dashboard.backToShopAria')}>
             <ArrowLeft className="w-5 h-5" />
           </a>
           <a href="/" className="flex flex-col items-center">
@@ -296,20 +299,21 @@ export default function Dashboard() {
               className="h-8 w-auto object-contain select-none"
               draggable={false}
             />
-            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#8B5CF6] mt-0.5">DASHBOARD</span>
+            <span className="text-[10px] font-mono uppercase tracking-[0.3em] text-[#8B5CF6] mt-0.5">{t('dashboard.title')}</span>
           </a>
           <div className="flex items-center gap-1.5">
+            <LanguageSwitcher />
             {myPromoter && (
-              <a href="/promoter" className="w-9 h-9 rounded-xl bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] flex items-center justify-center text-[#22C55E]" aria-label="Promoter panel">
+              <a href="/promoter" className="w-9 h-9 rounded-xl bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)] flex items-center justify-center text-[#22C55E]" aria-label={t('dashboard.promoterPanelAria')}>
                 <TrendingUp className="w-4 h-4" />
               </a>
             )}
             {isAdminUser && (
-              <a href="/admin/dashboard" className="w-9 h-9 rounded-xl bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] flex items-center justify-center text-[#EF4444]" aria-label="Admin panel">
+              <a href="/admin/dashboard" className="w-9 h-9 rounded-xl bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] flex items-center justify-center text-[#EF4444]" aria-label={t('dashboard.adminPanelAria')}>
                 <Shield className="w-4 h-4" />
               </a>
             )}
-            <button onClick={handleLogout} className="w-9 h-9 rounded-xl bg-[rgba(244,246,250,0.06)] flex items-center justify-center text-[#A9B3C7] hover:text-[#EF4444] transition-colors" aria-label="Logout">
+            <button onClick={handleLogout} className="w-9 h-9 rounded-xl bg-[rgba(244,246,250,0.06)] flex items-center justify-center text-[#A9B3C7] hover:text-[#EF4444] transition-colors" aria-label={t('dashboard.logoutAria')}>
               <LogOut className="w-4 h-4" />
             </button>
           </div>
@@ -330,19 +334,20 @@ export default function Dashboard() {
           <div className="flex items-center gap-4">
             {myPromoter && (
               <a href="/promoter" className="flex items-center gap-2 text-sm px-3 py-2 rounded-full bg-[rgba(34,197,94,0.12)] border border-[rgba(34,197,94,0.25)] text-[#22C55E] hover:bg-[rgba(34,197,94,0.2)] transition-colors">
-                Promoter Panel
+                {t('dashboard.promoterPanel')}
               </a>
             )}
             {isAdminUser && (
               <a href="/admin/dashboard" className="flex items-center gap-2 text-sm px-3 py-2 rounded-full bg-[rgba(239,68,68,0.12)] border border-[rgba(239,68,68,0.25)] text-[#EF4444] hover:bg-[rgba(239,68,68,0.2)] transition-colors">
-                Admin Panel
+                {t('dashboard.adminPanel')}
               </a>
             )}
+            <LanguageSwitcher />
             <button onClick={handleLogout} className="flex items-center gap-2 text-sm text-[#A9B3C7] hover:text-[#EF4444] transition-colors">
-              <LogOut className="w-4 h-4" /> Logout
+              <LogOut className="w-4 h-4" /> {t('dashboard.logout')}
             </button>
             <a href="/" className="flex items-center gap-2 text-sm text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors">
-              <ArrowLeft className="w-4 h-4" /> Back to Shop
+              <ArrowLeft className="w-4 h-4" /> {t('dashboard.backToShop')}
             </a>
           </div>
         </div>
@@ -357,54 +362,54 @@ export default function Dashboard() {
             </div>
             <div className="min-w-0">
               <p className="text-base font-semibold text-[#F4F6FA] truncate">{userName}</p>
-              <p className="text-xs text-[#A9B3C7]">Member since {joinDate}</p>
+              <p className="text-xs text-[#A9B3C7]">{t('dashboard.memberSince', { date: joinDate })}</p>
             </div>
-            <a href="/settings" className="ml-auto shrink-0 w-9 h-9 rounded-xl bg-[rgba(244,246,250,0.06)] flex items-center justify-center text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors" aria-label="Settings">
+            <a href="/settings" className="ml-auto shrink-0 w-9 h-9 rounded-xl bg-[rgba(244,246,250,0.06)] flex items-center justify-center text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors" aria-label={t('dashboard.settingsAria')}>
               <User className="w-4 h-4" />
             </a>
           </div>
           {/* Desktop welcome */}
           <div className="hidden lg:block mb-8">
             <h1 className="text-4xl font-bold text-[#F4F6FA] mb-2">
-              Welcome back, <span className="gradient-text">{userName}</span>
+              {t('dashboard.welcomeBack')} <span className="gradient-text">{userName}</span>
             </h1>
-            <p className="text-[#A9B3C7]">Member since {joinDate}</p>
+            <p className="text-[#A9B3C7]">{t('dashboard.memberSince', { date: joinDate })}</p>
           </div>
 
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-2.5 sm:gap-4 mb-5 lg:mb-8">
             <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
               <ShoppingBag className="w-5 h-5 sm:w-6 sm:h-6 text-[#2ED1B4] mb-1.5 sm:mb-2" />
               <p className="text-lg sm:text-2xl font-bold text-[#F4F6FA]">{paidOrderCount}</p>
-              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">Orders</p>
+              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">{t('dashboard.orders')}</p>
             </div>
             <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
               <History className="w-5 h-5 sm:w-6 sm:h-6 text-[#8B5CF6] mb-1.5 sm:mb-2" />
-              <p className="text-lg sm:text-2xl font-bold text-[#F4F6FA]">£{totalSpent.toFixed(0)}</p>
-              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">Spent</p>
+              <p className="text-lg sm:text-2xl font-bold text-[#F4F6FA]">{totalSpent.toFixed(0)} kr</p>
+              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">{t('dashboard.spent')}</p>
             </div>
             <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[rgba(34,197,94,0.1)] border border-[rgba(34,197,94,0.2)]">
               <Tag className="w-5 h-5 sm:w-6 sm:h-6 text-[#22C55E] mb-1.5 sm:mb-2" />
-              <p className="text-lg sm:text-2xl font-bold text-[#22C55E]">£0</p>
-              <p className="text-[10px] sm:text-xs text-[#22C55E]">Saved</p>
+              <p className="text-lg sm:text-2xl font-bold text-[#22C55E]">0 kr</p>
+              <p className="text-[10px] sm:text-xs text-[#22C55E]">{t('dashboard.saved')}</p>
             </div>
             <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
               <Star className="w-5 h-5 sm:w-6 sm:h-6 text-[#F59E0B] mb-1.5 sm:mb-2" />
               <p className="text-lg sm:text-2xl font-bold text-[#F4F6FA]">{reviewCount}</p>
-              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">Reviews</p>
+              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">{t('dashboard.reviews')}</p>
             </div>
             <div className="p-3 sm:p-4 rounded-xl sm:rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
               <div className="w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-[#22C55E] flex items-center justify-center mb-1.5 sm:mb-2">
                 <span className="text-[8px] sm:text-[10px] text-[#070A12] font-bold">✓</span>
               </div>
-              <p className="text-lg sm:text-2xl font-bold text-[#F4F6FA]">Active</p>
-              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">Status</p>
+              <p className="text-lg sm:text-2xl font-bold text-[#F4F6FA]">{t('dashboard.active')}</p>
+              <p className="text-[10px] sm:text-xs text-[#A9B3C7]">{t('dashboard.status')}</p>
             </div>
           </div>
 
           <div className="p-4 sm:p-6 rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
             <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
               <History className="w-4 h-4 sm:w-5 sm:h-5 text-[#8B5CF6]" />
-              <h2 className="text-base sm:text-xl font-semibold text-[#F4F6FA]">Purchase History</h2>
+              <h2 className="text-base sm:text-xl font-semibold text-[#F4F6FA]">{t('dashboard.purchaseHistory')}</h2>
             </div>
             {ordersLoading ? (
               <div className="space-y-3">
@@ -431,8 +436,8 @@ export default function Dashboard() {
             ) : orders.length === 0 ? (
               <div className="text-center py-8">
                 <ShoppingBag className="w-10 h-10 sm:w-12 sm:h-12 mx-auto text-[rgba(244,246,250,0.2)] mb-3" />
-                <p className="text-sm text-[#A9B3C7]">No orders yet</p>
-                <a href="/" className="text-[#2ED1B4] hover:underline text-sm mt-2 inline-block">Start Shopping</a>
+                <p className="text-sm text-[#A9B3C7]">{t('dashboard.noOrders')}</p>
+                <a href="/" className="text-[#2ED1B4] hover:underline text-sm mt-2 inline-block">{t('dashboard.startShopping')}</a>
               </div>
             ) : (
               <div className="space-y-3">
@@ -448,7 +453,7 @@ export default function Dashboard() {
                           <p className="text-xs sm:text-sm font-semibold text-[#F4F6FA] font-mono truncate">{formatOrderNumberDisplay(order.order_number) || order.id}</p>
                           <p className="text-[10px] sm:text-xs text-[#A9B3C7]">{new Date(order.created_at).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</p>
                         </div>
-                        <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap shrink-0 ml-2 ${order.status === 'Delivered' || order.status === 'delivered' ? 'bg-[rgba(34,197,94,0.15)] text-[#22C55E]' : 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B]'}`}>{order.status || 'Processing'}</span>
+                        <span className={`px-2 sm:px-3 py-0.5 sm:py-1 rounded-full text-[10px] sm:text-xs font-medium whitespace-nowrap shrink-0 ml-2 ${order.status === 'Delivered' || order.status === 'delivered' ? 'bg-[rgba(34,197,94,0.15)] text-[#22C55E]' : 'bg-[rgba(245,158,11,0.15)] text-[#F59E0B]'}`}>{order.status || t('dashboard.processing')}</span>
                       </div>
                       <div className="mb-2 sm:mb-3">
                         <div className="flex flex-wrap gap-1.5">
@@ -460,8 +465,8 @@ export default function Dashboard() {
                         </div>
                       </div>
                       <div className="flex items-center justify-between pt-2 sm:pt-3 border-t border-[rgba(244,246,250,0.08)]">
-                        <span className="text-xs text-[#A9B3C7]">Total</span>
-                        <span className="text-base sm:text-lg font-bold text-[#2ED1B4]">£{Number(order.total ?? 0).toFixed(2)}</span>
+                        <span className="text-xs text-[#A9B3C7]">{t('dashboard.total')}</span>
+                        <span className="text-base sm:text-lg font-bold text-[#2ED1B4]">{Number(order.total ?? 0).toFixed(2)} kr</span>
                       </div>
                     </div>
                   );
@@ -473,7 +478,7 @@ export default function Dashboard() {
           <div className="mt-4 sm:mt-6 p-4 sm:p-6 rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
             <div className="flex items-center gap-2 sm:gap-3 mb-4 sm:mb-6">
               <Star className="w-4 h-4 sm:w-5 sm:h-5 text-[#F59E0B]" />
-              <h3 className="text-base sm:text-xl font-semibold text-[#F4F6FA]">Your Reviews</h3>
+              <h3 className="text-base sm:text-xl font-semibold text-[#F4F6FA]">{t('dashboard.yourReviews')}</h3>
             </div>
 
             {userReviewsLoading ? (
@@ -497,7 +502,7 @@ export default function Dashboard() {
             ) : userReviews.length === 0 ? (
               <div className="text-center py-6 sm:py-8">
                 <Star className="w-8 h-8 sm:w-10 sm:h-10 mx-auto text-[rgba(244,246,250,0.15)] mb-2" />
-                <p className="text-sm text-[#A9B3C7]">No reviews yet. Write your first one below.</p>
+                <p className="text-sm text-[#A9B3C7]">{t('dashboard.noReviews')}</p>
               </div>
             ) : (
               <div className="space-y-2.5 sm:space-y-4">
@@ -505,9 +510,9 @@ export default function Dashboard() {
                   <div key={r.id} className="p-3 sm:p-4 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.08)]">
                     <div className="flex items-center justify-between gap-3 mb-1.5 sm:mb-2">
                       <div className="min-w-0">
-                        <p className="text-xs sm:text-sm font-medium text-[#F4F6FA] truncate">{r.title || 'Review'}</p>
+                        <p className="text-xs sm:text-sm font-medium text-[#F4F6FA] truncate">{r.title || t('dashboard.review')}</p>
                         <p className="text-[10px] sm:text-xs text-[#A9B3C7] truncate">
-                          {r.products?.name || 'Unknown product'}
+                          {r.products?.name || t('dashboard.unknownProduct')}
                         </p>
                       </div>
                       <div className="text-right shrink-0">
@@ -525,15 +530,15 @@ export default function Dashboard() {
           <div className="mt-4 sm:mt-6 p-4 sm:p-6 rounded-2xl bg-gradient-to-br from-[rgba(46,209,180,0.1)] to-[rgba(139,92,246,0.1)] border border-[rgba(46,209,180,0.2)]">
             <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
               <div>
-                <h3 className="text-base sm:text-lg font-semibold text-[#F4F6FA] mb-1">Share Your Experience</h3>
-                <p className="text-xs sm:text-sm text-[#A9B3C7]">Leave a review for products you've purchased.</p>
+                <h3 className="text-base sm:text-lg font-semibold text-[#F4F6FA] mb-1">{t('dashboard.shareExperience')}</h3>
+                <p className="text-xs sm:text-sm text-[#A9B3C7]">{t('dashboard.shareExperienceDesc')}</p>
               </div>
               <button
                 type="button"
                 onClick={openReviewModal}
                 className="w-full sm:w-auto btn-primary whitespace-nowrap flex items-center justify-center gap-2 py-3 sm:py-2.5 active:scale-[0.97] transition-all"
               >
-                <Star className="w-4 h-4" /> Write a Review
+                <Star className="w-4 h-4" /> {t('dashboard.writeReview')}
               </button>
             </div>
           </div>
@@ -550,7 +555,7 @@ export default function Dashboard() {
               >
                 <div className="w-10 h-1 rounded-full bg-[rgba(244,246,250,0.15)] mx-auto mt-2 sm:hidden" />
                 <div className="flex items-center justify-between flex-shrink-0 px-4 py-3 sm:px-5 sm:py-4 border-b border-[rgba(244,246,250,0.08)]">
-                  <h3 className="text-base sm:text-lg font-semibold text-[#F4F6FA]">Write a Review</h3>
+                  <h3 className="text-base sm:text-lg font-semibold text-[#F4F6FA]">{t('dashboard.writeReview')}</h3>
                   <button type="button" onClick={closeReviewModal} className="p-1.5 sm:p-2 rounded-lg text-[#A9B3C7] hover:text-[#F4F6FA] hover:bg-[rgba(244,246,250,0.08)] transition-colors">
                     <X className="w-5 h-5" />
                   </button>
@@ -560,12 +565,12 @@ export default function Dashboard() {
                     {reviewSuccess ? (
                       <div className="py-6 text-center">
                         <Check className="w-10 h-10 mx-auto text-[#22C55E] mb-2" />
-                        <p className="text-sm text-[#F4F6FA] font-medium">Thank you! Your review has been submitted.</p>
+                        <p className="text-sm text-[#F4F6FA] font-medium">{t('dashboard.thankYouReview')}</p>
                       </div>
                     ) : reviewableProducts.length === 0 ? (
                       <div className="py-6 text-center">
                         <ShoppingBag className="w-10 h-10 mx-auto text-[rgba(244,246,250,0.2)] mb-2" />
-                        <p className="text-xs sm:text-sm text-[#A9B3C7]">Complete a purchase to leave a verified review.</p>
+                        <p className="text-xs sm:text-sm text-[#A9B3C7]">{t('dashboard.purchaseToReview')}</p>
                       </div>
                     ) : (
                       <>
@@ -576,7 +581,7 @@ export default function Dashboard() {
                         )}
                         <div className="space-y-3">
                           <div>
-                            <label className="block text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-[#A9B3C7] mb-1.5">Product</label>
+                            <label className="block text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-[#A9B3C7] mb-1.5">{t('dashboard.product')}</label>
                             <select
                               value={reviewProductId}
                               onChange={(e) => setReviewProductId(e.target.value)}
@@ -588,7 +593,7 @@ export default function Dashboard() {
                             </select>
                           </div>
                           <div>
-                            <label className="block text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-[#A9B3C7] mb-1.5">Rating</label>
+                            <label className="block text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-[#A9B3C7] mb-1.5">{t('dashboard.rating')}</label>
                             <div className="flex gap-1">
                               {[1, 2, 3, 4, 5].map((star) => (
                                 <button
@@ -603,23 +608,23 @@ export default function Dashboard() {
                             </div>
                           </div>
                           <div>
-                            <label className="block text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-[#A9B3C7] mb-1.5">Title (optional)</label>
+                            <label className="block text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-[#A9B3C7] mb-1.5">{t('dashboard.titleOptional')}</label>
                             <input
                               type="text"
                               value={reviewTitle}
                               onChange={(e) => setReviewTitle(e.target.value)}
-                              placeholder="e.g. Great quality"
+                              placeholder={t('dashboard.titlePlaceholder')}
                               className="w-full px-3 py-3 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-base placeholder-[#A9B3C7] focus:outline-none focus:border-[#2ED1B4] transition-colors"
                             />
                           </div>
                           <div>
-                            <label className="block text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-[#A9B3C7] mb-1.5">Your review *</label>
+                            <label className="block text-[10px] sm:text-xs uppercase tracking-wider font-semibold text-[#A9B3C7] mb-1.5">{t('dashboard.yourReview')}</label>
                             <textarea
                               value={reviewComment}
                               onChange={(e) => setReviewComment(e.target.value)}
                               required
                               rows={3}
-                              placeholder="Share your experience..."
+                              placeholder={t('dashboard.reviewPlaceholder')}
                               className="w-full px-3 py-3 rounded-xl bg-[rgba(7,10,18,0.6)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-base placeholder-[#A9B3C7] focus:outline-none focus:border-[#2ED1B4] transition-colors resize-none"
                             />
                           </div>
@@ -629,10 +634,10 @@ export default function Dashboard() {
                   </div>
                   <div className="flex-shrink-0 flex gap-2 p-4 sm:p-5 pt-3 border-t border-[rgba(244,246,250,0.08)] bg-[#111827] pb-[calc(1rem+env(safe-area-inset-bottom,0px))] sm:pb-5">
                     <button type="button" onClick={closeReviewModal} className="flex-1 py-3 rounded-xl border border-[rgba(244,246,250,0.2)] text-sm text-[#A9B3C7] hover:bg-[rgba(244,246,250,0.06)] active:scale-[0.97] transition-all">
-                      Cancel
+                      {t('common.cancel')}
                     </button>
                     <button type="submit" disabled={reviewSubmitting} className="flex-1 py-3 rounded-xl bg-[#2ED1B4] text-[#070A12] text-sm font-semibold hover:bg-[#26b89e] disabled:opacity-50 active:scale-[0.97] transition-all">
-                      {reviewSubmitting ? 'Submitting...' : 'Submit'}
+                      {reviewSubmitting ? t('dashboard.submitting') : t('dashboard.submit')}
                     </button>
                   </div>
                 </form>
@@ -644,7 +649,7 @@ export default function Dashboard() {
 
       <footer className="relative z-0 px-4 lg:px-12 py-6 lg:py-8 border-t border-[rgba(244,246,250,0.08)]">
         <div className="max-w-4xl mx-auto text-center">
-          <p className="text-[10px] sm:text-xs text-[#A9B3C7]">© 2026 Viron Labs. All rights reserved.</p>
+          <p className="text-[10px] sm:text-xs text-[#A9B3C7]">{t('auth.copyright')}</p>
         </div>
       </footer>
     </div>

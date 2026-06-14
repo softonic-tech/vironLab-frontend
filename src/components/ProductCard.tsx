@@ -18,6 +18,7 @@ import {
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
 import { useCurrency } from "@/context/CurrencyContext";
+import { useTranslation } from "@/i18n";
 
 /*
   Replace these stubs with your actual imports:
@@ -29,7 +30,7 @@ import { useCurrency } from "@/context/CurrencyContext";
 const formatDosageLabel = (mg, unit) => `${mg}${unit ?? "mg"}`;
 const getStorefrontPrice = (o, e, p) => (e ? +(o * (1 - p / 100)).toFixed(2) : o);
 const getStorefrontSavings = (o, e, p) => (e ? +(o * (p / 100)).toFixed(2) : 0);
-const getBundleLabel = (q) => `Buy ${q}`;
+const getBundleLabel = (q, t) => t('product.buyBundle', { qty: q });
 const getStorefrontBundleUnitPrice = (o, e, m, b) => {
   const base = e ? o * (1 - m / 100) : o;
   return +(base * (1 - b / 100)).toFixed(2);
@@ -56,6 +57,7 @@ const getDefaultStorefrontDosage = (p) => {
 };
 
 export default function ProductCard({ product, discountSettings = {} }) {
+  const { t } = useTranslation();
   const dosageToNum = (d) => {
     const n = typeof d?.mg === "number" ? d.mg : parseFloat(String(d?.mg));
     return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
@@ -79,7 +81,7 @@ export default function ProductCard({ product, discountSettings = {} }) {
   const submitWaitlist = async (e) => {
     e?.preventDefault?.();
     if (!waitlistEmail.trim()) {
-      setWaitlistMsg("Please enter your email.");
+      setWaitlistMsg(t('product.enterEmail'));
       return;
     }
     setWaitlistLoading(true);
@@ -92,12 +94,12 @@ export default function ProductCard({ product, discountSettings = {} }) {
         p_phone: waitlistPhone.trim() || null,
       });
       if (error || !data?.ok) {
-        setWaitlistMsg(data?.error || error?.message || "Could not join waitlist right now.");
+        setWaitlistMsg(data?.error || error?.message || t('product.waitlistError'));
       } else {
-        setWaitlistMsg("You are on the priority waitlist. We will contact you first.");
+        setWaitlistMsg(t('product.waitlistSuccess'));
       }
     } catch (_err) {
-      setWaitlistMsg("Could not join waitlist right now.");
+      setWaitlistMsg(t('product.waitlistError'));
     } finally {
       setWaitlistLoading(false);
     }
@@ -136,7 +138,7 @@ export default function ProductCard({ product, discountSettings = {} }) {
             </div>
             <div className="pc-img-grad-bot" />
             <div className="pc-img-grad-top" />
-            <span className="pc-coming-badge">Coming Soon</span>
+            <span className="pc-coming-badge">{t('product.comingSoon')}</span>
           </div>
 
           <div className="pc-body">
@@ -145,12 +147,12 @@ export default function ProductCard({ product, discountSettings = {} }) {
               <span className="pc-spacer" />
               <span className="pc-stock-inline out">
                 <span className="pc-stock-dot-sm" />
-                Out of stock
+                {t('product.outOfStock')}
               </span>
             </div>
 
             <h3 className="pc-name">{product.name}</h3>
-            <p className="pc-ruo-mobile">Research Use Only</p>
+            <p className="pc-ruo-mobile">{t('product.researchUseOnly')}</p>
 
             <div className="pc-rating-row">
               <div className="pc-stars-group">
@@ -167,7 +169,7 @@ export default function ProductCard({ product, discountSettings = {} }) {
                     className="pc-meta-link"
                     onClick={(e) => { e.preventDefault(); e.stopPropagation(); setModal(true); }}
                   >
-                    <Info size={10} /> Info
+                    <Info size={10} /> {t('product.info')}
                   </button>
                 )}
               </div>
@@ -177,11 +179,11 @@ export default function ProductCard({ product, discountSettings = {} }) {
 
             <div className="pc-stock-mobile">
               <span className="pc-stk-dot out" />
-              <span style={{ fontSize: 8, fontWeight: 600, color: "#EF4444" }}>Out of Stock</span>
+              <span style={{ fontSize: 8, fontWeight: 600, color: "#EF4444" }}>{t('product.outOfStockTitle')}</span>
             </div>
 
             <div className="pc-coming-msg">
-              This product is currently out of stock. Join the priority waitlist for first access.
+              {t('product.waitlistMsg')}
             </div>
             <form onSubmit={submitWaitlist} className="pc-wl-form">
               <input
@@ -189,7 +191,7 @@ export default function ProductCard({ product, discountSettings = {} }) {
                 value={waitlistEmail}
                 onChange={(e) => setWaitlistEmail(e.target.value)}
                 className="pc-wl-inp"
-                placeholder="Email for priority access"
+                placeholder={t('product.emailPlaceholder')}
                 required
               />
               <input
@@ -197,10 +199,10 @@ export default function ProductCard({ product, discountSettings = {} }) {
                 value={waitlistPhone}
                 onChange={(e) => setWaitlistPhone(e.target.value)}
                 className="pc-wl-inp"
-                placeholder="Phone (optional)"
+                placeholder={t('product.phoneOptional')}
               />
               <button className="pc-cta go" type="submit" disabled={waitlistLoading}>
-                {waitlistLoading ? "Joining..." : "Join Waitlist"}
+                {waitlistLoading ? t('product.joining') : t('product.joinWaitlist')}
               </button>
               {waitlistMsg && <p className="pc-wl-msg">{waitlistMsg}</p>}
             </form>
@@ -216,7 +218,7 @@ export default function ProductCard({ product, discountSettings = {} }) {
                 <p style={{ fontSize: 12, color: "rgba(255,255,255,0.7)", whiteSpace: "pre-wrap", lineHeight: 1.55, marginTop: 8 }}>
                   {moreInfoText}
                 </p>
-                <button className="pc-mo-cls" onClick={() => setModal(false)}>Close</button>
+                <button className="pc-mo-cls" onClick={() => setModal(false)}>{t('product.close')}</button>
               </div>
             </div>
           </div>
@@ -260,8 +262,8 @@ export default function ProductCard({ product, discountSettings = {} }) {
   };
 
   const tiers = [
-    { q: 2, l: getBundleLabel(2), pct: b2, u: getStorefrontBundleUnitPrice(sel.originalPrice, dEn, dP, b2), t: getStorefrontBundleTotal(sel.originalPrice, 2, dEn, dP, b2) },
-    { q: 3, l: getBundleLabel(3), pct: b3, u: getStorefrontBundleUnitPrice(sel.originalPrice, dEn, dP, b3), t: getStorefrontBundleTotal(sel.originalPrice, 3, dEn, dP, b3) },
+    { q: 2, l: getBundleLabel(2, t), pct: b2, u: getStorefrontBundleUnitPrice(sel.originalPrice, dEn, dP, b2), t: getStorefrontBundleTotal(sel.originalPrice, 2, dEn, dP, b2) },
+    { q: 3, l: getBundleLabel(3, t), pct: b3, u: getStorefrontBundleUnitPrice(sel.originalPrice, dEn, dP, b3), t: getStorefrontBundleTotal(sel.originalPrice, 3, dEn, dP, b3) },
   ];
   const displayPrice = format(price);
   const displayOriginal = format(sel.originalPrice);
@@ -270,15 +272,15 @@ export default function ProductCard({ product, discountSettings = {} }) {
 
   const bdg = (() => {
     if (product.badge?.includes("OUT OF STOCK"))
-      return { c: "#EF4444", ic: <AlertCircle size={8} />, label: "Out of Stock" };
+      return { c: "#EF4444", ic: <AlertCircle size={8} />, label: t('product.outOfStockTitle') };
     if (product.category === "best-seller")
-      return { c: "#F59E0B", ic: <Flame size={8} />, label: "Bestseller" };
+      return { c: "#F59E0B", ic: <Flame size={8} />, label: t('product.bestseller') };
     if (product.category === "high-popularity")
-      return { c: "#60A5FA", ic: <Star size={8} />, label: "Trending" };
+      return { c: "#60A5FA", ic: <Star size={8} />, label: t('product.trending') };
     return null;
   })();
 
-  const vialLabel = product.vialType === "liquid" ? "Sterile Solution" : "Lyophilized Powder";
+  const vialLabel = product.vialType === "liquid" ? t('product.sterileSolution') : t('product.lyophilizedPowder');
 
   const handleOpenCoa = (e) => {
     e?.preventDefault(); e?.stopPropagation();
@@ -319,9 +321,9 @@ export default function ProductCard({ product, discountSettings = {} }) {
   };
   const defDisclaimer = () => (
     <>
-      <DB icon={<AlertTriangle size={11} />} t="NOT APPROVED BY THE TGA" c="#F59E0B" tx="Not evaluated or approved by the TGA of UK." />
-      <DB icon={<Shield size={11} />} t="NOT FOR THERAPEUTIC USE" c="#EF4444" tx="Not intended for therapeutic, diagnostic, or cosmetic purposes." />
-      <DB icon={<Beaker size={11} />} t="RESEARCH PURPOSES ONLY" c="#3B82F6" tx="Intended solely for in vitro research and laboratory use." />
+      <DB icon={<AlertTriangle size={11} />} t={t('product.notApprovedTga')} c="#F59E0B" tx={t('product.defTga')} />
+      <DB icon={<Shield size={11} />} t={t('product.notTherapeutic')} c="#EF4444" tx={t('product.defTherapeutic')} />
+      <DB icon={<Beaker size={11} />} t={t('product.researchOnly')} c="#3B82F6" tx={t('product.defResearch')} />
     </>
   );
 
@@ -368,11 +370,11 @@ export default function ProductCard({ product, discountSettings = {} }) {
             {!oos && (
               <button className="pc-quick-add" onClick={doAdd} disabled={adding}>
                 <Plus size={13} strokeWidth={3} />
-                {adding ? "Adding…" : "Quick Add"}
+                {adding ? t('product.adding') : t('product.quickAdd')}
               </button>
             )}
             <span className="pc-view-link">
-              View Details <ArrowUpRight size={11} strokeWidth={2.5} />
+              {t('product.viewDetails')} <ArrowUpRight size={11} strokeWidth={2.5} />
             </span>
           </div>
         </div>
@@ -388,7 +390,7 @@ export default function ProductCard({ product, discountSettings = {} }) {
             <span className="pc-spacer" />
             <span className={`pc-stock-inline ${sel.inStock ? "in" : "out"}`}>
               <span className="pc-stock-dot-sm" />
-              {sel.inStock ? "In stock" : "Out of stock"}
+              {sel.inStock ? t('product.inStock') : t('product.outOfStock')}
             </span>
           </div>
 
@@ -396,7 +398,7 @@ export default function ProductCard({ product, discountSettings = {} }) {
           <h3 className={`pc-name ${hovered ? "pc-name-hover" : ""}`}>{product.name}</h3>
 
           {/* Mobile: research tag */}
-          <p className="pc-ruo-mobile">Research Use Only</p>
+          <p className="pc-ruo-mobile">{t('product.researchUseOnly')}</p>
 
           {/* Stars + COA/Info */}
           <div className="pc-rating-row">
@@ -429,14 +431,14 @@ export default function ProductCard({ product, discountSettings = {} }) {
           <div className="pc-stock-mobile">
             <span className={`pc-stk-dot ${sel.inStock ? "in" : "out"}`} />
             <span style={{ fontSize: 8, fontWeight: 600, color: sel.inStock ? "#22C55E" : "#EF4444" }}>
-              {sel.inStock ? "In Stock" : "Out of Stock"}
+              {sel.inStock ? t('product.inStock') : t('product.outOfStockTitle')}
             </span>
           </div>
 
           {/* Dosage: mobile = dropdown, desktop = chips */}
           {/* Desktop chips */}
           <div className="pc-dosage-desktop">
-            <span className="pc-dosage-label">Size</span>
+            <span className="pc-dosage-label">{t('product.size')}</span>
             <div className="pc-dosage-chips">
               {dosages.map((d) => {
                 const ac = String(sel.mg) === String(d.mg) && (sel.unit ?? "MG") === (d.unit ?? "MG");
@@ -488,26 +490,26 @@ export default function ProductCard({ product, discountSettings = {} }) {
               {dEn && <span className="pc-price-strike">{displayOriginal}</span>}
               <span className={`pc-price-now ${dEn ? "accent" : ""}`}>{displayPrice}</span>
               {dEn && save > 0 && (
-                <span className="pc-price-save-pill">{dP}% off</span>
+                <span className="pc-price-save-pill">{t('product.offPercent', { percent: dP })}</span>
               )}
             </div>
-            {sel && <span className="pc-price-per">per vial · {formatDosageLabel(sel.mg, sel.unit)}</span>}
+            {sel && <span className="pc-price-per">{t('product.perVial', { dosage: formatDosageLabel(sel.mg, sel.unit) })}</span>}
           </div>
 
           {/* Trust badges — desktop */}
           <div className="pc-trust">
             <div className="pc-trust-item">
-              <Shield size={11} /> Lab Verified
+              <Shield size={11} /> {t('product.labVerified')}
             </div>
             <div className="pc-trust-item dim">
-              <Beaker size={11} /> HPLC Tested
+              <Beaker size={11} /> {t('product.hplcTested')}
             </div>
           </div>
 
           {/* Bundle */}
           {showB && (
             <div className="pc-bun">
-              <div className="pc-bun-h"><Zap size={9} color="#FCD34D" /><span>Bundle & Save</span></div>
+              <div className="pc-bun-h"><Zap size={9} color="#FCD34D" /><span>{t('product.bundleSave')}</span></div>
               <div className="pc-bun-list">
                 {tiers.map((tr) => {
                   const sv = (sel.originalPrice - tr.u) * tr.q;
@@ -520,7 +522,7 @@ export default function ProductCard({ product, discountSettings = {} }) {
                       </div>
                       <div className="pc-bun-e">
                         <span className="pc-bun-t">{format(tr.t)}</span>
-                        <span className="pc-bun-s">Save {format(sv)}</span>
+                        <span className="pc-bun-s">{t('product.saveAmount', { amount: format(sv) })}</span>
                       </div>
                     </button>
                   );
@@ -537,9 +539,9 @@ export default function ProductCard({ product, discountSettings = {} }) {
               disabled={adding}
             >
               {adding ? (
-                <><Check size={13} /> Added!</>
+                <><Check size={13} /> {t('product.added')}</>
               ) : (
-                <><Plus size={14} strokeWidth={2.5} /> Add to Cart</>
+                <><Plus size={14} strokeWidth={2.5} /> {t('product.addToCart')}</>
               )}
             </button>
           )}
@@ -550,7 +552,7 @@ export default function ProductCard({ product, discountSettings = {} }) {
                 value={waitlistEmail}
                 onChange={(e) => setWaitlistEmail(e.target.value)}
                 className="pc-wl-inp"
-                placeholder="Email for priority access"
+                placeholder={t('product.emailPlaceholder')}
                 required
               />
               <input
@@ -558,10 +560,10 @@ export default function ProductCard({ product, discountSettings = {} }) {
                 value={waitlistPhone}
                 onChange={(e) => setWaitlistPhone(e.target.value)}
                 className="pc-wl-inp"
-                placeholder="Phone (optional)"
+                placeholder={t('product.phoneOptional')}
               />
               <button className="pc-cta go" type="submit" disabled={waitlistLoading}>
-                {waitlistLoading ? "Joining..." : "Join Priority Waitlist"}
+                {waitlistLoading ? t('product.joining') : t('product.joinPriorityWaitlist')}
               </button>
               {waitlistMsg && <p className="pc-wl-msg">{waitlistMsg}</p>}
             </form>
@@ -578,32 +580,32 @@ export default function ProductCard({ product, discountSettings = {} }) {
               <h2 className="pc-mo-nm">{product.name}</h2>
               <div className="pc-stars-group" style={{ marginBottom: 12 }}>
                 <div className="pc-stars">{[...Array(5)].map((_, i) => <Star key={i} size={11} fill="#F59E0B" color="#F59E0B" />)}</div>
-                <span className="pc-review-ct" style={{ fontSize: 10 }}>({product.reviewCount} reviews)</span>
+                <span className="pc-review-ct" style={{ fontSize: 10 }}>({product.reviewCount} {t('product.reviews')})</span>
               </div>
               <div className="pc-mo-pills">
-                <div className="pc-mo-pill"><span className="pc-mo-pl">Form</span><span className="pc-mo-pv">{vialLabel}</span></div>
-                <div className="pc-mo-pill"><span className="pc-mo-pl">Dosages</span><span className="pc-mo-pv">{dosages.map(d => formatDosageLabel(d.mg, d.unit)).join(", ")}</span></div>
+                <div className="pc-mo-pill"><span className="pc-mo-pl">{t('product.form')}</span><span className="pc-mo-pv">{vialLabel}</span></div>
+                <div className="pc-mo-pill"><span className="pc-mo-pl">{t('product.dosages')}</span><span className="pc-mo-pv">{dosages.map(d => formatDosageLabel(d.mg, d.unit)).join(", ")}</span></div>
               </div>
               {product.technicalSpecs?.composition && (
-                <div className="pc-mo-comp"><span style={{ color: "#60A5FA", fontWeight: 600 }}>Composition:</span> {product.technicalSpecs.composition}</div>
+                <div className="pc-mo-comp"><span style={{ color: "#60A5FA", fontWeight: 600 }}>{t('product.composition')}</span> {product.technicalSpecs.composition}</div>
               )}
-              <h3 className="pc-mo-sec"><Info size={13} style={{ color: "#60A5FA" }} /> Specifications</h3>
+              <h3 className="pc-mo-sec"><Info size={13} style={{ color: "#60A5FA" }} /> {t('product.specifications')}</h3>
               <div className="pc-sp-tbl">
                 {[
-                  ["Synonyms", product.technicalSpecs?.synonyms],
-                  ["CAS", product.technicalSpecs?.casNumber],
-                  ["Mol. Weight", product.technicalSpecs?.molecularWeight],
-                  ["Length", product.technicalSpecs?.peptideLength],
-                  ["Purity", product.technicalSpecs?.purity],
-                  ["Appearance", product.technicalSpecs?.appearance],
-                  ["Solubility", product.technicalSpecs?.solubility],
-                  ["Quality", product.technicalSpecs?.qualityVerification],
-                  ["Storage", product.technicalSpecs?.storageConditions],
+                  [t('product.synonyms'), product.technicalSpecs?.synonyms],
+                  [t('product.cas'), product.technicalSpecs?.casNumber],
+                  [t('product.molWeight'), product.technicalSpecs?.molecularWeight],
+                  [t('product.length'), product.technicalSpecs?.peptideLength],
+                  [t('product.purity'), product.technicalSpecs?.purity],
+                  [t('product.appearance'), product.technicalSpecs?.appearance],
+                  [t('product.solubility'), product.technicalSpecs?.solubility],
+                  [t('product.quality'), product.technicalSpecs?.qualityVerification],
+                  [t('product.storage'), product.technicalSpecs?.storageConditions],
                 ].filter(([, v]) => v).map(([l, v]) => (
                   <div key={l} className="pc-sp-r"><span className="pc-sp-l">{l}</span><span className="pc-sp-v">{v}</span></div>
                 ))}
               </div>
-              <h3 className="pc-mo-sec"><AlertTriangle size={13} style={{ color: "#EF4444" }} /> Important Information</h3>
+              <h3 className="pc-mo-sec"><AlertTriangle size={13} style={{ color: "#EF4444" }} /> {t('product.importantInfo')}</h3>
               <div style={{ display: "flex", flexDirection: "column", gap: 6 }}>{renderMI()}</div>
               <button className="pc-mo-cls" onClick={() => setModal(false)}>Close</button>
             </div>

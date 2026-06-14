@@ -1,7 +1,13 @@
-import { ArrowLeft, Scale, FileCheck, AlertTriangle, UserCheck, Package, Truck, CreditCard, Ban } from 'lucide-react';
+import { Scale, FileCheck, AlertTriangle, UserCheck, Package, Truck, CreditCard, Ban } from 'lucide-react';
 import { SEO } from '@/components/SEO';
+import PageTopBar from '@/components/PageTopBar';
+import { useTranslation, useLanguage } from '@/i18n';
 
 export default function Terms() {
+  const { t } = useTranslation();
+  const { language } = useLanguage();
+  const dateLocale = language === 'sv' ? 'sv-SE' : 'en-GB';
+
   return (
     <div className="min-h-screen bg-[#070A12]">
       <SEO
@@ -9,31 +15,14 @@ export default function Terms() {
         description="Viron Labs Terms & Conditions - British Consumer Law compliant. Read our terms of service before purchasing."
       />
 
-      {/* Navigation */}
-      <nav className="px-4 py-4 border-b border-white/10">
-        <div className="max-w-7xl mx-auto flex items-center justify-between">
-          <a href="/" className="inline-flex items-center">
-            <img
-              src="/logo.png"
-              alt="Viron Labs"
-              className="h-9 w-auto object-contain select-none"
-              draggable={false}
-            />
-          </a>
-          <a href="/" className="text-sm text-gray-400 flex items-center gap-2 hover:text-white transition-colors">
-            <ArrowLeft className="w-4 h-4" />
-            Back to Home
-          </a>
-        </div>
-      </nav>
+      <PageTopBar backHref="/" backLabel={t('legal.backToHome')} />
 
-      {/* Content */}
       <main className="max-w-4xl mx-auto px-4 py-12">
         <div className="text-center mb-12">
           <Scale className="w-16 h-16 mx-auto text-[#2ED1B4] mb-4" />
-          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">Terms & Conditions</h1>
-          <p className="text-gray-400">Last Updated: {new Date().toLocaleDateString('en-GB')}</p>
-          <p className="text-sm text-[#2ED1B4] mt-2">Compliant with British Consumer Law (ACL)</p>
+          <h1 className="text-3xl md:text-4xl font-bold text-white mb-4">{t('legal.terms.fullTitle')}</h1>
+          <p className="text-gray-400">{t('legal.lastUpdated', { date: new Date().toLocaleDateString(dateLocale) })}</p>
+          <p className="text-sm text-[#2ED1B4] mt-2">{t('legal.terms.compliance')}</p>
         </div>
 
         <div className="space-y-8">
@@ -41,7 +30,7 @@ export default function Terms() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <FileCheck className="w-5 h-5 text-[#8B5CF6]" />
-              1. Agreement to Terms
+              {t('legal.terms.acceptance')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               By accessing <strong className="text-white">www.vironlabs.com</strong> ("the Website") and purchasing products from Viron Labs
@@ -59,7 +48,7 @@ export default function Terms() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <UserCheck className="w-5 h-5 text-[#8B5CF6]" />
-              2. Eligibility & Age Requirement
+              {t('legal.terms.eligibility')}
             </h2>
             <div className="p-4 rounded-xl bg-[rgba(239,68,68,0.1)] border border-[rgba(239,68,68,0.2)] mb-4">
               <p className="text-[#EF4444] font-medium flex items-center gap-2">
@@ -98,7 +87,7 @@ export default function Terms() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Package className="w-5 h-5 text-[#8B5CF6]" />
-              3. Products & Intended Use
+              {t('legal.terms.products')}
             </h2>
             <div className="p-4 rounded-xl bg-[rgba(245,158,11,0.1)] border border-[rgba(245,158,11,0.2)] mb-4">
               <p className="text-[#F59E0B] font-medium">
@@ -142,7 +131,7 @@ export default function Terms() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <FileCheck className="w-5 h-5 text-[#8B5CF6]" />
-              4. Ordering & Payment
+              {t('legal.terms.orders')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               All orders are subject to acceptance and availability. We reserve the right to:
@@ -175,7 +164,7 @@ export default function Terms() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Truck className="w-5 h-5 text-[#8B5CF6]" />
-              5. Shipping & Delivery
+              {t('legal.terms.shipping')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               We ship UK-wide. Delivery times are estimates and may vary based on location and circumstances beyond our control.
@@ -196,7 +185,7 @@ export default function Terms() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Ban className="w-5 h-5 text-[#8B5CF6]" />
-              6. Returns & Refunds
+              {t('legal.terms.returns')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               Due to the nature of our products, <strong className="text-white">we do not accept returns</strong> for:
@@ -228,7 +217,7 @@ export default function Terms() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <Scale className="w-5 h-5 text-[#8B5CF6]" />
-              7. British Consumer Law (ACL) Rights
+              {t('legal.terms.acl')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               Nothing in these Terms & Conditions excludes, restricts, or modifies any right or remedy you have under the
@@ -262,7 +251,7 @@ export default function Terms() {
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
             <h2 className="text-xl font-semibold text-white mb-4 flex items-center gap-2">
               <AlertTriangle className="w-5 h-5 text-[#8B5CF6]" />
-              8. Limitation of Liability
+              {t('legal.terms.liability')}
             </h2>
             <p className="text-gray-400 leading-relaxed">
               To the maximum extent permitted by law:
@@ -285,7 +274,7 @@ export default function Terms() {
 
           {/* Intellectual Property */}
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
-            <h2 className="text-xl font-semibold text-white mb-4">9. Intellectual Property</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('legal.terms.intellectualProperty')}</h2>
             <p className="text-gray-400 leading-relaxed">
               All content on this Website, including text, graphics, logos, images, and software, is the property of Viron Labs
               or its licensors and is protected by British and international copyright laws. You may not reproduce,
@@ -295,7 +284,7 @@ export default function Terms() {
 
           {/* Changes */}
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
-            <h2 className="text-xl font-semibold text-white mb-4">10. Changes to Terms</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('legal.terms.changes')}</h2>
             <p className="text-gray-400 leading-relaxed">
               We may modify these Terms & Conditions at any time. Changes will be effective immediately upon posting to the Website.
               Your continued use of the Website after changes constitutes acceptance of the modified terms.
@@ -304,7 +293,7 @@ export default function Terms() {
 
           {/* Contact */}
           <section className="p-6 rounded-2xl bg-white/5 border border-white/10">
-            <h2 className="text-xl font-semibold text-white mb-4">11. Contact Us</h2>
+            <h2 className="text-xl font-semibold text-white mb-4">{t('legal.terms.contact')}</h2>
             <div className="p-4 rounded-xl bg-[rgba(46,209,180,0.1)] border border-[rgba(46,209,180,0.2)]">
               <p className="text-white font-medium">Viron Labs</p>
               <p className="text-gray-400">Email: <a href="mailto:contact@vironlabs.com" className="text-[#2ED1B4] hover:underline">contact@vironlabs.com</a></p>

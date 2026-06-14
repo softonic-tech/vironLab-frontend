@@ -11,18 +11,21 @@ export const SIGNUP_BONUS = 50;
 /** Points awarded for placing the very first paid order. */
 export const FIRST_ORDER_BONUS = 100;
 
-/** Points awarded per pound spent (1 pt per £1). */
-export const POINTS_PER_POUND = 1;
+/** Points awarded per 100 SEK spent (1 pt per 100 kr). */
+export const POINTS_PER_100_SEK = 1;
 
-/** @deprecated Use `POINTS_PER_POUND`. Kept only for backward compatibility. */
-export const POINTS_PER_DOLLAR = POINTS_PER_POUND;
+/** @deprecated Use `POINTS_PER_100_SEK`. Kept only for backward compatibility. */
+export const POINTS_PER_POUND = POINTS_PER_100_SEK;
+
+/** @deprecated Use `POINTS_PER_100_SEK`. Kept only for backward compatibility. */
+export const POINTS_PER_DOLLAR = POINTS_PER_100_SEK;
 
 /**
  * Calculate how many purchase points to award for a given order total.
- * 1 point per £1 spent, rounded down.
+ * 1 point per 100 kr spent, rounded down.
  */
 export function calculatePurchasePoints(orderTotal: number): number {
-  return Math.floor(orderTotal * POINTS_PER_POUND);
+  return Math.floor(orderTotal / 100 * POINTS_PER_100_SEK);
 }
 
 /** Supported point event types. */

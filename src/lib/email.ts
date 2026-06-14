@@ -144,7 +144,7 @@ export const sendOrderConfirmation = async (
           name: it.name || 'Item',
           dosage: String(it.dosage ?? ''),
           quantity: it.quantity ?? 0,
-          lineTotal: `£${(((it.price ?? 0) as number) * (it.quantity ?? 0)).toFixed(2)}`,
+          lineTotal: `${(((it.price ?? 0) as number) * (it.quantity ?? 0)).toFixed(2)} kr`,
         }))
       : [];
 
@@ -156,7 +156,7 @@ export const sendOrderConfirmation = async (
     <p style="margin:0 0 8px;text-align:center;color:#9CA3AF;font-size:14px;">We’ve received your order and reserved your items.</p>
     ${emailCallout(
       `<span style="font-size:13px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.12em;">Amount due</span><br>
-       <span style="font-size:32px;font-weight:800;color:#2ED1B4;letter-spacing:-0.02em;">£${tot}</span><br>
+       <span style="font-size:32px;font-weight:800;color:#2ED1B4;letter-spacing:-0.02em;">${tot} kr</span><br>
        <span style="font-size:13px;color:#F4F6FA;">Order <strong style="color:#F4F6FA;font-family:ui-monospace,Menlo,Consolas,monospace;">${on}</strong></span>`,
       'info'
     )}
@@ -181,7 +181,7 @@ export const sendOrderConfirmation = async (
   let html = template?.html
     ? template.html
     : wrapVironLabsEmail({
-        preheader: `Viron Labs order ${displayOrderNo} — £${orderData.total.toFixed(2)} due`,
+        preheader: `Viron Labs order ${displayOrderNo} — ${orderData.total.toFixed(2)} kr due`,
         headline: 'Order confirmed',
         subline: 'Next step: complete your bank transfer using the details below.',
         bodyHtml: defaultBody,
@@ -230,7 +230,7 @@ export const sendPaymentReceived = async (
     ${emailCallout(
       `<span style="font-size:13px;color:#9CA3AF;text-transform:uppercase;letter-spacing:0.12em;">Payment received</span><br>
        <span style="font-size:15px;color:#F4F6FA;">Order <strong style="font-family:ui-monospace,Menlo,Consolas,monospace;">${on}</strong></span><br>
-       <span style="font-size:28px;font-weight:800;color:#34D399;margin-top:6px;display:inline-block;">£${tot}</span>`,
+       <span style="font-size:28px;font-weight:800;color:#34D399;margin-top:6px;display:inline-block;">${tot} kr</span>`,
       'success'
     )}
     <p style="margin:8px 0 0;text-align:center;font-size:15px;color:#9CA3AF;line-height:1.6;">Your order is now <strong style="color:#F4F6FA;">being prepared</strong>. We aim to ship within <strong style="color:#F4F6FA;">24 hours</strong>.</p>
@@ -494,8 +494,8 @@ export const sendAffiliateDiscountEmail = async (
       <p>You used referral code <strong style="font-size: 18px; color: #22C55E;">${data.code}</strong> on your order.</p>
       <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #bbf7d0;">
         <p><strong>Order:</strong> #${data.order_number}</p>
-        <p><strong>Discount:</strong> ${data.discount_percent}% off (−£${data.discount_amount.toFixed(2)})</p>
-        <p><strong>Order Total:</strong> £${data.total.toFixed(2)}</p>
+        <p><strong>Discount:</strong> ${data.discount_percent}% off (−${data.discount_amount.toFixed(2)} kr)</p>
+        <p><strong>Order Total:</strong> ${data.total.toFixed(2)} kr</p>
       </div>
       <p>Thanks for shopping with Viron Labs!</p>
     </div>
@@ -521,8 +521,8 @@ export const sendPromoterCommissionEmail = async (
       <p>Great news — someone used your referral code!</p>
       <div style="background: #f0fdf4; padding: 15px; border-radius: 8px; margin: 20px 0; border: 1px solid #bbf7d0;">
         <p><strong>Order #:</strong> ${data.order_number}</p>
-        <p><strong>Your Commission:</strong> <span style="font-size: 20px; color: #22C55E; font-weight: bold;">£${data.commission.toFixed(2)}</span></p>
-        <p><strong>Total Store Credit:</strong> £${data.total_credit.toFixed(2)}</p>
+        <p><strong>Your Commission:</strong> <span style="font-size: 20px; color: #22C55E; font-weight: bold;">${data.commission.toFixed(2)} kr</span></p>
+        <p><strong>Total Store Credit:</strong> ${data.total_credit.toFixed(2)} kr</p>
       </div>
       <p>Your commission has been added to your store credit. You can use it at checkout or view it in your Promoter Dashboard.</p>
       <a href="${CONFIG.SITE_URL || 'https://vironlabs.com'}/promoter" style="display: inline-block; background: #22C55E; color: white; padding: 12px 24px; text-decoration: none; border-radius: 8px; margin-top: 10px; font-weight: bold;">View Dashboard</a>
@@ -531,7 +531,7 @@ export const sendPromoterCommissionEmail = async (
 
   const result = await sendEmail({
     to,
-    subject: `You earned £${data.commission.toFixed(2)} — Order #${data.order_number}`,
+    subject: `You earned ${data.commission.toFixed(2)} kr — Order #${data.order_number}`,
     html,
   });
   return result.success;
@@ -546,7 +546,7 @@ export const sendAbandonedCart = async (
     name: String(item.name ?? 'Item'),
     dosage: String(item.dosage ?? ''),
     quantity: item.quantity ?? 0,
-    lineTotal: `£${((item.price ?? 0) * (item.quantity ?? 0)).toFixed(2)}`,
+    lineTotal: `${((item.price ?? 0) * (item.quantity ?? 0)).toFixed(2)} kr`,
   }));
 
   const checkout = cartData.checkoutUrl;

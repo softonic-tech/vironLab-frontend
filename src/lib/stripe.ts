@@ -26,7 +26,7 @@ export type CreateStripeSessionRequest = {
   discount_amount?: number;
   points_redeemed?: number;
   total: number;
-  currency?: 'sek' | 'gbp' | 'eur' | 'usd';
+  currency?: 'sek';
   age_verified?: boolean;
   customer_notes?: string;
   affiliate_code?: string | null;

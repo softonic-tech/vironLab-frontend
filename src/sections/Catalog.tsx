@@ -9,6 +9,7 @@ import { loadProductsFromSupabase } from '@/lib/supabase-db';
 import { getSiteSetting, DEFAULT_DISCOUNT_SETTINGS, DEFAULT_SUPPORT_LINKS, type DiscountSettings } from '@/lib/settings';
 import type { Product } from '@/products';
 import { Skeleton } from '@/components/ui/skeleton';
+import { useTranslation } from '@/i18n';
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -41,6 +42,7 @@ function isBestSellerCategoryKey(key: string): boolean {
 }
 
 export default function Catalog() {
+  const { t } = useTranslation();
   const sectionRef = useRef<HTMLElement>(null);
   const headerRef = useRef<HTMLDivElement>(null);
   const gridRef = useRef<HTMLDivElement>(null);
@@ -200,7 +202,7 @@ export default function Catalog() {
             className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgba(0,136,204,0.15)] border border-[rgba(0,136,204,0.3)] hover:bg-[rgba(0,136,204,0.25)] hover:border-[rgba(0,136,204,0.5)] transition-all"
           >
             <MessageCircle className="w-4 h-4 text-[#0088CC]" />
-            <span className="text-xs font-medium text-[#F4F6FA]">Telegram Support</span>
+            <span className="text-xs font-medium text-[#F4F6FA]">{t('landing.catalog.telegramSupport')}</span>
           </a>
 
           {whatsappLink ? (
@@ -211,7 +213,7 @@ export default function Catalog() {
               className="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-[rgba(34,197,94,0.15)] border border-[rgba(34,197,94,0.3)] hover:bg-[rgba(34,197,94,0.25)] hover:border-[rgba(34,197,94,0.5)] transition-all"
             >
               <MessageCircle className="w-4 h-4 text-[#22C55E]" />
-              <span className="text-xs font-medium text-[#F4F6FA]">WhatsApp Support</span>
+              <span className="text-xs font-medium text-[#F4F6FA]">{t('landing.catalog.whatsappSupport')}</span>
             </a>
           ) : null}
         </motion.div>
@@ -219,7 +221,7 @@ export default function Catalog() {
         {/* Header */}
         <div ref={headerRef} className="mb-8">
           <h2 className="text-2xl sm:text-3xl md:text-4xl font-bold text-white mb-4 font-['Syne',sans-serif] tracking-tight">
-            Curated <span className="gradient-text">SKU matrix</span>
+            {t('landing.catalog.title')} <span className="gradient-text">{t('landing.catalog.titleHighlight')}</span>
           </h2>
 
           {/* Search */}
@@ -227,7 +229,7 @@ export default function Catalog() {
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
             <input
               type="text"
-              placeholder="Search by peptide or descriptor..."
+              placeholder={t('landing.catalog.searchPlaceholder')}
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
               className="w-full pl-11 pr-4 py-3.5 rounded-full bg-[rgba(8,10,18,0.72)] border border-white/[0.1] text-slate-100 placeholder:text-slate-500 focus:outline-none focus:ring-2 focus:ring-amber-400/35 focus:border-amber-400/50 transition-colors backdrop-blur-md"
@@ -269,13 +271,13 @@ export default function Catalog() {
                 onClick={() => window.location.reload()}
                 className="text-amber-400 hover:text-amber-300 hover:underline"
               >
-                Retry
+                {t('landing.catalog.retry')}
               </button>
             </div>
           )}
           {!loading && !error && products.length === 0 && (
             <div className="text-center py-16">
-              <p className="text-[#A9B3C7] text-lg">No products available.</p>
+              <p className="text-[#A9B3C7] text-lg">{t('landing.catalog.noProducts')}</p>
             </div>
           )}
           {!loading && !error && products.length > 0 && (

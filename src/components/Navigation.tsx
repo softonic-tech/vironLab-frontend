@@ -1,13 +1,16 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect } from 'react';
 import { motion } from 'framer-motion';
-import { ShoppingCart, Menu, X, User, LayoutDashboard, Settings, HelpCircle, TrendingUp, ChevronDown } from 'lucide-react';
+import { ShoppingCart, Menu, X, User, LayoutDashboard, Settings, HelpCircle, TrendingUp } from 'lucide-react';
 import { useLocation } from 'react-router-dom';
 import { useCart } from '@/context/CartContext';
 import { useAffiliate } from '@/context/AffiliateContext';
-import { useCurrency } from '@/context/CurrencyContext';
 import { supabase, getCurrentUser } from '@/lib/supabase';
 import { checkIsAdmin } from '@/lib/supabase-db';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslation } from '@/i18n';
+
 export default function Navigation() {
+  const { t } = useTranslation();
   const location = useLocation();
   const [isScrolled, setIsScrolled] = useState(false);
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
@@ -15,8 +18,6 @@ export default function Navigation() {
   const [isAdminUser, setIsAdminUser] = useState(false);
   const { totalItems, setIsCartOpen } = useCart();
   const { myPromoter } = useAffiliate();
-  const { currency, setCurrency } = useCurrency();
-
   // Check login + admin state — read from Supabase session directly
   useEffect(() => {
     const syncAuthState = async () => {
@@ -95,99 +96,12 @@ export default function Navigation() {
   };
 
   const navLinks = [
-    { label: 'Catalog', action: scrollToTop },
-    { label: 'Trust', id: 'trust' },
-    { label: 'Quality', id: 'quality' },
-    { label: 'Lab guide', id: 'tutorial' },
-    { label: 'Contact', action: openContact },
+    { label: t('nav.catalog'), action: scrollToTop },
+    { label: t('nav.trust'), id: 'trust' },
+    { label: t('nav.quality'), id: 'quality' },
+    { label: t('nav.labGuide'), id: 'tutorial' },
+    { label: t('nav.contact'), action: openContact },
   ];
-
-  const CurrencyDropdown = ({
-    isMobile = false,
-  }: {
-    isMobile?: boolean;
-  }) => {
-    const [open, setOpen] = useState(false);
-    const dropdownRef = useRef<HTMLDivElement | null>(null);
-
-    useEffect(() => {
-      const handleOutsideClick = (event: MouseEvent) => {
-        if (!dropdownRef.current?.contains(event.target as Node)) {
-          setOpen(false);
-        }
-      };
-
-      document.addEventListener('mousedown', handleOutsideClick);
-      return () => document.removeEventListener('mousedown', handleOutsideClick);
-    }, []);
-
-    const triggerLabel =
-      currency === 'sek' ? 'SEK kr' : currency === 'gbp' ? 'GBP £' : currency === 'eur' ? 'EUR €' : 'USD $';
-
-    return (
-      <div
-        ref={dropdownRef}
-        className={isMobile ? 'relative w-full' : 'relative hidden md:block w-[108px]'}
-      >
-        <button
-          type="button"
-          onClick={() => setOpen((prev) => !prev)}
-          className={
-            isMobile
-              ? 'flex h-10 w-full items-center justify-between rounded-lg border border-[rgba(244,246,250,0.15)] bg-[rgba(7,10,18,0.5)] px-3 text-sm text-[#F4F6FA] transition-colors duration-300 hover:bg-[rgba(14,18,30,0.85)] focus:outline-none focus:border-amber-400/60 focus:ring-2 focus:ring-amber-400/25'
-              : 'flex h-10 w-full items-center justify-between rounded-full border border-amber-500/35 bg-amber-500/10 px-3 text-sm font-medium text-amber-200 transition-colors duration-300 hover:bg-amber-500/18 hover:text-amber-50 focus:outline-none focus:border-amber-400/70 focus:ring-2 focus:ring-amber-400/25'
-          }
-          aria-label="Currency selector"
-          aria-expanded={open}
-          aria-haspopup="listbox"
-        >
-          <span>{triggerLabel}</span>
-          <ChevronDown className={`h-4 w-4 transition-transform duration-200 ${open ? 'rotate-180' : ''} ${isMobile ? 'text-[#A9B3C7]' : 'text-amber-300/85'}`} />
-        </button>
-
-        {open && (
-          <div
-            className={
-              isMobile
-                ? 'absolute z-50 mt-2 w-full overflow-hidden rounded-lg border border-[rgba(244,246,250,0.14)] bg-[rgba(7,10,18,0.96)] backdrop-blur-xl'
-                : 'absolute right-0 z-50 mt-2 w-[96px] overflow-hidden rounded-2xl border border-[rgba(244,246,250,0.14)] bg-[rgba(7,10,18,0.96)] backdrop-blur-xl'
-            }
-            role="listbox"
-            aria-label="Select currency"
-          >
-            {[
-              { value: 'sek', label: 'SEK kr' },
-              { value: 'gbp', label: 'GBP £' },
-              { value: 'eur', label: 'EUR €' },
-              { value: 'usd', label: 'USD $' },
-            ].map((option) => {
-              const isActive = currency === option.value;
-              return (
-                <button
-                  key={option.value}
-                  type="button"
-                  onClick={() => {
-                    setCurrency(option.value as 'sek' | 'gbp' | 'eur' | 'usd');
-                    setOpen(false);
-                  }}
-                  className={`flex w-full items-center justify-between px-3 py-2 text-left text-sm transition-colors ${
-                    isActive
-                      ? 'bg-amber-500/20 text-amber-200'
-                      : 'text-[#F4F6FA] hover:bg-[rgba(244,246,250,0.08)]'
-                  }`}
-                  role="option"
-                  aria-selected={isActive}
-                >
-                  <span>{option.label}</span>
-                  {isActive && <span className="text-xs">✓</span>}
-                </button>
-              );
-            })}
-          </div>
-        )}
-      </div>
-    );
-  };
 
   return (
     <>
@@ -205,7 +119,7 @@ export default function Navigation() {
               type="button"
               onClick={scrollToTop}
               className="flex shrink-0 items-center pr-1 lg:pr-2"
-              aria-label="VIRON — back to top"
+              aria-label={t('nav.backToTop')}
             >
               <motion.span whileHover={{ scale: 1.04 }} whileTap={{ scale: 0.98 }} className="block">
                 <img
@@ -222,7 +136,7 @@ export default function Navigation() {
             {/* Desktop Navigation — centered in the row so logo + actions stay balanced */}
             <nav
               className="hidden lg:flex flex-1 justify-center items-center min-w-0 px-2 xl:px-4"
-              aria-label="Primary"
+              aria-label={t('nav.primary')}
             >
               <div className="flex flex-nowrap items-center justify-center gap-x-5 xl:gap-x-8">
                 {navLinks.map((link) => (
@@ -241,16 +155,14 @@ export default function Navigation() {
                   className="inline-flex items-center gap-1.5 whitespace-nowrap text-sm font-medium text-slate-400 hover:text-amber-200/95 transition-colors duration-300"
                 >
                   <HelpCircle className="w-4 h-4 shrink-0 opacity-85" aria-hidden />
-                  FAQ
+                  {t('nav.faq')}
                 </button>
               </div>
             </nav>
 
             {/* Right Side */}
             <div className="flex shrink-0 items-center gap-1.5 sm:gap-2 md:gap-2.5 lg:gap-3 ml-auto lg:ml-0">
-              {/* Currency Selector */}
-              <CurrencyDropdown />
-
+              <LanguageSwitcher />
               {/* Dashboard/Login Button - Desktop */}
               {isLoggedIn ? (
                 <div className="hidden sm:flex items-center gap-2">
@@ -258,26 +170,26 @@ export default function Navigation() {
                   <a
                     href="/promoter"
                     className="flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-full bg-[rgba(34,197,94,0.15)] border border-[rgba(34,197,94,0.3)] text-[#22C55E] hover:bg-[rgba(34,197,94,0.25)] transition-colors duration-300"
-                    title="Promoter"
-                    aria-label="Promoter dashboard"
+                    title={t('nav.promoter')}
+                    aria-label={t('nav.promoterDashboard')}
                   >
                       <TrendingUp className="w-4 h-4 shrink-0" />
-                      <span className="hidden min-[1180px]:inline text-sm font-medium whitespace-nowrap">Promoter</span>
+                      <span className="hidden min-[1180px]:inline text-sm font-medium whitespace-nowrap">{t('nav.promoter')}</span>
                     </a>
                   )}
                   <a
                     href="/dashboard"
                     className="flex items-center gap-2 px-3 sm:px-3.5 py-2 rounded-full bg-amber-500/12 border border-amber-500/35 text-amber-200 hover:bg-amber-500/22 hover:text-amber-50 hover:border-amber-400/45 transition-colors duration-300"
-                    title="Dashboard"
-                    aria-label="Dashboard"
+                    title={t('nav.dashboard')}
+                    aria-label={t('nav.dashboard')}
                   >
                     <LayoutDashboard className="w-4 h-4 shrink-0" />
-                    <span className="hidden min-[1180px]:inline text-sm font-medium whitespace-nowrap">Dashboard</span>
+                    <span className="hidden min-[1180px]:inline text-sm font-medium whitespace-nowrap">{t('nav.dashboard')}</span>
                   </a>
                   <a
                     href="/settings"
                     className="flex items-center justify-center w-10 h-10 rounded-full bg-[rgba(244,246,250,0.08)] border border-[rgba(244,246,250,0.15)] text-[#A9B3C7] hover:text-[#F4F6FA] hover:bg-[rgba(244,246,250,0.12)] transition-colors duration-300"
-                    title="Account Settings"
+                    title={t('nav.accountSettings')}
                   >
                     <Settings className="w-4 h-4" />
                   </a>
@@ -288,7 +200,7 @@ export default function Navigation() {
                   className="hidden sm:flex items-center gap-2 px-4 py-2 rounded-full bg-amber-500/12 border border-amber-500/40 text-amber-200 hover:bg-amber-500/22 hover:text-amber-50 hover:border-amber-400/55 transition-colors duration-300 shadow-[0_0_22px_rgba(234,179,8,0.14)]"
                 >
                   <User className="w-4 h-4" />
-                  <span className="text-sm font-medium">Login</span>
+                  <span className="text-sm font-medium">{t('nav.login')}</span>
                 </a>
               )}
 
@@ -329,11 +241,6 @@ export default function Navigation() {
           }`}
         >
           <div className="px-6 py-6 space-y-4">
-            <div className="pt-1">
-              <label className="block text-[11px] text-[#A9B3C7] mb-1">Currency</label>
-              <CurrencyDropdown isMobile />
-            </div>
-            
             {navLinks.map((link) => (
               <button
                 key={link.label}
@@ -350,7 +257,7 @@ export default function Navigation() {
               className="flex items-center gap-2 text-lg font-medium text-slate-400 hover:text-amber-200 transition-colors duration-300 py-2 w-full text-left"
             >
               <HelpCircle className="w-5 h-5" />
-              FAQ
+              {t('nav.faq')}
             </button>
 
             {/* Mobile Login/Dashboard Button */}
@@ -363,7 +270,7 @@ export default function Navigation() {
                     onClick={() => setIsMobileMenuOpen(false)}
                   >
                     <TrendingUp className="w-5 h-5" />
-                    Promoter Dashboard
+                    {t('nav.promoterDashboard')}
                   </a>
                 )}
                 <a
@@ -371,14 +278,14 @@ export default function Navigation() {
                   className="flex items-center gap-2 text-lg font-medium text-amber-200 hover:text-amber-100 transition-colors duration-300 py-2"
                 >
                   <LayoutDashboard className="w-5 h-5" />
-                  Dashboard
+                  {t('nav.dashboard')}
                 </a>
                 <a
                   href="/settings"
                   className="flex items-center gap-2 text-lg font-medium text-[#A9B3C7] hover:text-[#F4F6FA] transition-colors duration-300 py-2"
                 >
                   <Settings className="w-5 h-5" />
-                  Account Settings
+                  {t('nav.accountSettings')}
                 </a>
               </>
             ) : (
@@ -387,7 +294,7 @@ export default function Navigation() {
                 className="flex items-center gap-2 text-lg font-medium text-amber-200 hover:text-amber-50 transition-colors duration-300 py-2"
               >
                 <User className="w-5 h-5" />
-                Login
+                {t('nav.login')}
               </a>
             )}
           </div>

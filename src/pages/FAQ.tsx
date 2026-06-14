@@ -3,6 +3,8 @@ import { ChevronDown, Search, HelpCircle, MessageCircle } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import SEO from '@/components/SEO';
 import { Skeleton } from '@/components/ui/skeleton';
+import LanguageSwitcher from '@/components/LanguageSwitcher';
+import { useTranslation } from '@/i18n';
 
 interface FAQCategory {
   id: string;
@@ -18,6 +20,7 @@ interface FAQItem {
 }
 
 export default function FAQ() {
+  const { t } = useTranslation();
   const [categories, setCategories] = useState<FAQCategory[]>([]);
   const [faqs, setFaqs] = useState<FAQItem[]>([]);
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -95,33 +98,35 @@ export default function FAQ() {
   return (
     <div className="min-h-screen" style={{ background: '#070A12' }}>
       <SEO 
-        title="FAQ | Viron Labs - Frequently Asked Questions"
-        description="Find answers to common questions about ordering, shipping, products, and more."
+        title={t('faq.seoTitle')}
+        description={t('faq.seoDesc')}
       />
       
       <div className="absolute inset-0 grid-overlay opacity-40" />
+
+      <div className="relative z-20 flex justify-end px-6 pt-4">
+        <LanguageSwitcher />
+      </div>
       
-      <main className="relative z-10 pt-24 pb-12">
+      <main className="relative z-10 pt-12 pb-12">
         <div className="max-w-4xl mx-auto px-6">
-          {/* Header */}
           <div className="text-center mb-12">
-            <span className="eyebrow mb-4 block">SUPPORT</span>
+            <span className="eyebrow mb-4 block">{t('faq.eyebrow')}</span>
             <h1 className="text-3xl sm:text-4xl lg:text-5xl font-bold text-[#F4F6FA] mb-4">
-              Frequently Asked <span className="gradient-text">Questions</span>
+              {t('faq.title')} <span className="gradient-text">{t('faq.titleHighlight')}</span>
             </h1>
             <p className="text-[#A9B3C7] max-w-xl mx-auto">
-              Find answers to common questions about ordering, shipping, products, and more.
+              {t('faq.subtitle')}
             </p>
           </div>
 
-          {/* Search */}
           <div className="relative mb-8">
             <Search className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-[#A9B3C7]" />
             <input
               type="text"
               value={searchQuery}
               onChange={(e) => setSearchQuery(e.target.value)}
-              placeholder="Search for answers..."
+              placeholder={t('faq.searchPlaceholder')}
               className="w-full pl-12 pr-4 py-4 rounded-xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)] text-[#F4F6FA] placeholder-[#A9B3C7] focus:outline-none focus:border-[#2ED1B4]"
             />
           </div>
@@ -136,7 +141,7 @@ export default function FAQ() {
                   : 'bg-[rgba(244,246,250,0.08)] text-[#A9B3C7] hover:text-[#F4F6FA]'
               }`}
             >
-              All
+              {t('faq.all')}
             </button>
             {categories.map((cat) => (
               <button
@@ -158,7 +163,7 @@ export default function FAQ() {
             {filteredFAQs.length === 0 ? (
               <div className="text-center py-12">
                 <HelpCircle className="w-16 h-16 mx-auto text-[rgba(244,246,250,0.2)] mb-4" />
-                <p className="text-[#A9B3C7]">No questions found. Try a different search.</p>
+                <p className="text-[#A9B3C7]">{t('faq.noResults')}</p>
               </div>
             ) : (
               filteredFAQs.map((faq) => (
@@ -192,13 +197,13 @@ export default function FAQ() {
           {/* Contact CTA */}
           <div className="mt-12 p-8 rounded-2xl bg-gradient-to-br from-[rgba(46,209,180,0.1)] to-[rgba(139,92,246,0.1)] border border-[rgba(46,209,180,0.2)] text-center">
             <MessageCircle className="w-12 h-12 mx-auto text-[#2ED1B4] mb-4" />
-            <h3 className="text-xl font-semibold text-[#F4F6FA] mb-2">Still have questions?</h3>
-            <p className="text-[#A9B3C7] mb-6">Can't find the answer you're looking for? Contact our support team.</p>
+            <h3 className="text-xl font-semibold text-[#F4F6FA] mb-2">{t('faq.stillQuestions')}</h3>
+            <p className="text-[#A9B3C7] mb-6">{t('faq.stillQuestionsDesc')}</p>
             <a 
               href="/contact" 
               className="inline-flex items-center gap-2 px-6 py-3 rounded-xl bg-[#2ED1B4] text-[#070A12] font-semibold hover:bg-[#25b89d] transition-colors"
             >
-              Contact Support
+              {t('faq.contactSupport')}
             </a>
           </div>
         </div>
