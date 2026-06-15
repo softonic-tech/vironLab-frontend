@@ -211,7 +211,7 @@ export const admin = {
     uploading: 'Laddar upp…',
     uploadFailed: 'Uppladdning misslyckades: {{message}}',
     firstDosage: 'Första doseringsvariant',
-    originalPrice: 'Ursprungspris (SEK) *',
+    originalPrice: 'Försäljningspris (SEK) *',
     nameSlugRequired: 'Namn och slug krävs.',
     dosageRequired: 'Minst en dosering krävs.',
     failAdd: 'Kunde inte lägga till produkt.',

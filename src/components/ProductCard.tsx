@@ -17,44 +17,16 @@ import {
 } from "lucide-react";
 import { useCart } from "@/context/CartContext";
 import { supabase } from "@/lib/supabase";
-import { useCurrency } from "@/context/CurrencyContext";
+import {
+  formatSek,
+  getStorefrontPrice,
+  getStorefrontListPrice,
+  getStorefrontSavings,
+  getStorefrontBundleUnitPrice,
+  getStorefrontBundleTotal,
+} from "@/utils/pricing";
+import { formatDosageLabel, getDefaultStorefrontDosage } from "@/products";
 import { useTranslation } from "@/i18n";
-
-/*
-  Replace these stubs with your actual imports:
-  import type { Product } from '@/products';
-  import { useCart } from '@/context/CartContext';
-  import { getStorefrontPrice, ... } from '@/utils/pricing';
-  import { formatDosageLabel, getDefaultStorefrontDosage } from '@/products';
-*/
-const formatDosageLabel = (mg, unit) => `${mg}${unit ?? "mg"}`;
-const getStorefrontPrice = (o, e, p) => (e ? +(o * (1 - p / 100)).toFixed(2) : o);
-const getStorefrontSavings = (o, e, p) => (e ? +(o * (p / 100)).toFixed(2) : 0);
-const getBundleLabel = (q, t) => t('product.buyBundle', { qty: q });
-const getStorefrontBundleUnitPrice = (o, e, m, b) => {
-  const base = e ? o * (1 - m / 100) : o;
-  return +(base * (1 - b / 100)).toFixed(2);
-};
-const getStorefrontBundleTotal = (o, q, e, m, b) =>
-  +(getStorefrontBundleUnitPrice(o, e, m, b) * q).toFixed(2);
-// Default variant shown on the card:
-//   1. 5mg in-stock if available
-//   2. otherwise the smallest in-stock dosage
-//   3. otherwise the smallest overall dosage
-const getDefaultStorefrontDosage = (p) => {
-  const dosages = p.dosages ?? [];
-  if (dosages.length === 0) return null;
-  const toNum = (d) => {
-    const n = typeof d.mg === "number" ? d.mg : parseFloat(String(d.mg));
-    return Number.isFinite(n) ? n : Number.POSITIVE_INFINITY;
-  };
-  const isMgUnit = (d) => (d.unit ?? "MG") === "MG";
-  const fiveMg = dosages.find((d) => d.inStock && isMgUnit(d) && toNum(d) === 5);
-  if (fiveMg) return fiveMg;
-  const inStockSorted = dosages.filter((d) => d.inStock).sort((a, b) => toNum(a) - toNum(b));
-  if (inStockSorted.length > 0) return inStockSorted[0];
-  return [...dosages].sort((a, b) => toNum(a) - toNum(b))[0] ?? null;
-};
 
 export default function ProductCard({ product, discountSettings = {} }) {
   const { t } = useTranslation();
@@ -76,7 +48,6 @@ export default function ProductCard({ product, discountSettings = {} }) {
   const [waitlistMsg, setWaitlistMsg] = useState("");
   const ddRef = useRef(null);
   const { addItem } = useCart();
-  const { format } = useCurrency();
 
   const submitWaitlist = async (e) => {
     e?.preventDefault?.();
@@ -235,8 +206,10 @@ export default function ProductCard({ product, discountSettings = {} }) {
   const b2 = discountSettings.buy2_percentage ?? 5;
   const b3 = discountSettings.buy3_percentage ?? 10;
 
-  const price = getStorefrontPrice(sel.originalPrice, dEn, dP);
-  const save = getStorefrontSavings(sel.originalPrice, dEn, dP);
+  const sellPrice = sel.originalPrice;
+  const listPrice = getStorefrontListPrice(sellPrice, dEn, dP);
+  const price = getStorefrontPrice(sellPrice, dEn, dP);
+  const save = getStorefrontSavings(sellPrice, dEn, dP);
 
   const doAdd = (e?: React.MouseEvent, qty = 1) => {
     if (e) { e.preventDefault(); e.stopPropagation(); }
@@ -245,15 +218,15 @@ export default function ProductCard({ product, discountSettings = {} }) {
       qty === 1
         ? price
         : qty === 2
-          ? getStorefrontBundleUnitPrice(sel.originalPrice, dEn, dP, b2)
-          : getStorefrontBundleUnitPrice(sel.originalPrice, dEn, dP, b3);
+          ? getStorefrontBundleUnitPrice(sellPrice, dEn, dP, b2)
+          : getStorefrontBundleUnitPrice(sellPrice, dEn, dP, b3);
     addItem({
       productId: product.id,
       name: product.name,
       dosage: formatDosageLabel(sel.mg, sel.unit),
-      basePrice: sel.originalPrice,
+      basePrice: sellPrice,
       price: unitPrice,
-      originalPrice: sel.originalPrice,
+      originalPrice: listPrice,
       quantity: qty,
       image: product.image ?? '',
     });
@@ -262,11 +235,11 @@ export default function ProductCard({ product, discountSettings = {} }) {
   };
 
   const tiers = [
-    { q: 2, l: getBundleLabel(2, t), pct: b2, u: getStorefrontBundleUnitPrice(sel.originalPrice, dEn, dP, b2), t: getStorefrontBundleTotal(sel.originalPrice, 2, dEn, dP, b2) },
-    { q: 3, l: getBundleLabel(3, t), pct: b3, u: getStorefrontBundleUnitPrice(sel.originalPrice, dEn, dP, b3), t: getStorefrontBundleTotal(sel.originalPrice, 3, dEn, dP, b3) },
+    { q: 2, l: t('product.buyBundle', { qty: 2 }), pct: b2, u: getStorefrontBundleUnitPrice(sellPrice, dEn, dP, b2), t: getStorefrontBundleTotal(sellPrice, 2, dEn, dP, b2) },
+    { q: 3, l: t('product.buyBundle', { qty: 3 }), pct: b3, u: getStorefrontBundleUnitPrice(sellPrice, dEn, dP, b3), t: getStorefrontBundleTotal(sellPrice, 3, dEn, dP, b3) },
   ];
-  const displayPrice = format(price);
-  const displayOriginal = format(sel.originalPrice);
+  const displayPrice = formatSek(price);
+  const displayOriginal = formatSek(listPrice);
   const showB = (product.bundlePricing?.length ?? 0) > 0;
   const moreInfo = product.moreInfo?.trim();
 
@@ -512,17 +485,17 @@ export default function ProductCard({ product, discountSettings = {} }) {
               <div className="pc-bun-h"><Zap size={9} color="#FCD34D" /><span>{t('product.bundleSave')}</span></div>
               <div className="pc-bun-list">
                 {tiers.map((tr) => {
-                  const sv = (sel.originalPrice - tr.u) * tr.q;
+                  const sv = price * tr.q - tr.t;
                   return (
                     <button key={tr.q} className="pc-bun-r" disabled={!sel.inStock} onClick={(e) => doAdd(e, tr.q)}>
                       <span className="pc-bun-q">{tr.q}x</span>
                       <div className="pc-bun-m">
                         <span className="pc-bun-l">{tr.l}</span>
-                        <span className="pc-bun-u">{format(tr.u)}/ea</span>
+                        <span className="pc-bun-u">{formatSek(tr.u)}/ea</span>
                       </div>
                       <div className="pc-bun-e">
-                        <span className="pc-bun-t">{format(tr.t)}</span>
-                        <span className="pc-bun-s">{t('product.saveAmount', { amount: format(sv) })}</span>
+                        <span className="pc-bun-t">{formatSek(tr.t)}</span>
+                        <span className="pc-bun-s">{t('product.saveAmount', { amount: formatSek(sv) })}</span>
                       </div>
                     </button>
                   );

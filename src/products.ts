@@ -40,7 +40,7 @@ export interface Dosage {
    * - For legacy data, `mg` may already include unit text in the string.
    */
   unit?: DosageUnit;
-  /** Base (original/undiscounted) price. Discounted prices are calculated via src/utils/pricing.ts. */
+  /** Sell price stored in the database (SEK). List price for discounts is derived at runtime. */
   originalPrice: number;
   inStock: boolean;
   /**

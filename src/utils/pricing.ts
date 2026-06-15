@@ -1,27 +1,61 @@
 /**
  * Centralized pricing utility.
  * All bundle discount calculations must go through this file.
- * Never store computed prices in the database — only originalPrice is persisted.
+ *
+ * The database stores the **sell price** (what the customer pays for Buy 1).
+ * When the storefront discount badge is enabled, we derive a higher list price
+ * so "X% off" lands on the sell price.
  */
 
 /** Discount percentage (as a decimal) for each supported bundle quantity. */
 export const BUNDLE_DISCOUNTS: Record<number, number> = {
-  1: 0.20,  // Buy 1 → 20% off
-  2: 0.25,  // Buy 2 → 25% off
-  3: 0.30,  // Buy 3 → 30% off
-  5: 0.36,  // Buy 5 → 36% off
-  10: 0.44, // Buy 10 → 44% off
+  1: 0.20,  // legacy label — Buy 1 uses sell price directly
+  2: 0.25,  // Buy 2 → 25% off sell (admin preview tiers)
+  3: 0.30,  // Buy 3 → 30% off sell
+  5: 0.36,  // Buy 5 → 36% off sell
+  10: 0.44, // Buy 10 → 44% off sell
 };
 
 const round2 = (n: number) => Math.round(n * 100) / 100;
 
+/** Read sell price from a dosage row returned by the API (already SEK). */
+export function resolveDosageSekPrice(row: {
+  original_price?: number | null;
+  originalPrice?: number | null;
+  price?: number | null;
+}): number {
+  const n = row.original_price ?? row.originalPrice ?? row.price ?? 0;
+  return round2(Number(n));
+}
+
+/** Format an amount that is already in SEK — no currency conversion. */
+export function formatSek(amount: number): string {
+  return `${round2(amount).toFixed(2)} kr`;
+}
+
 /**
- * Calculate the per-unit discounted price for a given quantity.
- * Falls back to the single-unit discount for unsupported quantities.
+ * Inflated list price shown struck-through when a storefront discount is active.
+ * sellPrice / (1 - discount%) so applying the discount returns the sell price.
  */
-export function calculatePrice(originalPrice: number, quantity: number): number {
+export function getStorefrontListPrice(
+  sellPrice: number,
+  discountEnabled: boolean,
+  discountPercentage: number,
+): number {
+  if (!discountEnabled || !discountPercentage) return sellPrice;
+  const factor = 1 - discountPercentage / 100;
+  if (factor <= 0) return sellPrice;
+  return round2(sellPrice / factor);
+}
+
+/**
+ * Calculate the per-unit price for admin bundle preview tiers.
+ * Buy 1 is the sell price; higher quantities use BUNDLE_DISCOUNTS off sell.
+ */
+export function calculatePrice(sellPrice: number, quantity: number): number {
+  if (quantity === 1) return round2(sellPrice);
   const discount = BUNDLE_DISCOUNTS[quantity] ?? BUNDLE_DISCOUNTS[1];
-  return round2(originalPrice * (1 - discount));
+  return round2(sellPrice * (1 - discount));
 }
 
 export interface BundlePrices {
@@ -33,15 +67,15 @@ export interface BundlePrices {
 }
 
 /**
- * Return per-unit prices for all supported bundle tiers.
+ * Return per-unit prices for admin bundle preview tiers (sell price = Buy 1).
  */
-export function getBundlePricing(originalPrice: number): BundlePrices {
+export function getBundlePricing(sellPrice: number): BundlePrices {
   return {
-    buy1:  calculatePrice(originalPrice, 1),
-    buy2:  calculatePrice(originalPrice, 2),
-    buy3:  calculatePrice(originalPrice, 3),
-    buy5:  calculatePrice(originalPrice, 5),
-    buy10: calculatePrice(originalPrice, 10),
+    buy1:  calculatePrice(sellPrice, 1),
+    buy2:  calculatePrice(sellPrice, 2),
+    buy3:  calculatePrice(sellPrice, 3),
+    buy5:  calculatePrice(sellPrice, 5),
+    buy10: calculatePrice(sellPrice, 10),
   };
 }
 
@@ -61,60 +95,51 @@ export function getDiscountLabel(quantity: number): string {
 }
 
 /**
- * Calculate the storefront display price using the admin-configured global discount.
- * If discount is disabled, returns the original price unchanged.
+ * Storefront sell price — equals the database price (no reduction).
  */
 export function getStorefrontPrice(
-  originalPrice: number,
-  discountEnabled: boolean,
-  discountPercentage: number,
+  sellPrice: number,
+  _discountEnabled?: boolean,
+  _discountPercentage?: number,
 ): number {
-  if (!discountEnabled) return originalPrice;
-  return round2(originalPrice * (1 - discountPercentage / 100));
+  return round2(sellPrice);
 }
 
 /**
- * Calculate the savings amount for storefront display.
- * Returns 0 if discount is disabled.
+ * Savings shown on the product card (list price − sell price).
  */
 export function getStorefrontSavings(
-  originalPrice: number,
+  sellPrice: number,
   discountEnabled: boolean,
   discountPercentage: number,
 ): number {
   if (!discountEnabled) return 0;
-  return round2(originalPrice * (discountPercentage / 100));
+  const list = getStorefrontListPrice(sellPrice, discountEnabled, discountPercentage);
+  return round2(list - sellPrice);
 }
 
 /**
  * Storefront bundle pricing model:
- * 1) apply the global storefront discount (Buy 1)
- * 2) apply an additional "extra" discount for Buy 2 / Buy 3
- *
- * Example:
- * - Buy1 = 20% off original → 880 kr
- * - Buy2 total = (880 kr × 2) - extra 5%
- * - Buy3 total = (880 kr × 3) - extra 10%
+ * Extra Buy 2 / Buy 3 % off the sell price.
  */
 export function getStorefrontBundleUnitPrice(
-  originalPrice: number,
-  discountEnabled: boolean,
-  discountPercentage: number,
+  sellPrice: number,
+  _discountEnabled: boolean,
+  _discountPercentage: number,
   extraPercentageOff: number,
 ): number {
-  const buy1Unit = getStorefrontPrice(originalPrice, discountEnabled, discountPercentage);
-  return round2(buy1Unit * (1 - extraPercentageOff / 100));
+  return round2(sellPrice * (1 - extraPercentageOff / 100));
 }
 
 export function getStorefrontBundleTotal(
-  originalPrice: number,
+  sellPrice: number,
   quantity: number,
   discountEnabled: boolean,
   discountPercentage: number,
   extraPercentageOff: number,
 ): number {
   return round2(
-    getStorefrontBundleUnitPrice(originalPrice, discountEnabled, discountPercentage, extraPercentageOff) * quantity
+    getStorefrontBundleUnitPrice(sellPrice, discountEnabled, discountPercentage, extraPercentageOff) * quantity
   );
 }
 
@@ -155,7 +180,7 @@ export type StorefrontDiscountParams = {
  * then extra Buy 2 / Buy 3 % off the already-discounted unit). Qty ≥ 3 uses the Buy 3 extra rate.
  */
 export function getCartUnitPrice(
-  originalPrice: number,
+  sellPrice: number,
   quantity: number,
   s: StorefrontDiscountParams,
 ): number {
@@ -164,15 +189,15 @@ export function getCartUnitPrice(
   const b2 = s.buy2_percentage ?? 5;
   const b3 = s.buy3_percentage ?? 10;
   if (quantity <= 0) return 0;
-  if (quantity === 1) return getStorefrontPrice(originalPrice, dEn, dP);
-  if (quantity === 2) return getStorefrontBundleUnitPrice(originalPrice, dEn, dP, b2);
-  return getStorefrontBundleUnitPrice(originalPrice, dEn, dP, b3);
+  if (quantity === 1) return getStorefrontPrice(sellPrice, dEn, dP);
+  if (quantity === 2) return getStorefrontBundleUnitPrice(sellPrice, dEn, dP, b2);
+  return getStorefrontBundleUnitPrice(sellPrice, dEn, dP, b3);
 }
 
 /** % off list price per unit — for cart badges (vs struck-through list price). */
-export function getListPriceDiscountPercent(originalPrice: number, unitPrice: number): number {
-  if (!originalPrice || originalPrice <= 0 || unitPrice > originalPrice) return 0;
-  return Math.max(0, Math.round((1 - unitPrice / originalPrice) * 100));
+export function getListPriceDiscountPercent(listPrice: number, unitPrice: number): number {
+  if (!listPrice || listPrice <= 0 || unitPrice > listPrice) return 0;
+  return Math.max(0, Math.round((1 - unitPrice / listPrice) * 100));
 }
 
 /**

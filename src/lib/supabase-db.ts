@@ -2,7 +2,7 @@ import { supabase } from './supabase';
 import { CONFIG } from './config';
 import { generateLocalOrderNumber } from '@/utils/order-number';
 import type { Product } from '@/products';
-import { getBundlePricing } from '@/utils/pricing';
+import { getBundlePricing, resolveDosageSekPrice } from '@/utils/pricing';
 import type { PointType } from '@/utils/points';
 import {
   cached, invalidateCache,
@@ -39,6 +39,7 @@ export interface DosageFromDB {
   // others store as quoted camelCase `"originalPrice"`.
   original_price?: number | null;
   originalPrice?: number | null;
+  price?: number | null;
   in_stock: boolean;
   stock_quantity: number;
 }
@@ -146,7 +147,7 @@ const transformProductFromDB = (dbProduct: ProductFromDB): Product => {
   const dosages = dosageRows.map((d: DosageFromDB) => ({
     mg: d.mg,
     unit: (d.unit ?? 'MG') as any,
-    originalPrice: Number(d.original_price ?? d.originalPrice ?? 0),
+    originalPrice: resolveDosageSekPrice(d),
     inStock: d.in_stock,
   }));
 

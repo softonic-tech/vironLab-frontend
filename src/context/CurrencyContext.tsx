@@ -1,4 +1,5 @@
 import React, { createContext, useContext, useMemo } from 'react';
+import { formatSek } from '@/utils/pricing';
 
 export type AppCurrency = 'sek';
 
@@ -15,7 +16,7 @@ const CurrencyContext = createContext<CurrencyContextType | undefined>(undefined
 export function CurrencyProvider({ children }: { children: React.ReactNode }) {
   const value = useMemo<CurrencyContextType>(() => {
     const convert = (amountSek: number) => Math.round(Number(amountSek) * 100) / 100;
-    const format = (amountSek: number) => `${convert(amountSek).toFixed(2)} kr`;
+    const format = (amountSek: number) => formatSek(amountSek);
     return { currency: 'sek', rate: 1, symbol: 'kr ', convert, format };
   }, []);
 

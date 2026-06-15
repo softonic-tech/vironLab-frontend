@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { formatDosageLabel, getDefaultStorefrontDosage } from '@/products';
 import { loadEssentialProductsFromSupabase } from '@/lib/supabase-db';
 import { getSiteSetting, DEFAULT_DISCOUNT_SETTINGS } from '@/lib/settings';
-import { getStorefrontPrice, getListPriceDiscountPercent } from '@/utils/pricing';
+import { getStorefrontPrice, getStorefrontListPrice, getStorefrontSavings, getListPriceDiscountPercent } from '@/utils/pricing';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useTranslation } from '@/i18n';
 
@@ -66,7 +66,7 @@ export default function CartDrawer() {
       productId: product.productId,
       name: product.name,
       dosage: product.dosage,
-      basePrice: product.originalPrice,
+      basePrice: product.unitPrice,
       price: product.unitPrice,
       originalPrice: product.originalPrice,
       quantity: 1,
@@ -96,8 +96,10 @@ export default function CartDrawer() {
           if (!product.dosages?.length) continue;
           const dosage = getDefaultStorefrontDosage(product);
           if (!dosage) continue;
-          const unitPrice = getStorefrontPrice(dosage.originalPrice, discountEnabled, discountPercentage);
-          const savings = Math.max(0, Math.round((dosage.originalPrice - unitPrice) * 100) / 100);
+          const sellPrice = dosage.originalPrice;
+          const unitPrice = getStorefrontPrice(sellPrice, discountEnabled, discountPercentage);
+          const listPrice = getStorefrontListPrice(sellPrice, discountEnabled, discountPercentage);
+          const savings = getStorefrontSavings(sellPrice, discountEnabled, discountPercentage);
           list.push({
             productId: product.id,
             name: product.name,
@@ -105,7 +107,7 @@ export default function CartDrawer() {
             image: product.image,
             dosage: formatDosageLabel(dosage.mg, dosage.unit),
             inStock: dosage.inStock,
-            originalPrice: dosage.originalPrice,
+            originalPrice: listPrice,
             unitPrice,
             discountEnabled,
             discountPercentage,

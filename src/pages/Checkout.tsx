@@ -34,6 +34,7 @@ import {
 import { useCurrency } from '@/context/CurrencyContext';
 import LanguageSwitcher from '@/components/LanguageSwitcher';
 import { useTranslation } from '@/i18n';
+import { CHECKOUT_COUNTRY, isSwedenShippingRegion } from '@/lib/shipping';
 
 interface ShippingMethod {
   id: string;
@@ -49,140 +50,11 @@ const getShippingMethods = (t: (key: string) => string): ShippingMethod[] => [
 
 const FREE_SHIPPING_THRESHOLD_SEK = 2500;
 
-const countryRegionOptions = [
-  'United Kingdom',
-  'Ireland',
-  'United States',
-  'Canada',
-  'Australia',
-  'New Zealand',
-  'Afghanistan',
-  'Albania',
-  'Algeria',
-  'Andorra',
-  'Angola',
-  'Antigua and Barbuda',
-  'Argentina',
-  'Armenia',
-  'Austria',
-  'Azerbaijan',
-  'Bahamas',
-  'Bahrain',
-  'Bangladesh',
-  'Barbados',
-  'Belarus',
-  'Belgium',
-  'Belize',
-  'Benin',
-  'Bhutan',
-  'Bolivia',
-  'Bosnia and Herzegovina',
-  'Botswana',
-  'Brazil',
-  'Brunei',
-  'Bulgaria',
-  'Burkina Faso',
-  'Burundi',
-  'Cambodia',
-  'Cameroon',
-  'Cape Verde',
-  'Central African Republic',
-  'Chad',
-  'Chile',
-  'China',
-  'Colombia',
-  'Comoros',
-  'Congo',
-  'Costa Rica',
-  'Croatia',
-  'Cuba',
-  'Cyprus',
-  'Czech Republic',
-  'Denmark',
-  'Djibouti',
-  'Dominica',
-  'Dominican Republic',
-  'Ecuador',
-  'Egypt',
-  'El Salvador',
-  'Estonia',
-  'Ethiopia',
-  'Fiji',
-  'Finland',
-  'France',
-  'Georgia',
-  'Germany',
-  'Ghana',
-  'Greece',
-  'Grenada',
-  'Guatemala',
-  'Guinea',
-  'Guyana',
-  'Haiti',
-  'Honduras',
-  'Hong Kong',
-  'Hungary',
-  'Iceland',
-  'India',
-  'Indonesia',
-  'Iran',
-  'Iraq',
-  'Israel',
-  'Italy',
-  'Jamaica',
-  'Japan',
-  'Jordan',
-  'Kazakhstan',
-  'Kenya',
-  'Kuwait',
-  'Latvia',
-  'Lebanon',
-  'Lithuania',
-  'Luxembourg',
-  'Malaysia',
-  'Maldives',
-  'Malta',
-  'Mexico',
-  'Monaco',
-  'Morocco',
-  'Nepal',
-  'Netherlands',
-  'Nigeria',
-  'Norway',
-  'Pakistan',
-  'Panama',
-  'Peru',
-  'Philippines',
-  'Poland',
-  'Portugal',
-  'Qatar',
-  'Romania',
-  'Saudi Arabia',
-  'Serbia',
-  'Singapore',
-  'Slovakia',
-  'Slovenia',
-  'South Africa',
-  'South Korea',
-  'Spain',
-  'Sri Lanka',
-  'Sweden',
-  'Switzerland',
-  'Taiwan',
-  'Thailand',
-  'Tunisia',
-  'Turkey',
-  'Ukraine',
-  'United Arab Emirates',
-  'Uruguay',
-  'Vietnam',
-].sort((a, b) => a.localeCompare(b));
-
 function formatShippingForEmail(
   a: { firstName: string; lastName: string; address: string; apartment: string; suburb: string; state: string; postcode: string; phone: string }
 ): string {
   const name = [a.firstName, a.lastName].filter(Boolean).join(' ').trim();
-  const line3 = [a.suburb, a.state, a.postcode].filter(Boolean).join(' ').trim();
+  const line3 = [a.suburb, CHECKOUT_COUNTRY, a.postcode].filter(Boolean).join(' ').trim();
   return [name, a.address, a.apartment, line3, a.phone].filter(Boolean).join(', ');
 }
 
@@ -270,7 +142,7 @@ export default function Checkout() {
     address: '',
     apartment: '',
     suburb: '',
-    state: '',
+    state: CHECKOUT_COUNTRY,
     postcode: '',
     phone: ''
   });
@@ -411,8 +283,15 @@ export default function Checkout() {
     setSubmitError(null);
     setOrderEmailNotice(null);
 
+    if (!isSwedenShippingRegion(shippingAddress.state)) {
+      setSubmitError(t('checkout.swedenOnly'));
+      setIsSubmitting(false);
+      return;
+    }
+
     const finalOrderTotal = paidItemsTotal + shippingCost - pointsDiscount - affiliateDiscountAmount;
     const shippingCombined = `${shippingAddress.address}${shippingAddress.apartment ? ', ' + shippingAddress.apartment : ''}`;
+    const shippingCountry = CHECKOUT_COUNTRY;
 
     try {
       if (CONFIG.PAYMENT_PROVIDER === 'stripe') {
@@ -425,7 +304,7 @@ export default function Checkout() {
           customer_phone: shippingAddress.phone,
           shipping_address: shippingCombined,
           shipping_suburb: shippingAddress.suburb,
-          shipping_state: shippingAddress.state,
+          shipping_state: shippingCountry,
           shipping_postcode: shippingAddress.postcode,
           shipping_method: selectedShipping,
           shipping_cost: shippingCost,
@@ -468,7 +347,7 @@ export default function Checkout() {
         customer_phone: shippingAddress.phone,
         shipping_address: shippingCombined,
         shipping_suburb: shippingAddress.suburb,
-        shipping_state: shippingAddress.state,
+        shipping_state: shippingCountry,
         shipping_postcode: shippingAddress.postcode,
         shipping_method: selectedShipping,
         subtotal: paidItemsTotal,
@@ -886,6 +765,7 @@ export default function Checkout() {
               <MapPin className="w-3.5 h-3.5 text-[#8B5CF6]" />
               {t('checkout.delivery')}
             </h2>
+            <p className="text-[10px] text-[#A9B3C7] mb-2">{t('checkout.swedenOnly')}</p>
             <div className="space-y-2">
               <div className="grid grid-cols-2 gap-2">
                 <input 
@@ -932,21 +812,17 @@ export default function Checkout() {
                   autoComplete="postal-code"
                 />
               </div>
-              <div className="grid grid-cols-2 gap-2">
-                <select
-                  value={shippingAddress.state}
-                  onChange={(e) => setShippingAddress({...shippingAddress, state: e.target.value})}
-                  required
-                  className="w-full px-3 py-2 rounded-lg bg-black/30 border border-white/10 text-white text-xs focus:border-[#2ED1B4] outline-none"
-                  autoComplete="country-name"
-                >
-                  <option value="">{t('checkout.countryRegion')}</option>
-                  {countryRegionOptions.map((region) => (
-                    <option key={region} value={region}>
-                      {region}
-                    </option>
-                  ))}
-                </select>
+              <div className="grid grid-cols-1 gap-2">
+                <div>
+                  <label className="block text-[10px] text-[#A9B3C7] mb-1">{t('checkout.country')}</label>
+                  <input
+                    type="text"
+                    value={t('checkout.sweden')}
+                    readOnly
+                    tabIndex={-1}
+                    className="w-full px-3 py-2 rounded-lg bg-black/20 border border-white/10 text-[#A9B3C7] text-xs cursor-not-allowed"
+                  />
+                </div>
                 <input 
                   type="tel" 
                   value={shippingAddress.phone} 
