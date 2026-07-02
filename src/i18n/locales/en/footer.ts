@@ -21,6 +21,7 @@ export const footer = {
   ourStandards: 'Our standards',
   reconstitutionGuide: 'Reconstitution guide',
   support: 'Support',
+  emailSupport: 'Email support',
   trackOrder: 'Track order',
   shipping: 'Shipping',
   legal: 'Legal',

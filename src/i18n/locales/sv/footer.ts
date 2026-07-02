@@ -21,6 +21,7 @@ export const footer = {
   ourStandards: 'Våra standarder',
   reconstitutionGuide: 'Rekonstitutionsguide',
   support: 'Support',
+  emailSupport: 'E-postsupport',
   trackOrder: 'Spåra order',
   shipping: 'Frakt',
   legal: 'Juridiskt',

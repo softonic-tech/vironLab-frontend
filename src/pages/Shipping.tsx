@@ -1,5 +1,6 @@
 import { ArrowLeft, Truck, MapPin, Globe, Mail } from 'lucide-react';
 import PageTopBar from '@/components/PageTopBar';
+import { CONFIG } from '@/lib/config';
 import { useTranslation } from '@/i18n';
 
 export default function Shipping() {
@@ -217,10 +218,10 @@ export default function Shipping() {
                 <div className="flex items-center gap-3 p-4 rounded-xl bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.08)]">
                   <Mail className="w-5 h-5 text-[#2ED1B4]" />
                   <a 
-                    href="mailto:contact@vironlabs.com" 
+                    href={`mailto:${CONFIG.CONTACT_EMAIL}`} 
                     className="text-[#F4F6FA] hover:text-[#2ED1B4] transition-colors"
                   >
-                    contact@vironlabs.com
+                    {CONFIG.CONTACT_EMAIL}
                   </a>
                 </div>
               </section>

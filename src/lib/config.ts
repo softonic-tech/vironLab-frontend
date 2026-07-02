@@ -20,8 +20,8 @@ export const CONFIG = {
   RESEND_API_KEY: import.meta.env.VITE_RESEND_API_KEY || '',
   FROM_EMAIL: import.meta.env.VITE_FROM_EMAIL || 'orders@vironlabs.com',
   /** Public-facing contact email shown on Contact pages and legal footers. Update when new inbox is ready. */
-  CONTACT_EMAIL: import.meta.env.VITE_CONTACT_EMAIL || 'contact@vironlabs.com',
-  SUPPORT_EMAIL: import.meta.env.VITE_CONTACT_EMAIL || 'support@vironlabs.com',
+  CONTACT_EMAIL: import.meta.env.VITE_CONTACT_EMAIL || 'vironlabs@gmail.com',
+  SUPPORT_EMAIL: import.meta.env.VITE_CONTACT_EMAIL || 'vironlabs@gmail.com',
   /**
    * When false (default), transactional email uses branded HTML from code — not `email_templates` body.
    * Set VITE_EMAIL_USE_SUPABASE_HTML_TEMPLATES=true only if you maintain HTML in Supabase and want that instead.

@@ -93,12 +93,10 @@ export default function CheckoutSuccess() {
         </Link>
 
         <a
-          href={CONFIG.SOCIAL.TELEGRAM}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="w-full py-3 rounded-xl bg-[#0088cc] text-white font-semibold text-center flex items-center justify-center gap-2 mb-3"
+          href={`mailto:${CONFIG.CONTACT_EMAIL}`}
+          className="w-full py-3 rounded-xl bg-amber-500/90 text-[#070A12] font-semibold text-center flex items-center justify-center gap-2 mb-3 hover:bg-amber-400 transition-colors"
         >
-          {t('checkout.supportTelegram')}
+          {t('checkout.supportEmail')}
         </a>
 
         <Link

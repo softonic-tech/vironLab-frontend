@@ -40,7 +40,6 @@ export function wrapVironLabsEmail(opts: WrapOpts): string {
   const subline = opts.subline ? escapeHtml(opts.subline) : '';
   const site = escapeHtml(CONFIG.SITE_URL.replace(/\/$/, ''));
   const support = escapeHtml(CONFIG.SUPPORT_EMAIL);
-  const telegram = escapeHtml(CONFIG.SOCIAL.TELEGRAM || '');
 
   return `<!DOCTYPE html>
 <html lang="en">
@@ -76,7 +75,6 @@ export function wrapVironLabsEmail(opts: WrapOpts): string {
               <p style="margin:0 0 8px;font-size:12px;color:${C.muted};text-align:center;line-height:1.5;">
                 Questions? Reply to this email or reach us at<br>
                 <a href="mailto:${support}" style="color:${C.teal};text-decoration:none;font-weight:600;">${support}</a>
-                ${telegram ? ` · <a href="${telegram}" style="color:${C.teal};text-decoration:none;font-weight:600;">Telegram</a>` : ''}
               </p>
               <p style="margin:0;font-size:11px;color:${C.muted};opacity:0.85;text-align:center;">
                 <a href="${site}" style="color:${C.muted};text-decoration:underline;">${site}</a>

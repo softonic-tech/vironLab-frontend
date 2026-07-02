@@ -2,6 +2,7 @@ import { useEffect, useRef, useState } from 'react';
 import { motion, useInView } from 'framer-motion';
 import { Mail, ArrowRight, Shield, Beaker, CreditCard, Hexagon } from 'lucide-react';
 import { getSiteSetting, DEFAULT_SUPPORT_LINKS } from '@/lib/settings';
+import { CONFIG } from '@/lib/config';
 import { fadeUp, staggerContainer } from '@/components/landing/motion';
 import { useTranslation } from '@/i18n';
 
@@ -16,15 +17,11 @@ export default function Footer() {
   const inViewHead = useInView(headlineRef, { once: true, margin: '-10%' });
   const linksInView = useInView(footerLinksRef, { once: true, margin: '-8%' });
 
-  const [telegramLink, setTelegramLink] = useState(DEFAULT_SUPPORT_LINKS.telegram_link);
   const [whatsappLink, setWhatsappLink] = useState(DEFAULT_SUPPORT_LINKS.whatsapp_link);
 
   useEffect(() => {
     (async () => {
       try {
-        const telegramVal = await getSiteSetting('telegram_link', { url: DEFAULT_SUPPORT_LINKS.telegram_link });
-        setTelegramLink((telegramVal as { url?: string })?.url || DEFAULT_SUPPORT_LINKS.telegram_link);
-
         const whatsappVal = await getSiteSetting('whatsapp_link', { url: DEFAULT_SUPPORT_LINKS.whatsapp_link });
         setWhatsappLink((whatsappVal as { url?: string })?.url || '');
       } catch (_) {
@@ -141,7 +138,7 @@ export default function Footer() {
                 <>
                   <li><a href="/track-order" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('footer.trackOrder')}</a></li>
                   <li><a href="/contact-info" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('common.contact')}</a></li>
-                  <li><a href={telegramLink} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">Telegram</a></li>
+                  <li><a href={`mailto:${CONFIG.CONTACT_EMAIL}`} className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{CONFIG.CONTACT_EMAIL}</a></li>
                   {whatsappLink ? (
                     <li><a href={whatsappLink} target="_blank" rel="noopener noreferrer" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">WhatsApp</a></li>
                   ) : null}
@@ -182,8 +179,8 @@ export default function Footer() {
                   draggable={false}
                 />
                 <div className="flex items-center gap-2">
-                <a href={telegramLink} target="_blank" rel="noopener noreferrer" className={socialBtn} aria-label="Telegram">
-                  <svg viewBox="0 0 24 24" className="h-4 w-4 fill-current" aria-hidden><path d="M11.944 0A12 12 0 0 0 0 12a12 12 0 0 0 12 12 12 12 0 0 0 12-12A12 12 0 0 0 12 0a12 12 0 0 0-.056 0zm4.962 7.224c.1-.002.321.023.465.14a.506.506 0 0 1 .171.325c.016.093.036.306.02.472-.18 1.898-.962 6.502-1.36 8.627-.168.9-.499 1.201-.82 1.23-.696.065-1.225-.46-1.9-.902-1.056-.693-1.653-1.124-2.678-1.8-1.185-.78-.417-1.21.258-1.91.177-.184 3.247-2.977 3.307-3.23.007-.032.014-.147-.056-.207s-.174-.041-.249-.024c-.106.024-1.793 1.14-5.061 3.345-.48.33-.913.49-1.302.48-.428-.008-1.252-.241-1.865-.44-.752-.245-1.349-.374-1.297-.789.027-.216.325-.437.893-.663 3.498-1.524 5.83-2.529 6.998-3.014 3.332-1.386 4.025-1.627 4.476-1.559z"/></svg>
+                <a href={`mailto:${CONFIG.CONTACT_EMAIL}`} className={socialBtn} aria-label={t('footer.emailSupport')}>
+                  <Mail className="h-4 w-4" aria-hidden />
                 </a>
                 {whatsappLink ? (
                   <a href={whatsappLink} target="_blank" rel="noopener noreferrer" className={socialBtn} aria-label="WhatsApp">

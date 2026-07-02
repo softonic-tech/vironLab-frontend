@@ -1,6 +1,7 @@
 import { RotateCcw, AlertCircle, CheckCircle, XCircle, Package, Mail, Phone } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import PageTopBar from '@/components/PageTopBar';
+import { CONFIG } from '@/lib/config';
 import { useTranslation, useLanguage } from '@/i18n';
 
 export default function Refund() {
@@ -121,7 +122,7 @@ export default function Refund() {
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-6 h-6 rounded-full bg-[#2ED1B4] text-[#070A12] flex items-center justify-center text-sm font-bold flex-shrink-0">2</span>
-                <span>Email <a href="mailto:contact@vironlabs.com" className="text-[#2ED1B4] hover:underline">contact@vironlabs.com</a> or message us on Telegram</span>
+                <span>Email <a href={`mailto:${CONFIG.CONTACT_EMAIL}`} className="text-[#2ED1B4] hover:underline">{CONFIG.CONTACT_EMAIL}</a></span>
               </li>
               <li className="flex items-start gap-3">
                 <span className="w-6 h-6 rounded-full bg-[#2ED1B4] text-[#070A12] flex items-center justify-center text-sm font-bold flex-shrink-0">3</span>
@@ -248,8 +249,7 @@ export default function Refund() {
             <h2 className="text-xl font-semibold text-white mb-4">{t('legal.refund.contact')}</h2>
             <div className="p-4 rounded-xl bg-[rgba(46,209,180,0.1)] border border-[rgba(46,209,180,0.2)]">
               <p className="text-white font-medium">Viron Labs</p>
-              <p className="text-gray-400">Email: <a href="mailto:contact@vironlabs.com" className="text-[#2ED1B4] hover:underline">contact@vironlabs.com</a></p>
-              <p className="text-gray-400">Telegram: <a href="https://t.me/vironlabs" target="_blank" rel="noopener noreferrer" className="text-[#2ED1B4] hover:underline">@VironLabs</a></p>
+              <p className="text-gray-400">Email: <a href={`mailto:${CONFIG.CONTACT_EMAIL}`} className="text-[#2ED1B4] hover:underline">{CONFIG.CONTACT_EMAIL}</a></p>
             </div>
           </section>
         </div>

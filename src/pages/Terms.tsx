@@ -1,6 +1,7 @@
 import { Scale, FileCheck, AlertTriangle, UserCheck, Package, Truck, CreditCard, Ban } from 'lucide-react';
 import { SEO } from '@/components/SEO';
 import PageTopBar from '@/components/PageTopBar';
+import { CONFIG } from '@/lib/config';
 import { useTranslation, useLanguage } from '@/i18n';
 
 export default function Terms() {
@@ -296,8 +297,7 @@ export default function Terms() {
             <h2 className="text-xl font-semibold text-white mb-4">{t('legal.terms.contact')}</h2>
             <div className="p-4 rounded-xl bg-[rgba(46,209,180,0.1)] border border-[rgba(46,209,180,0.2)]">
               <p className="text-white font-medium">Viron Labs</p>
-              <p className="text-gray-400">Email: <a href="mailto:contact@vironlabs.com" className="text-[#2ED1B4] hover:underline">contact@vironlabs.com</a></p>
-              <p className="text-gray-400">Telegram: <a href="https://t.me/vironlabs" target="_blank" rel="noopener noreferrer" className="text-[#2ED1B4] hover:underline">@VironLabs</a></p>
+              <p className="text-gray-400">Email: <a href={`mailto:${CONFIG.CONTACT_EMAIL}`} className="text-[#2ED1B4] hover:underline">{CONFIG.CONTACT_EMAIL}</a></p>
             </div>
           </section>
         </div>

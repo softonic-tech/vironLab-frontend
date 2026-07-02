@@ -1,5 +1,6 @@
 import { Beaker, Shield, FileText, MessageCircle, Heart } from 'lucide-react';
 import PageTopBar from '@/components/PageTopBar';
+import { CONFIG } from '@/lib/config';
 import { useTranslation } from '@/i18n';
 
 export default function Standards() {
@@ -104,16 +105,14 @@ export default function Standards() {
                     <li className="flex items-start gap-2">
                       <span className="text-[#EC4899] mt-1">•</span>
                       <span>
-                        Live chat support via Telegram ({' '}
+                        Email us at{' '}
                         <a
-                          href="https://t.me/vironlabs"
-                          target="_blank"
-                          rel="noopener noreferrer"
+                          href={`mailto:${CONFIG.CONTACT_EMAIL}`}
                           className="text-[#2ED1B4] hover:underline"
                         >
-                          @VironLabs
+                          {CONFIG.CONTACT_EMAIL}
                         </a>
-                        {' '} ) and email ensures quick and reliable assistance.
+                        {' '}for quick and reliable assistance.
                       </span>
                     </li>
                   </ul>
