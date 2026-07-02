@@ -1,10 +1,12 @@
 import { useState } from 'react';
 import { Mail, Send, MessageCircle, Clock, MapPin } from 'lucide-react';
 import PageTopBar from '@/components/PageTopBar';
+import { CONFIG } from '@/lib/config';
 import { useTranslation } from '@/i18n';
 
 export default function Contact() {
   const { t } = useTranslation();
+  const contactEmail = CONFIG.CONTACT_EMAIL;
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -18,7 +20,7 @@ export default function Contact() {
     e.preventDefault();
     setIsSubmitting(true);
 
-    const mailtoLink = `mailto:contact@vironlabs.com?subject=${encodeURIComponent(
+    const mailtoLink = `mailto:${contactEmail}?subject=${encodeURIComponent(
       formData.subject || t('contact.enquirySubject')
     )}&body=${encodeURIComponent(
       `Name: ${formData.name}\nEmail: ${formData.email}\n\nMessage:\n${formData.message}`
@@ -67,10 +69,10 @@ export default function Contact() {
                 </div>
                 <h3 className="text-sm font-bold text-[#F4F6FA] mb-1">{t('contact.email')}</h3>
                 <a
-                  href="mailto:contact@vironlabs.com"
+                  href={`mailto:${contactEmail}`}
                   className="text-sm text-[#A9B3C7] hover:text-amber-300 transition-colors"
                 >
-                  contact@vironlabs.com
+                  {contactEmail}
                 </a>
               </div>
 
@@ -101,8 +103,8 @@ export default function Contact() {
                     <h3 className="text-xl font-bold text-[#F4F6FA] mb-2">{t('contact.messageReady')}</h3>
                     <p className="text-sm text-[#A9B3C7] mb-6">
                       {t('contact.messageReadyDesc')}{' '}
-                      <a href="mailto:contact@vironlabs.com" className="text-amber-400 hover:text-amber-300 hover:underline">
-                        contact@vironlabs.com
+                      <a href={`mailto:${contactEmail}`} className="text-amber-400 hover:text-amber-300 hover:underline">
+                        {contactEmail}
                       </a>
                     </p>
                     <button

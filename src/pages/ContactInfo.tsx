@@ -1,9 +1,11 @@
-import { Mail, MessageCircle, Clock, MapPin, ExternalLink, Send } from 'lucide-react';
+import { Mail, MessageCircle, Clock, MapPin, ExternalLink } from 'lucide-react';
 import PageTopBar from '@/components/PageTopBar';
+import { CONFIG } from '@/lib/config';
 import { useTranslation } from '@/i18n';
 
 export default function ContactInfo() {
   const { t } = useTranslation();
+  const contactEmail = CONFIG.CONTACT_EMAIL;
 
   return (
     <div className="min-h-screen" style={{ background: '#070A12' }}>
@@ -22,7 +24,7 @@ export default function ContactInfo() {
             </p>
           </div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-12">
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-12">
             <div className="p-6 rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)] hover:border-amber-500/35 transition-colors">
               <div className="w-12 h-12 rounded-xl bg-amber-500/10 flex items-center justify-center mb-4">
                 <Mail className="w-6 h-6 text-amber-400" />
@@ -30,33 +32,14 @@ export default function ContactInfo() {
               <h3 className="text-lg font-bold text-[#F4F6FA] mb-2">{t('contact.email')}</h3>
               <p className="text-sm text-[#A9B3C7] mb-4">{t('contact.info.emailDesc')}</p>
               <a
-                href="mailto:contact@vironlabs.com"
+                href={`mailto:${contactEmail}`}
                 className="inline-flex items-center gap-2 text-amber-400 hover:text-amber-300 hover:underline"
               >
-                contact@vironlabs.com
+                {contactEmail}
                 <ExternalLink className="w-4 h-4" />
               </a>
             </div>
 
-            {/* Telegram */}
-            <div className="p-6 rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)] hover:border-sky-500/35 transition-colors">
-              <div className="w-12 h-12 rounded-xl bg-[rgba(59,130,246,0.1)] flex items-center justify-center mb-4">
-                <Send className="w-6 h-6 text-[#3B82F6]" />
-              </div>
-              <h3 className="text-lg font-bold text-[#F4F6FA] mb-2">{t('contact.info.telegram')}</h3>
-              <p className="text-sm text-[#A9B3C7] mb-4">{t('contact.info.telegramDesc')}</p>
-              <a
-                href="https://t.me/vironlabs"
-                target="_blank"
-                rel="noopener noreferrer"
-                className="inline-flex items-center gap-2 text-[#3B82F6] hover:underline"
-              >
-                @VironLabs
-                <ExternalLink className="w-4 h-4" />
-              </a>
-            </div>
-
-            {/* Response Time */}
             <div className="p-6 rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)] hover:border-amber-500/25 transition-colors">
               <div className="w-12 h-12 rounded-xl bg-amber-500/8 flex items-center justify-center mb-4">
                 <Clock className="w-6 h-6 text-amber-300" />
@@ -67,124 +50,6 @@ export default function ContactInfo() {
             </div>
           </div>
 
-          {/* Telegram Support Section */}
-          <div className="p-6 sm:p-8 rounded-2xl bg-gradient-to-br from-sky-500/10 via-amber-500/8 to-red-500/6 border border-sky-500/20 mb-12">
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 items-center">
-              <div>
-                <div className="flex items-center gap-3 mb-4">
-                  <div className="w-10 h-10 rounded-xl bg-[#3B82F6] flex items-center justify-center">
-                    <Send className="w-5 h-5 text-white" />
-                  </div>
-                  <h2 className="text-2xl font-bold text-[#F4F6FA]">{t('contact.info.telegramSupport')}</h2>
-                </div>
-                <p className="text-[#A9B3C7] mb-6">{t('contact.info.telegramSupportDesc')}</p>
-                <div className="space-y-4">
-                  <div className="flex items-center gap-3">
-                    <MessageCircle className="w-5 h-5 text-[#3B82F6]" />
-                    <span className="text-[#F4F6FA]">{t('contact.info.username')} <span className="text-[#3B82F6]">@VironLabs</span></span>
-                  </div>
-                  <div className="flex items-center gap-3">
-                    <Clock className="w-5 h-5 text-amber-400" />
-                    <span className="text-[#F4F6FA]">{t('contact.info.responseMinutes')} <span className="text-amber-300">{t('contact.info.usuallyMinutes')}</span></span>
-                  </div>
-                </div>
-                <a
-                  href="https://t.me/vironlabs"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="inline-flex items-center gap-2 mt-6 px-6 py-3 rounded-xl bg-[#3B82F6] text-white font-medium hover:bg-[#2563EB] transition-colors"
-                >
-                  <Send className="w-4 h-4" />
-                  {t('contact.info.messageTelegram')}
-                </a>
-              </div>
-              <div className="flex justify-center">
-                <div className="p-4 rounded-2xl bg-white">
-                  {/* Telegram QR Code */}
-                  <svg
-                    viewBox="0 0 200 200"
-                    className="w-48 h-48"
-                  >
-                    {/* Background */}
-                    <rect width="200" height="200" fill="white" />
-
-                    {/* Telegram Logo in center */}
-                    <circle cx="100" cy="100" r="35" fill="#3B82F6" />
-                    <path
-                      d="M125 75 L85 110 L75 100 L115 65 Z"
-                      fill="white"
-                      transform="translate(5, 5)"
-                    />
-                    <path
-                      d="M125 75 L85 110 L95 120 L135 85 Z"
-                      fill="white"
-                      transform="translate(5, 5)"
-                    />
-
-                    {/* QR Code Pattern - Simplified representation */}
-                    {/* Position detection patterns */}
-                    <rect x="15" y="15" width="40" height="40" fill="none" stroke="#070A12" strokeWidth="4" />
-                    <rect x="25" y="25" width="20" height="20" fill="#070A12" />
-
-                    <rect x="145" y="15" width="40" height="40" fill="none" stroke="#070A12" strokeWidth="4" />
-                    <rect x="155" y="25" width="20" height="20" fill="#070A12" />
-
-                    <rect x="15" y="145" width="40" height="40" fill="none" stroke="#070A12" strokeWidth="4" />
-                    <rect x="25" y="155" width="20" height="20" fill="#070A12" />
-
-                    {/* Data modules - stylized pattern */}
-                    <g fill="#070A12">
-                      <rect x="65" y="15" width="8" height="8" />
-                      <rect x="85" y="15" width="8" height="8" />
-                      <rect x="105" y="15" width="8" height="8" />
-                      <rect x="65" y="30" width="8" height="8" />
-                      <rect x="95" y="30" width="8" height="8" />
-                      <rect x="115" y="30" width="8" height="8" />
-                      <rect x="75" y="45" width="8" height="8" />
-                      <rect x="105" y="45" width="8" height="8" />
-                      <rect x="125" y="45" width="8" height="8" />
-
-                      <rect x="15" y="65" width="8" height="8" />
-                      <rect x="35" y="65" width="8" height="8" />
-                      <rect x="55" y="65" width="8" height="8" />
-                      <rect x="15" y="80" width="8" height="8" />
-                      <rect x="45" y="80" width="8" height="8" />
-                      <rect x="55" y="95" width="8" height="8" />
-                      <rect x="25" y="110" width="8" height="8" />
-                      <rect x="45" y="110" width="8" height="8" />
-                      <rect x="35" y="125" width="8" height="8" />
-
-                      <rect x="145" y="65" width="8" height="8" />
-                      <rect x="165" y="65" width="8" height="8" />
-                      <rect x="185" y="65" width="8" height="8" />
-                      <rect x="155" y="80" width="8" height="8" />
-                      <rect x="175" y="80" width="8" height="8" />
-                      <rect x="145" y="95" width="8" height="8" />
-                      <rect x="165" y="95" width="8" height="8" />
-                      <rect x="185" y="110" width="8" height="8" />
-                      <rect x="155" y="125" width="8" height="8" />
-
-                      <rect x="65" y="145" width="8" height="8" />
-                      <rect x="85" y="145" width="8" height="8" />
-                      <rect x="105" y="145" width="8" height="8" />
-                      <rect x="125" y="155" width="8" height="8" />
-                      <rect x="145" y="155" width="8" height="8" />
-                      <rect x="75" y="170" width="8" height="8" />
-                      <rect x="95" y="170" width="8" height="8" />
-                      <rect x="115" y="170" width="8" height="8" />
-                      <rect x="165" y="170" width="8" height="8" />
-                      <rect x="185" y="185" width="8" height="8" />
-                    </g>
-                  </svg>
-                  <p className="text-center text-sm text-[#070A12] mt-2 font-medium">
-                    {t('contact.info.scanQr')}
-                  </p>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          {/* Additional Info */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             <div className="p-6 rounded-2xl bg-[rgba(17,24,39,0.6)] border border-[rgba(244,246,250,0.08)]">
               <div className="flex items-center gap-3 mb-4">
@@ -203,7 +68,6 @@ export default function ContactInfo() {
             </div>
           </div>
 
-          {/* Contact Form Link */}
           <div className="mt-12 text-center">
             <p className="text-[#A9B3C7] mb-4">{t('contact.info.preferForm')}</p>
             <a
@@ -217,7 +81,6 @@ export default function ContactInfo() {
         </div>
       </main>
 
-      {/* Footer */}
       <footer className="relative z-10 px-6 lg:px-12 py-8 border-t border-amber-500/15">
         <div className="max-w-5xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4">
           <p className="text-xs text-[#A9B3C7]">{t('contact.info.copyright')}</p>
