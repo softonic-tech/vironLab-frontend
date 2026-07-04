@@ -165,7 +165,7 @@ export const landing = {
       },
       {
         q: 'What about shipping and support?',
-        a: 'Shipping tiers and rewards thresholds are shown in the catalog ribbon. For operational questions, use the contact routes linked in the footer or email us at vironlabs@gmail.com.',
+        a: 'Shipping tiers and rewards thresholds are shown in the catalog ribbon. For operational questions, use the contact routes linked in the footer or email us at vironlabsx@gmail.com.',
       },
     ],
   },

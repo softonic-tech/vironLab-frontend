@@ -165,7 +165,7 @@ export const landing = {
       },
       {
         q: 'Hur fungerar frakt och support?',
-        a: 'Fraktnivåer och belöningsgränser visas i katalogbandet. För operativa frågor, använd kontaktvägarna i sidfoten eller mejla vironlabs@gmail.com.',
+        a: 'Fraktnivåer och belöningsgränser visas i katalogbandet. För operativa frågor, använd kontaktvägarna i sidfoten eller mejla vironlabsx@gmail.com.',
       },
     ],
   },
