@@ -49,6 +49,7 @@ const NotFound = lazy(() => import('@/pages/NotFound'));
 const ProductPage = lazy(() => import('@/pages/Product'));
 const PromoterDashboard = lazy(() => import('@/pages/PromoterDashboard'));
 const TrackOrder = lazy(() => import('@/pages/TrackOrder'));
+const Analysis = lazy(() => import('@/pages/Analysis'));
 
 gsap.registerPlugin(ScrollTrigger);
 
@@ -349,6 +350,7 @@ function App() {
               <Route path="/product/:slug" element={<ProductPage />} />
               <Route path="/promoter" element={<PromoterDashboard />} />
               <Route path="/track-order" element={<TrackOrder />} />
+              <Route path="/analysis" element={<Analysis />} />
               <Route path="*" element={<NotFound />} />
             </Routes>
           </Suspense>

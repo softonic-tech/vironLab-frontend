@@ -19,6 +19,7 @@ export const footer = {
   whyViron: 'Varför VIRON',
   quality: 'Kvalitet',
   ourStandards: 'Våra standarder',
+  certificatesOfAnalysis: 'Analyscertifikat',
   reconstitutionGuide: 'Rekonstitutionsguide',
   support: 'Support',
   emailSupport: 'E-postsupport',

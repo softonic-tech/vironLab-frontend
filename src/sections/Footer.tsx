@@ -118,6 +118,7 @@ export default function Footer() {
               links: (
                 <>
                   <li><a href="/standards" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('footer.ourStandards')}</a></li>
+                  <li><a href="/analysis" className="transition-colors hover:text-amber-200/95 text-slate-400 text-sm">{t('footer.certificatesOfAnalysis')}</a></li>
                   <li>
                     <button
                       type="button"

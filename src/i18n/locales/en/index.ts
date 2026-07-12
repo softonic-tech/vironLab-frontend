@@ -14,6 +14,7 @@ import { contact } from './contact';
 import { faq } from './faq';
 import { admin, adminLogin } from './admin';
 import { legal } from './legal';
+import { analysis } from './analysis';
 
 export const en = {
   common,
@@ -34,6 +35,7 @@ export const en = {
   admin,
   adminLogin,
   legal,
+  analysis,
 };
 
 export type EnTranslations = typeof en;
