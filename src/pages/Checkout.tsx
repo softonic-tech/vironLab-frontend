@@ -22,8 +22,14 @@ import { useCart } from '@/context/CartContext';
 import { useAffiliate } from '@/context/AffiliateContext';
 import { supabase, getCurrentUser } from '@/lib/supabase';
 import { CONFIG } from '@/lib/config';
-import { getSiteSetting, DEFAULT_BANK_DETAILS, type BankDetails } from '@/lib/settings';
-import { recordAffiliateOrder } from '@/lib/affiliates';
+import {
+  getSiteSetting,
+  DEFAULT_BANK_DETAILS,
+  DEFAULT_FREE_GIFT_SETTINGS,
+  type BankDetails,
+  type FreeGiftSettings,
+} from '@/lib/settings';
+import { recordAffiliateOrder, recordDiscountCodeUsage } from '@/lib/affiliates';
 import { sendOrderConfirmation } from '@/lib/email';
 import { generateOrderNumberForCheckout } from '@/lib/orderNumber';
 import { copyTextToClipboard } from '@/lib/clipboard';
@@ -166,6 +172,7 @@ export default function Checkout() {
   const [copyNotice, setCopyNotice] = useState<string | null>(null);
 
   const [bankDetails, setBankDetails] = useState<BankDetails>(DEFAULT_BANK_DETAILS);
+  const [freeGiftSettings, setFreeGiftSettings] = useState<FreeGiftSettings>(DEFAULT_FREE_GIFT_SETTINGS);
   const { format } = useCurrency();
   const [elementsClientSecret, setElementsClientSecret] = useState<string | null>(null);
 
@@ -181,19 +188,25 @@ export default function Checkout() {
     getUser();
   }, []);
 
-  // Load admin-editable bank details for the order confirmation page.
+  // Load admin-editable bank details + free gift settings.
   useEffect(() => {
     let cancelled = false;
-    const loadBankDetails = async () => {
+    const loadSettings = async () => {
       try {
-        const data = await getSiteSetting<BankDetails>('bank_details', DEFAULT_BANK_DETAILS);
-        if (!cancelled) setBankDetails(data);
+        const [bank, gift] = await Promise.all([
+          getSiteSetting<BankDetails>('bank_details', DEFAULT_BANK_DETAILS),
+          getSiteSetting<FreeGiftSettings>('free_gift_settings', DEFAULT_FREE_GIFT_SETTINGS),
+        ]);
+        if (!cancelled) {
+          setBankDetails(bank);
+          setFreeGiftSettings(gift);
+        }
       } catch (e) {
         // Keep fallback defaults if DB is unavailable.
-        console.error('Failed to load bank_details:', e);
+        console.error('Failed to load checkout settings:', e);
       }
     };
-    loadBankDetails();
+    loadSettings();
     return () => {
       cancelled = true;
     };
@@ -213,10 +226,20 @@ export default function Checkout() {
     } catch (_) {}
   }, []);
 
-  const affiliateDiscountPercent = appliedPromotion?.valid ? (appliedPromotion.discount_percent ?? 10) : 0;
+  const isDiscountCode = appliedPromotion?.valid && appliedPromotion.code_type === 'discount';
+  const isAffiliateCode = appliedPromotion?.valid && appliedPromotion.code_type !== 'discount';
+  const affiliateDiscountPercent = appliedPromotion?.valid
+    ? (appliedPromotion.discount_percent ??
+      (appliedPromotion.discount_type === 'percentage' ? appliedPromotion.discount_value : undefined) ??
+      10)
+    : 0;
   const affiliateDiscountAmount = appliedPromotion?.valid
     ? Math.round(paidItemsTotal * affiliateDiscountPercent) / 100
     : 0;
+  const freeGiftEnabled = freeGiftSettings.enabled !== false;
+  const freeGiftThreshold = freeGiftSettings.threshold || 2500;
+  const remainingForFreeGift = Math.max(0, freeGiftThreshold - paidItemsTotal);
+  const freeGiftUnlocked = freeGiftEnabled && paidItemsTotal >= freeGiftThreshold;
 
   const handleApplyAffiliate = async () => {
     if (!affiliateInput.trim()) return;
@@ -315,7 +338,8 @@ export default function Checkout() {
           total: finalOrderTotal,
           currency: 'sek',
           age_verified: ageVerified,
-          affiliate_code: appliedCode && appliedPromotion?.valid ? appliedCode : null,
+          affiliate_code: appliedCode && isAffiliateCode ? appliedCode : null,
+          discount_code: appliedCode && isDiscountCode ? appliedCode : null,
           user_id: userId,
           items: items.map((item) => ({
             product_id: item.productId,
@@ -370,9 +394,12 @@ export default function Checkout() {
         })),
       };
 
-      if (appliedCode && appliedPromotion?.valid) {
+      if (appliedCode && isAffiliateCode) {
         orderPayload.affiliate_code = appliedCode;
         orderPayload.affiliate_discount = affiliateDiscountAmount;
+      }
+      if (appliedCode && isDiscountCode) {
+        orderPayload.discount_code = appliedCode;
       }
 
       const { error } = await supabase.from('orders').insert(orderPayload);
@@ -385,27 +412,37 @@ export default function Checkout() {
         localStorage.setItem('vironlabs_orders', JSON.stringify(orders));
       }
 
-      if (!error && appliedCode && appliedPromotion?.valid && appliedPromotion.promoter_id) {
+      if (!error && appliedCode && appliedPromotion?.valid) {
         try {
           const { data: orderId, error: idErr } = await supabase.rpc('get_order_id_by_number', {
             p_order_number: newOrderNumber,
             p_email: contactEmail,
           });
           if (!idErr && orderId) {
-            await recordAffiliateOrder({
-              promoter_id: appliedPromotion.promoter_id,
-              order_id: orderId as string,
-              order_number: newOrderNumber,
-              customer_email: contactEmail,
-              order_total: finalOrderTotal,
-              customer_discount: affiliateDiscountAmount,
-            }).catch((e) => console.error('Affiliate tracking error:', e));
-            clearCode();
+            if (isDiscountCode && appliedPromotion.discount_code_id) {
+              await recordDiscountCodeUsage({
+                discount_code_id: appliedPromotion.discount_code_id,
+                order_id: orderId as string,
+                discount_amount: affiliateDiscountAmount,
+                user_id: userId,
+              }).catch((e) => console.error('Discount code tracking error:', e));
+              clearCode();
+            } else if (isAffiliateCode && appliedPromotion.promoter_id) {
+              await recordAffiliateOrder({
+                promoter_id: appliedPromotion.promoter_id,
+                order_id: orderId as string,
+                order_number: newOrderNumber,
+                customer_email: contactEmail,
+                order_total: finalOrderTotal,
+                customer_discount: affiliateDiscountAmount,
+              }).catch((e) => console.error('Affiliate tracking error:', e));
+              clearCode();
+            }
           } else if (idErr) {
-            console.error('Could not resolve order id for affiliate tracking:', idErr);
+            console.error('Could not resolve order id for promo tracking:', idErr);
           }
         } catch (e) {
-          console.error('Affiliate id-resolution error:', e);
+          console.error('Promo id-resolution error:', e);
         }
       }
 
@@ -698,6 +735,32 @@ export default function Checkout() {
         )}
 
         <form onSubmit={handleSubmit} className="space-y-3">
+          {freeGiftEnabled && (
+            <div
+              className={`p-3 rounded-xl border ${
+                freeGiftUnlocked
+                  ? 'bg-emerald-500/10 border-emerald-500/30'
+                  : 'bg-amber-500/10 border-amber-500/30'
+              }`}
+            >
+              <p className="text-xs font-semibold text-white">
+                {freeGiftUnlocked
+                  ? t('checkout.freeGiftUnlocked', { name: freeGiftSettings.name || 'BAC Water' })
+                  : t('checkout.freeGiftProgress', {
+                      amount: format(remainingForFreeGift),
+                      name: freeGiftSettings.name || 'BAC Water',
+                      threshold: format(freeGiftThreshold),
+                    })}
+              </p>
+              <p className="text-[10px] text-[#A9B3C7] mt-0.5">
+                {t('checkout.freeGiftHint', {
+                  threshold: format(freeGiftThreshold),
+                  name: freeGiftSettings.name || 'BAC Water',
+                })}
+              </p>
+            </div>
+          )}
+
           {/* Order Summary */}
           <div className="p-3 rounded-xl bg-white/5 border border-white/10">
             <h2 className="text-xs font-semibold text-white mb-2 flex items-center gap-2">
@@ -868,7 +931,7 @@ export default function Checkout() {
             </div>
           </div>
 
-          {/* ── AFFILIATE / REFERRAL CODE ── */}
+          {/* ── PROMO / REFERRAL CODE ── */}
           <div className="p-3 rounded-xl bg-white/5 border border-white/10">
             <h2 className="text-xs font-semibold text-white mb-2 flex items-center gap-2">
               <Tag className="w-3.5 h-3.5 text-[#22C55E]" />
@@ -886,6 +949,9 @@ export default function Checkout() {
                     </p>
                     <p className="text-[10px] text-green-500/70">
                       {t('checkout.saving', { amount: format(affiliateDiscountAmount) })}
+                      {isDiscountCode && appliedPromotion.usage_remaining != null
+                        ? ` · ${t('checkout.usesLeft', { count: String(appliedPromotion.usage_remaining) })}`
+                        : ''}
                     </p>
                   </div>
                 </div>

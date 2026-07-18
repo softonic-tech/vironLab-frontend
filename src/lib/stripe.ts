@@ -30,6 +30,7 @@ export type CreateStripeSessionRequest = {
   age_verified?: boolean;
   customer_notes?: string;
   affiliate_code?: string | null;
+  discount_code?: string | null;
   user_id?: string | null;
   items: StripeCartItem[];
 };

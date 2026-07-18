@@ -1,7 +1,7 @@
 import React, { createContext, useContext, useState, useCallback, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
 import {
-  validateAffiliateCode,
+  validatePromoCode,
   getPromoterForSessionUser,
   getAffiliateOrdersForPromoter,
   getStoreCreditTransactions,
@@ -89,7 +89,7 @@ export function AffiliateProvider({ children }: { children: React.ReactNode }) {
     const trimmed = code.trim().toUpperCase();
     if (!trimmed) return { valid: false, error: 'Please enter a code' };
 
-    // Fraud: prevent self-referral
+    // Fraud: prevent self-referral (affiliate codes only)
     if (userId) {
       const me = await getPromoterForSessionUser();
       if (me && me.referral_code.toUpperCase() === trimmed) {
@@ -97,7 +97,7 @@ export function AffiliateProvider({ children }: { children: React.ReactNode }) {
       }
     }
 
-    const result = await validateAffiliateCode(trimmed);
+    const result = await validatePromoCode(trimmed);
     if (result.valid) {
       setAppliedCode(trimmed);
       setAppliedPromotion(result);

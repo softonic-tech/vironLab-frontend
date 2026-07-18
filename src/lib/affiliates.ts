@@ -50,9 +50,17 @@ export interface StoreCreditTransaction {
 export interface AffiliateValidation {
   valid: boolean;
   error?: string;
+  /** affiliate = influencer referral; discount = limited-use store promo code */
+  code_type?: 'affiliate' | 'discount';
   promoter_id?: string;
   promoter_name?: string;
   discount_percent?: number;
+  discount_code_id?: string;
+  discount_type?: 'percentage' | 'fixed_amount';
+  discount_value?: number;
+  usage_limit?: number | null;
+  usage_count?: number;
+  usage_remaining?: number | null;
 }
 
 // Commission tiers — admin can override per-promoter
@@ -72,6 +80,20 @@ export function getTierForSales(totalSales: number): typeof COMMISSION_TIERS[0] 
 // VALIDATION
 // ============================================
 
+export async function validateDiscountCode(code: string): Promise<AffiliateValidation> {
+  try {
+    const { data, error } = await supabase.rpc('validate_discount_code', { p_code: code });
+    if (error) {
+      console.error('validate_discount_code error:', error);
+      return { valid: false, error: 'Unable to validate code' };
+    }
+    return data as AffiliateValidation;
+  } catch (e) {
+    console.error('validateDiscountCode exception:', e);
+    return { valid: false, error: 'Unable to validate code' };
+  }
+}
+
 export async function validateAffiliateCode(code: string): Promise<AffiliateValidation> {
   try {
     const { data, error } = await supabase.rpc('validate_affiliate_code', { p_code: code });
@@ -79,10 +101,52 @@ export async function validateAffiliateCode(code: string): Promise<AffiliateVali
       console.error('validate_affiliate_code error:', error);
       return { valid: false, error: 'Unable to validate code' };
     }
-    return data as AffiliateValidation;
+    const result = data as AffiliateValidation;
+    if (result?.valid && !result.code_type) {
+      return { ...result, code_type: 'affiliate' };
+    }
+    return result;
   } catch (e) {
     console.error('validateAffiliateCode exception:', e);
     return { valid: false, error: 'Unable to validate code' };
+  }
+}
+
+/** Try limited-use discount codes first, then influencer referral codes. */
+export async function validatePromoCode(code: string): Promise<AffiliateValidation> {
+  const discount = await validateDiscountCode(code);
+  if (discount.valid) return discount;
+  const affiliate = await validateAffiliateCode(code);
+  if (affiliate.valid) return affiliate;
+  // Prefer the more specific discount-code error when the code looked like a promo.
+  return discount.error && discount.error !== 'Code not found or inactive'
+    ? discount
+    : affiliate.error
+      ? affiliate
+      : { valid: false, error: 'Invalid code' };
+}
+
+export async function recordDiscountCodeUsage(params: {
+  discount_code_id: string;
+  order_id: string;
+  discount_amount: number;
+  user_id?: string | null;
+}): Promise<boolean> {
+  try {
+    const { data, error } = await supabase.rpc('record_discount_code_usage', {
+      p_discount_code_id: params.discount_code_id,
+      p_order_id: params.order_id,
+      p_discount_amount: params.discount_amount,
+      p_user_id: params.user_id ?? null,
+    });
+    if (error) {
+      console.error('record_discount_code_usage error:', error);
+      return false;
+    }
+    return !!(data as { ok?: boolean })?.ok;
+  } catch (e) {
+    console.error('recordDiscountCodeUsage exception:', e);
+    return false;
   }
 }
 

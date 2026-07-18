@@ -3941,7 +3941,7 @@ function SettingsSection() {
             <input
               type="number"
               value={freeGiftSettings.threshold}
-              onChange={(e) => setFreeGiftSettings({ ...freeGiftSettings, threshold: parseInt(e.target.value) || 300 })}
+              onChange={(e) => setFreeGiftSettings({ ...freeGiftSettings, threshold: parseInt(e.target.value) || 2500 })}
               className="w-full px-3 py-2 rounded-lg bg-[rgba(7,10,18,0.5)] border border-[rgba(244,246,250,0.1)] text-[#F4F6FA] text-sm"
             />
           </div>

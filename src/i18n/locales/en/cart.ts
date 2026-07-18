@@ -11,5 +11,8 @@ export const cart = {
   continueShopping: 'Continue shopping',
   addForFreeShipping: 'Add {{amount}} for free shipping',
   freeShippingUnlocked: 'FREE SHIPPING unlocked!',
+  addForFreeGift: 'Add {{amount}} for free {{name}}',
+  freeGiftUnlocked: 'FREE {{name}} unlocked!',
   earnPoints: '{{points}} pts',
+  free: 'FREE',
 };

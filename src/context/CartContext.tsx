@@ -2,7 +2,13 @@ import React, { createContext, useContext, useState, useCallback, useEffect, use
 import { supabase, getCurrentUser } from '@/lib/supabase';
 import { CONFIG } from '@/lib/config';
 import { sendAbandonedCart } from '@/lib/email';
-import { getSiteSetting, DEFAULT_DISCOUNT_SETTINGS, type DiscountSettings } from '@/lib/settings';
+import {
+  getSiteSetting,
+  DEFAULT_DISCOUNT_SETTINGS,
+  DEFAULT_FREE_GIFT_SETTINGS,
+  type DiscountSettings,
+  type FreeGiftSettings,
+} from '@/lib/settings';
 import { getCartUnitPrice, repriceCartItems } from '@/utils/pricing';
 
 export interface CartItem {
@@ -195,16 +201,83 @@ export function CartProvider({ children }: { children: React.ReactNode }) {
     .filter(item => !item.isFree)
     .reduce((sum, item) => sum + item.price * item.quantity, 0);
 
-  // Free BAC/DAC Water gifts are disabled; clean up older saved carts that still contain them.
+  const hasFreeGiftItem = items.some((item) => item.isFree);
+
+  // Auto-add free BAC Water when paid cart reaches the configured threshold.
   useEffect(() => {
-    const hasFreeGift = items.some(item => item.isFree);
-    if (hasFreeGift) {
-      const newItems = items.filter(item => !item.isFree);
-      setItems(newItems);
-      saveCartToSupabase(newItems);
-    }
-    setFreeGiftAdded(false);
-  }, [items]);
+    if (isLoading) return;
+
+    let cancelled = false;
+
+    const syncFreeGift = async () => {
+      const settings: FreeGiftSettings = await getSiteSetting(
+        'free_gift_settings',
+        DEFAULT_FREE_GIFT_SETTINGS
+      );
+      if (cancelled) return;
+
+      const paidItems = items.filter((item) => !item.isFree);
+      const paidTotal = paidItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
+      const freeItems = items.filter((item) => item.isFree);
+      const giftId = settings.product_id || 'bac-water';
+      const hasMatchingGift = freeItems.some((item) => item.productId === giftId);
+
+      if (!settings.enabled) {
+        if (freeItems.length > 0) {
+          const cleaned = paidItems;
+          setItems(cleaned);
+          await saveCartToSupabase(cleaned);
+          setFreeGiftAdded(false);
+        } else {
+          setFreeGiftAdded(false);
+        }
+        return;
+      }
+
+      if (paidItems.length === 0) {
+        if (freeItems.length > 0) {
+          setItems([]);
+          await saveCartToSupabase([]);
+        }
+        setFreeGiftAdded(false);
+        return;
+      }
+
+      if (paidTotal >= settings.threshold && !hasMatchingGift) {
+        const gift: CartItem = {
+          productId: giftId,
+          name: settings.name || 'BAC Water',
+          dosage: settings.dosage || '3 mL',
+          price: 0,
+          quantity: 1,
+          image: giftId === 'bac-water' ? '/bac-water.png' : '/bac-water.png',
+          isFree: true,
+        };
+        const updated = [...paidItems, gift];
+        setItems(updated);
+        await saveCartToSupabase(updated);
+        setFreeGiftAdded(true);
+        return;
+      }
+
+      if (paidTotal < settings.threshold && freeItems.length > 0) {
+        const cleaned = paidItems;
+        setItems(cleaned);
+        await saveCartToSupabase(cleaned);
+        setFreeGiftAdded(false);
+        return;
+      }
+
+      setFreeGiftAdded(hasMatchingGift);
+    };
+
+    void syncFreeGift();
+    return () => {
+      cancelled = true;
+    };
+    // Intentionally keyed on paid total + free-gift presence to avoid loops on every item mutation.
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [isLoading, paidItemsTotal, hasFreeGiftItem, items.length]);
 
   // Logged-in users: one cart reminder per ~7 days if the cart was last updated 24+ hours ago and still has items.
   useEffect(() => {

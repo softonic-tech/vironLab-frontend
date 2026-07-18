@@ -116,6 +116,10 @@ export default function LandingHero() {
               <span className="lp-trust-dot" />
               {t('landing.hero.freeShipping')}
             </li>
+            <li>
+              <span className="lp-trust-dot" />
+              {t('landing.hero.freeBacWater')}
+            </li>
           </motion.ul>
         </motion.div>
       </div>

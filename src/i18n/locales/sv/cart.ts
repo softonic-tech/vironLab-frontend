@@ -11,5 +11,8 @@ export const cart = {
   continueShopping: 'Fortsätt handla',
   addForFreeShipping: 'Lägg till {{amount}} för fri frakt',
   freeShippingUnlocked: 'FRI FRAKT upplåst!',
+  addForFreeGift: 'Lägg till {{amount}} för gratis {{name}}',
+  freeGiftUnlocked: 'GRATIS {{name}} upplåst!',
   earnPoints: '{{points}} poäng',
+  free: 'GRATIS',
 };

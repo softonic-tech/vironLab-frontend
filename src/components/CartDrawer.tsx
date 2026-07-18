@@ -3,7 +3,12 @@ import { useCart } from '@/context/CartContext';
 import { useEffect, useState } from 'react';
 import { formatDosageLabel, getDefaultStorefrontDosage } from '@/products';
 import { loadEssentialProductsFromSupabase } from '@/lib/supabase-db';
-import { getSiteSetting, DEFAULT_DISCOUNT_SETTINGS } from '@/lib/settings';
+import {
+  getSiteSetting,
+  DEFAULT_DISCOUNT_SETTINGS,
+  DEFAULT_FREE_GIFT_SETTINGS,
+  type FreeGiftSettings,
+} from '@/lib/settings';
 import { getStorefrontPrice, getStorefrontListPrice, getStorefrontSavings, getListPriceDiscountPercent } from '@/utils/pricing';
 import { useCurrency } from '@/context/CurrencyContext';
 import { useTranslation } from '@/i18n';
@@ -18,8 +23,10 @@ export default function CartDrawer() {
     totalItems,
     isCartOpen,
     setIsCartOpen,
+    freeGiftAdded,
   } = useCart();
   const { format, convert, symbol } = useCurrency();
+  const [freeGiftSettings, setFreeGiftSettings] = useState<FreeGiftSettings>(DEFAULT_FREE_GIFT_SETTINGS);
 
   type SuggestedItem = {
     productId: string;
@@ -38,8 +45,12 @@ export default function CartDrawer() {
   const [suggestedItems, setSuggestedItems] = useState<SuggestedItem[]>([]);
 
   const freeShippingThreshold = 2500;
+  const freeGiftThreshold = freeGiftSettings.threshold || 2500;
+  const freeGiftEnabled = freeGiftSettings.enabled !== false;
+  const freeGiftName = freeGiftSettings.name || 'BAC Water';
   
   const paidItems = items.filter(item => !item.isFree);
+  const freeItems = items.filter(item => item.isFree);
   const paidTotal = paidItems.reduce((sum, item) => sum + item.price * item.quantity, 0);
   
   // Calculate points to be earned (1 point per 100 kr on subtotal)
@@ -54,6 +65,7 @@ export default function CartDrawer() {
   }, 0);
   
   const remainingForFreeShipping = Math.max(0, freeShippingThreshold - paidTotal);
+  const remainingForFreeGift = Math.max(0, freeGiftThreshold - paidTotal);
 
   const paidProductIdsInCart = new Set(
     items.filter((item) => !item.isFree).map((item) => item.productId),
@@ -81,12 +93,15 @@ export default function CartDrawer() {
 
     const loadSuggested = async () => {
       try {
-        const [discountSettings, essentials] = await Promise.all([
+        const [discountSettings, essentials, giftSettings] = await Promise.all([
           getSiteSetting('discount_settings', DEFAULT_DISCOUNT_SETTINGS),
           loadEssentialProductsFromSupabase(),
+          getSiteSetting('free_gift_settings', DEFAULT_FREE_GIFT_SETTINGS),
         ]);
 
         if (cancelled) return;
+
+        setFreeGiftSettings(giftSettings);
 
         const discountEnabled = discountSettings.discount_enabled ?? true;
         const discountPercentage = discountSettings.discount_percentage ?? 20;
@@ -158,33 +173,65 @@ export default function CartDrawer() {
         </div>
 
         {/* Progress Section - Compact */}
-        <div className="px-3 py-2 sm:px-4 sm:py-3 bg-[rgba(7,10,18,0.5)] border-b border-[rgba(244,246,250,0.08)] space-y-2 sm:space-y-3">
-          {/* Free Shipping Progress */}
-          {/* <div>
-            <div className="flex items-center justify-between mb-0.5 sm:mb-1">
-              <div className="flex items-center gap-1 sm:gap-1.5">
-                <Truck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#2ED1B4]" />
-                {remainingForFreeShipping > 0 ? (
-                  <span className="text-[10px] sm:text-xs text-[#A9B3C7]">
-                    Add <span className="text-[#2ED1B4] font-medium">{symbol}{convert(remainingForFreeShipping).toFixed(0)}</span> for free shipping
-                  </span>
-                ) : (
-                  <span className="text-[10px] sm:text-xs text-[#2ED1B4] font-medium">
-                    FREE SHIPPING unlocked!
-                  </span>
-                )}
+        {paidItems.length > 0 && (
+          <div className="px-3 py-2 sm:px-4 sm:py-3 bg-[rgba(7,10,18,0.5)] border-b border-[rgba(244,246,250,0.08)] space-y-2 sm:space-y-3">
+            <div>
+              <div className="flex items-center justify-between mb-0.5 sm:mb-1">
+                <div className="flex items-center gap-1 sm:gap-1.5">
+                  <Truck className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-[#2ED1B4]" />
+                  {remainingForFreeShipping > 0 ? (
+                    <span className="text-[10px] sm:text-xs text-[#A9B3C7]">
+                      {t('cart.addForFreeShipping', {
+                        amount: format(remainingForFreeShipping),
+                      })}
+                    </span>
+                  ) : (
+                    <span className="text-[10px] sm:text-xs text-[#2ED1B4] font-medium">
+                      {t('cart.freeShippingUnlocked')}
+                    </span>
+                  )}
+                </div>
+                <span className="text-[9px] sm:text-[10px] text-[#A9B3C7]">
+                  {symbol}{convert(paidTotal).toFixed(0)}/{symbol}{convert(freeShippingThreshold).toFixed(0)}
+                </span>
               </div>
-              <span className="text-[9px] sm:text-[10px] text-[#A9B3C7]">{symbol}{convert(paidTotal).toFixed(0)}/{symbol}{convert(freeShippingThreshold).toFixed(0)}</span>
+              <div className="h-1 sm:h-1.5 bg-[rgba(244,246,250,0.08)] rounded-full overflow-hidden">
+                <div
+                  className="h-full bg-gradient-to-r from-[#2ED1B4] to-[#3B82F6] transition-all duration-500"
+                  style={{ width: `${Math.min(100, (paidTotal / freeShippingThreshold) * 100)}%` }}
+                />
+              </div>
             </div>
-            <div className="h-1 sm:h-1.5 bg-[rgba(244,246,250,0.08)] rounded-full overflow-hidden">
-              <div
-                className="h-full bg-gradient-to-r from-[#2ED1B4] to-[#3B82F6] transition-all duration-500"
-                style={{ width: `${Math.min(100, (paidTotal / freeShippingThreshold) * 100)}%` }}
-              />
-            </div>
-          </div> */}
 
-        </div>
+            {freeGiftEnabled && (
+              <div>
+                <div className="flex items-center justify-between mb-0.5 sm:mb-1">
+                  <div className="flex items-center gap-1 sm:gap-1.5">
+                    <Award className="w-3 h-3 sm:w-3.5 sm:h-3.5 text-amber-400" />
+                    {remainingForFreeGift > 0 && !freeGiftAdded ? (
+                      <span className="text-[10px] sm:text-xs text-[#A9B3C7]">
+                        {t('cart.addForFreeGift', {
+                          amount: format(remainingForFreeGift),
+                          name: freeGiftName,
+                        })}
+                      </span>
+                    ) : (
+                      <span className="text-[10px] sm:text-xs text-amber-300 font-medium">
+                        {t('cart.freeGiftUnlocked', { name: freeGiftName })}
+                      </span>
+                    )}
+                  </div>
+                </div>
+                <div className="h-1 sm:h-1.5 bg-[rgba(244,246,250,0.08)] rounded-full overflow-hidden">
+                  <div
+                    className="h-full bg-gradient-to-r from-amber-400 to-amber-500 transition-all duration-500"
+                    style={{ width: `${Math.min(100, (paidTotal / freeGiftThreshold) * 100)}%` }}
+                  />
+                </div>
+              </div>
+            )}
+          </div>
+        )}
 
         {/* Cart Items - Compact */}
         <div className="flex-1 overflow-y-auto">
@@ -198,6 +245,28 @@ export default function CartDrawer() {
             </div>
           ) : (
             <div className="p-2 sm:p-3 space-y-1.5 sm:space-y-2">
+              {freeItems.map((item) => (
+                <div
+                  key={`free-${item.productId}-${item.dosage}`}
+                  className="flex gap-2 sm:gap-3 p-2 sm:p-2.5 rounded-lg border bg-amber-500/10 border-amber-500/25"
+                >
+                  <img
+                    src={item.image}
+                    alt={item.name}
+                    className="w-10 h-10 sm:w-12 sm:h-12 object-contain rounded bg-[rgba(7,10,18,0.5)] flex-shrink-0"
+                  />
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center gap-1.5">
+                      <h3 className="font-medium text-[#F4F6FA] text-xs sm:text-sm truncate">{item.name}</h3>
+                      <span className="px-1 py-0.5 rounded bg-amber-500/20 text-amber-300 text-[8px] font-bold uppercase">
+                        {t('cart.free')}
+                      </span>
+                    </div>
+                    <p className="text-[9px] sm:text-[10px] text-[#A9B3C7]">{item.dosage}</p>
+                  </div>
+                  <span className="text-xs text-amber-300 font-medium">{t('cart.free')}</span>
+                </div>
+              ))}
               {paidItems.map((item) => (
                 <div
                   key={`${item.productId}-${item.dosage}`}
