@@ -8,11 +8,8 @@
 *.swp
 
 # Ignore IDE specific files
-.vscode/
 .idea/
 
 
 config.bat
 .venv/
-.env
-.env.local
