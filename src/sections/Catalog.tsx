@@ -2,7 +2,7 @@ import { useEffect, useMemo, useRef, useState } from 'react';
 import { gsap } from 'gsap';
 import { ScrollTrigger } from 'gsap/ScrollTrigger';
 import { motion } from 'framer-motion';
-import { Search, MessageCircle, Tag } from 'lucide-react';
+import { Search, MessageCircle } from 'lucide-react';
 import ProductCard from '@/components/ProductCard';
 import { VIRION_LOCAL_PRODUCTS } from '@/data/viron-catalog';
 import { loadProductsFromSupabase } from '@/lib/supabase-db';
@@ -190,30 +190,8 @@ export default function Catalog() {
       <div className="absolute inset-0 grid-overlay opacity-60" />
 
       <div className="relative z-10 px-4 sm:px-6 lg:px-12">
-        {/* July launch offer */}
-        <motion.div className="flex flex-wrap items-center justify-start gap-3 mb-5 sm:mb-7">
-          <div className="inline-flex flex-wrap items-center gap-x-3 gap-y-1.5 px-4 py-2.5 rounded-lg bg-[rgba(245,158,11,0.12)] border border-[rgba(245,158,11,0.35)]">
-            <div className="flex items-center gap-2">
-              <Tag className="w-4 h-4 text-amber-400 shrink-0" />
-              <span className="text-xs sm:text-sm font-semibold text-amber-200">{t('landing.catalog.launchOfferTitle')}</span>
-            </div>
-            <span className="hidden sm:inline text-amber-500/50">·</span>
-            <span className="text-xs sm:text-sm font-medium text-[#F4F6FA]">{t('landing.catalog.launchOfferDiscount')}</span>
-            <span className="hidden sm:inline text-amber-500/50">·</span>
-            <span className="text-xs sm:text-sm text-[#A9B3C7]">
-              {t('landing.catalog.launchOfferCode')}{' '}
-              <button
-                type="button"
-                onClick={() => void navigator.clipboard?.writeText(t('landing.catalog.launchOfferCodeValue'))}
-                className="font-semibold text-amber-300 hover:text-amber-200 underline-offset-2 hover:underline cursor-pointer"
-                title={t('landing.catalog.launchOfferCodeValue')}
-              >
-                {t('landing.catalog.launchOfferCodeValue')}
-              </button>
-            </span>
-          </div>
-
-          {whatsappLink ? (
+        {whatsappLink ? (
+          <motion.div className="flex flex-wrap items-center justify-start gap-3 mb-5 sm:mb-7">
             <a
               href={whatsappLink}
               target="_blank"
@@ -223,8 +201,8 @@ export default function Catalog() {
               <MessageCircle className="w-4 h-4 text-[#22C55E]" />
               <span className="text-xs font-medium text-[#F4F6FA]">{t('landing.catalog.whatsappSupport')}</span>
             </a>
-          ) : null}
-        </motion.div>
+          </motion.div>
+        ) : null}
 
         {/* Header */}
         <div ref={headerRef} className="mb-8">
